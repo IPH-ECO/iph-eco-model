@@ -1,0 +1,69 @@
+Subroutine MatOp(a,b,dt,HydroParam,MeshParam)
+    
+    ! Compute the Semi-Implicit Method Coefficient Matrix
+    ! Casulli, V. A high-resolution wetting and drying algorithm for free-surfacehydrodynamics. 
+    ! INTERNATIONAL JOURNAL FOR NUMERICAL METHODS IN FLUIDS, v. 60, n. 4 (2009), p. 391-408
+    
+    ! Input:
+    ! a -> Free-Surface Elevation Vector
+    ! Output:
+    ! b -> Solution
+    
+    ! List of Modifications: 
+    !   -> 10.03.2014: Routine Implementation (Rafael Cavalcanti)
+    ! Programmer: Rafael Cavalcanti
+    
+    !$ use omp_lib
+    Use MeshVars
+    Use Hydrodynamic
+     
+    Implicit None
+    Integer:: iElem, iEdge, Pij, Face
+    Real:: Sum1, Coef
+    Real:: NearZero = 1e-10
+    Real:: dt
+    type(MeshGridParam) :: MeshParam
+    type(HydrodynamicParam) :: HydroParam
+    Real, intent(in) :: a(MeshParam%nElem)
+    Real, intent(out) :: b(MeshParam%nElem)
+    Real:: aGhost
+    
+    
+    Coef = HydroParam%g*(HydroParam%Theta*dt)**2
+    !call omp_set_num_threads(1)        
+    ! 1. Compute T Matrix (Casulli, 2009)
+    
+    
+    !!$OMP parallel do default(none) shared(a,b,MeshParam,HydroParam,NearZero,Coef) private(iElem,iEdge,Face,Pij,Sum)
+    Do iElem = 1, MeshParam%nElem
+        b(iElem) = HydroParam%P(iElem)*a(iElem) ! Initializing b
+        Sum1 = 0d0
+        Do iEdge = 1, 4
+            Face = MeshParam%Edge(iEdge,iElem)
+            Pij = MeshParam%Neighbor(iEdge,iElem)
+            If (HydroParam%IndexWaterLevelEdge(Face)>0) Then
+                !Sum1 = Sum1 !+ Coef*( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( - a(iElem) ) )*HydroParam%DZiADZ(Face) !( EdgeLength(Face)/CirDistance(Face) )*
+                Sum1 = Sum1 + Coef*( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( (  - a(iElem) ) )*HydroParam%DZiADZ(Face)
+            Else
+                If (Pij == 0) Then
+                    Sum1 = Sum1
+                Else
+                    Sum1 = Sum1 + Coef*( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*HydroParam%DZiADZ(Face)
+                EndIf
+            EndIf            
+            !If (Pij == 0.or.HydroParam%H(Face) <= HydroParam%PCRI+NearZero) Then
+            !    If (HydroParam%IndexWaterLevel(iElem)>0) Then
+            !        Sum1 = Sum1 + Coef*( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( - a(iElem) ) )*HydroParam%DZiADZ(Face) !( EdgeLength(Face)/CirDistance(Face) )*
+            !    EndIf
+            !Else
+            !    Sum1 = Sum1 + Coef*( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*HydroParam%DZiADZ(Face)
+            !EndIf
+        EndDo
+        b(iElem) = b(iElem) - Sum1 
+        
+    EndDo 
+    !!$OMP end parallel do
+   
+    
+    Return    
+End Subroutine MatOp

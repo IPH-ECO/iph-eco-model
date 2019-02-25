@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectType="typeDynamicLibrary" ProjectCreator="Intel Fortran" Keyword="Dll" Version="11.0" ProjectIdGuid="{6D898ED9-60A6-410A-B6C0-39E382DF5CAC}">
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32" TargetName="iph-eco-model" ConfigurationType="typeDynamicLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" WarnInterfaces="true" RoundFloatingPointResults="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|Win32" ConfigurationType="typeDynamicLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" SuppressStartupBanner="true" SubSystem="subSystemWindows" LinkDLL="true"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Debug|x64" TargetName="iph-eco-model" ConfigurationType="typeDynamicLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" HeapArrays="0" OpenMP="OpenMPParallelCode" WarnInterfaces="true" RealKIND="realKIND8" RoundFloatingPointResults="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemWindows" StackReserveSize="1000000000" StackCommitSize="1000000000" LinkDLL="true"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="copy &quot;D:\IPH-ECO\Interface\IPH-ECO 2.0\model\iph-eco\iph-eco-model-type - Copy-v9\x64\Debug\iph-eco-model.dll&quot; &quot;C:\Users\FragosoJr\IPH-ECO&quot;"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|x64" TargetName="iph-eco-model" ConfigurationType="typeDynamicLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" MultiProcessorCompilation="true" Optimization="optimizeFull" InlineFunctionExpansion="expandDisable" FavorSizeOrSpeed="favorNone" HeapArrays="0" OpenMPConditionalCompilation="false" RealKIND="realKIND8" FloatingPointSpeculation="fpSpeculationSafe" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" AdditionalOptions="/NODEFAULTLIB:library" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemWindows" StackReserveSize="1000000000" StackCommitSize="1000000000" LinkDLL="true"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="copy &quot;C:\IPH-ECO\iph-eco-model-type - Copy-v9\x64\Release\iph-eco-model.dll&quot; &quot;C:\IPH-ECO\Area2\IPH-ECO-A2&quot;"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="Header Files" Filter="fi;fd;h;inc">
+		<File RelativePath=".\simulation_manager.f90"/></Filter>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+		<Filter Name="Allocate">
+		<File RelativePath=".\AllocateHydroVars.f90"/>
+		<File RelativePath=".\AllocateMeteoVars.f90"/>
+		<File RelativePath=".\AllocateWQVars.f90"/></Filter>
+		<Filter Name="Functions">
+		<File RelativePath=".\Cross.f90"/>
+		<File RelativePath=".\DGTSV.f90"/>
+		<File RelativePath=".\FETCH.f90"/>
+		<File RelativePath=".\Functions.f90"/>
+		<File RelativePath=".\interp.f90"/>
+		<File RelativePath=".\JULIANDAY.F90"/>
+		<File RelativePath=".\matinv3.f90"/>
+		<File RelativePath=".\MatMult.f90"/>
+		<File RelativePath=".\Norm.f90"/>
+		<File RelativePath=".\signa.f90"/>
+		<File RelativePath=".\sorting.f90"/>
+		<File RelativePath=".\str.f90"/>
+		<File RelativePath=".\unix_time.f"/>
+		<File RelativePath=".\uTempFunction.F90"/>
+		<File RelativePath=".\WaterDensity.f90"/></Filter>
+		<Filter Name="Hydrodynamic">
+		<File RelativePath=".\CGOp.f90"/>
+		<File RelativePath=".\CGOpNH.f90"/>
+		<File RelativePath=".\DestroyHydro.f90"/>
+		<File RelativePath=".\ELM.f90"/>
+		<File RelativePath=".\ExplicitTerms.f90"/>
+		<File RelativePath=".\Hydro.f90"/>
+		<File RelativePath=".\MatOp.f90"/>
+		<File RelativePath=".\MatOpNH.f90"/>
+		<File RelativePath=".\NonHydroPressure.f90"/>
+		<File RelativePath=".\Pressure.f90"/>
+		<File RelativePath=".\solve_tridiag.f90"/>
+		<File RelativePath=".\Tension.f90"/>
+		<File RelativePath=".\Turbulence.f90"/>
+		<File RelativePath=".\utangvelocity.f90"/>
+		<File RelativePath=".\uvelocity.f90"/>
+		<File RelativePath=".\Velocities.f90"/>
+		<File RelativePath=".\VerticalWB.f90"/>
+		<File RelativePath=".\WindVelocity.f90"/>
+		<File RelativePath=".\wvelocity.f90"/></Filter>
+		<Filter Name="I/O Data">
+		<File RelativePath=".\GetHydroBoundaryConditions.f90"/>
+		<File RelativePath=".\GetMeteorologicalData.f90"/>
+		<File RelativePath=".\GetWQBoundaryConditions.f90"/>
+		<File RelativePath=".\ReadGridData.f90"/>
+		<File RelativePath=".\ReadHydroBoundaryCondition.f90"/>
+		<File RelativePath=".\ReadHydroIniCond.f90"/>
+		<File RelativePath=".\ReadOutputs.f90"/>
+		<File RelativePath=".\ReadWQBoundaryCondition.f90"/>
+		<File RelativePath=".\ReadWQIniCond.f90"/>
+		<File RelativePath=".\SaveRecovery.f90"/>
+		<File RelativePath=".\VTKOutput.f90"/>
+		<File RelativePath=".\WriteOutputs.f90"/></Filter>
+		<Filter Name="MassTransport">
+		<File RelativePath=".\Psi_value.F90"/>
+		<File RelativePath=".\UpWindCWC.F90"/>
+		<File RelativePath=".\UpWindCWC_GATS.F90"/>
+		<File RelativePath=".\UpWindCWC_HR.F90"/>
+		<File RelativePath=".\UpWindCWC_HR_GATS.F90"/></Filter>
+		<Filter Name="Modules">
+		<File RelativePath=".\domain_types.f90"/>
+		<File RelativePath=".\LIB_VTK_IO.f90"/>
+		<File RelativePath=".\MOD_Hydrodynamic.f90"/>
+		<File RelativePath=".\MOD_LimnologyVars.f90"/>
+		<File RelativePath=".\Mod_Mesh.f90"/>
+		<File RelativePath=".\Mod_Meteorogical.f90"/>
+		<File RelativePath=".\Mod_Simulation.f90"/></Filter>
+		<Filter Name="Sediment">
+		<File RelativePath=".\AbioticSediment.f90"/>
+		<File RelativePath=".\BacSediment.f90"/>
+		<File RelativePath=".\PhytoSediment.f90"/>
+		<File RelativePath=".\RatiosSediment.f90"/>
+		<File RelativePath=".\Sediment.f90"/>
+		<File RelativePath=".\SedimentFluxes.f90"/>
+		<File RelativePath=".\UpdateSedVars.f90"/>
+		<File RelativePath=".\Zoobenthos.f90"/></Filter>
+		<Filter Name="Tracking">
+		<File RelativePath=".\ExchangeTime.f90"/>
+		<File RelativePath=".\ParticleTracking.f90"/></Filter>
+		<Filter Name="WaterQuality">
+		<File RelativePath=".\Bacterioplankton.f90"/>
+		<File RelativePath=".\density.F90"/>
+		<File RelativePath=".\Fishes.f90">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath=".\Gases.f90"/>
+		<File RelativePath=".\InorgMatter.f90"/>
+		<File RelativePath=".\Limnology.f90"/>
+		<File RelativePath=".\Macrophytes.f90"/>
+		<File RelativePath=".\Nutrients.f90"/>
+		<File RelativePath=".\OrgMatter.f90"/>
+		<File RelativePath=".\PhytoWater.f90"/>
+		<File RelativePath=".\Ratios.f90"/>
+		<File RelativePath=".\Salinity.F90"/>
+		<File RelativePath=".\UpdateLimnVars.f90"/>
+		<File RelativePath=".\WaterTemp.F90"/>
+		<File RelativePath=".\Zooplankton.f90"/></Filter></Filter></Files>
+	<Globals/></VisualStudioProject>
