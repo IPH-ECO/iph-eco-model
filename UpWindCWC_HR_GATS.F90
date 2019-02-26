@@ -289,7 +289,7 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
                 EndIf
                 
                 If (HydroParam%Theta*HydroParam%w(iLayer+1,iElem)+(1.-HydroParam%Theta)*HydroParam%wt(iLayer+1,iElem)>0) Then !top layer outflow 
-                    !if (iLayer < HydroParam%ElCapitalM(iElem)) then
+                    if (iLayer < HydroParam%ElCapitalM(iElem)) then
                         !set boundary condition for psi_cel top layer outflow
                         b = VarEstP(iLayer,iElem)
                         bd = HydroParam%DZit(iLayer,iElem)
@@ -313,11 +313,11 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
                         dendist = (0.5d0*(bd+cd))  !(0.5d0*(HydroParam%DZit(iLayer,iElem)+HydroParam%DZit(iLayer-1,iElem))+NearZero))  
                     
                         if (abs(a-b)<=NearZero.or.abs(b-c)<=NearZero) then
-                            HydroParam%psi_cell(iLayer,iElem) = 0
+                            HydroParam%psi_cell(iLayer+1,iElem) = 0
                             cycle
                         endif
                         if (abs(numdist)<=NearZero.or.abs(dendist)<=NearZero) then
-                            HydroParam%psi_cell(iLayer,iElem) = 0
+                            HydroParam%psi_cell(iLayer+1,iElem) = 0
                             cycle
                         endif
                     
@@ -326,9 +326,9 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
                         r_face =  ((VarEstP(iLayer,iElem)-VarEstP(iLayer-1,iElem))/(VarEstP(iLayer+1,iElem)-VarEstP(iLayer,iElem)+NearZero))*(0.5d0*(HydroParam%DZit(iLayer,iElem)+HydroParam%DZit(iLayer+1,iElem))/(0.5d0*(HydroParam%DZit(iLayer,iElem)+HydroParam%DZit(iLayer-1,iElem))+NearZero)) !r_face = (r_num_plus(iLayer)/(abs(VarEstP(iLayer+1,iElem)-VarEstP(iLayer,iElem))*(r_den_plus(iLayer)) + NearZero))
                         Courant = 0.5*(HydroParam%Theta*HydroParam%u(iLayer,Face)*+(1.-HydroParam%Theta)*HydroParam%ut(iLayer,Face))*dt/MeshParam%CirDistance(Face)
                         Call Psi_value(psi_flag,r_face,Courant,fi_small,psi_face)
-                        HydroParam%psi_cell(iLayer,iElem) = psi_face
+                        HydroParam%psi_cell(iLayer+1,iElem) = psi_face
                     
-                        !endif
+                        endif
                     EndIf  
                 
                 !Do iEdge = 1,4
