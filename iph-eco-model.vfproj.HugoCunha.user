@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<VisualStudioUserFile ProjectType="typeDynamicLibrary" ProjectCreator="Intel Fortran" Keyword="Dll" Version="11.0" ProjectIdGuid="{6D898ED9-60A6-410A-B6C0-39E382DF5CAC}">
-	<Configurations>
-		<Configuration Name="Debug|Win32"/>
-		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" Command="C:\Program Files (x86)\IPH-ECO\iph-eco.exe" Environment="PATH=%PATH%;&quot;C:\Users\HugoCunha\Documents\IPH-ECO\iph-eco-model-type\x64\Debug&quot;"/>
-		<Configuration Name="Release|x64" Command="C:\Program Files (x86)\IPH-ECO\iph-eco.exe" Environment="PATH=%PATH%;&quot;C:\Users\HugoCunha\Documents\IPH-ECO\iph-eco-model-type\x64\Release&quot;"/></Configurations></VisualStudioUserFile>
