@@ -20,7 +20,8 @@ Subroutine Tension(SurfTensionFlag,BottomTensionFlag,iEdge,kSurf,kBottom,g,ub,vb
 
     ! 1. Shear stress in water surface
     If (SurfTensionFlag==1) Then ! Formulation 1 - Based on Wind Drag coefficient
-        GammaT = CV*(WindEdgeXY(1)**2.+WindEdgeXY(2)**2.)**0.5
+        GammaT = CV*(WindEdgeXY(1)**2.+WindEdgeXY(2)**2.)**0.5 
+        !GammaT = 0.013/(rho0*sqrt((WindEdgeXY(1)-us)**2. + (WindEdgeXY(2)-vs)**2.)) 
     ElseIf (SurfTensionFlag==0) Then ! Formulation 2 - Based on Air density
         GammaT = rhoair/rho0*(0.63+0.066*sqrt(WindEdgeXY(1)**2.+WindEdgeXY(2)**2.))*0.001*sqrt((WindEdgeXY(1)-us)**2. + (WindEdgeXY(2)-vs)**2.)
     EndIf

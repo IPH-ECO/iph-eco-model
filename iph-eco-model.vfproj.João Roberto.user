@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioUserFile ProjectType="typeDynamicLibrary" ProjectCreator="Intel Fortran" Keyword="Dll" Version="11.0" ProjectIdGuid="{6D898ED9-60A6-410A-B6C0-39E382DF5CAC}">
+	<Configurations>
+		<Configuration Name="Debug|Win32" Command="C:\dev\workspace\iph-eco\build\Release\iph-eco.exe" Environment="PATH=%PATH%;C:\dev\workspace\iph-eco\model\iph-eco-model\Debug"/>
+		<Configuration Name="Release|Win32"/></Configurations></VisualStudioUserFile>

@@ -32,7 +32,7 @@
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool" CommandLine="copy &quot;D:\IPH-ECO\Interface\IPH-ECO 2.0\model\iph-eco\iph-eco-model-type - Copy-v9\x64\Debug\iph-eco-model.dll&quot; &quot;C:\Users\FragosoJr\IPH-ECO&quot;"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="copy &quot;D:\vIPH-ECO\iph-eco-model-type - Copy-v10.5\x64\Debug\iph-eco-model.dll&quot; &quot;D:\vIPH-ECO\Sub_Sup\IPH-ECO&quot;"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" TargetName="iph-eco-model" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" MultiProcessorCompilation="true" Optimization="optimizeFull" InlineFunctionExpansion="expandDisable" FavorSizeOrSpeed="favorNone" HeapArrays="0" OpenMPConditionalCompilation="false" RealKIND="realKIND8" FloatingPointSpeculation="fpSpeculationSafe" RuntimeLibrary="rtMultiThreadedDLL"/>
@@ -86,7 +86,9 @@
 		<File RelativePath=".\utangvelocity.f90"/>
 		<File RelativePath=".\uvelocity.f90"/>
 		<File RelativePath=".\Velocities.f90"/>
+		<File RelativePath=".\VelocitiesSUB.f90"/>
 		<File RelativePath=".\VerticalWB.f90"/>
+		<File RelativePath=".\Volume.f90"/>
 		<File RelativePath=".\WindVelocity.f90"/>
 		<File RelativePath=".\wvelocity.f90"/></Filter>
 		<Filter Name="I/O Data">
