@@ -27,9 +27,9 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     Use ELM
     
     Implicit None
-    Integer:: iElem, iEdge, iNode, iNewton, iLayer, INFO, iLayer_bar
+    Integer:: iElem, iEdge, iNode, iNewton, iLayer, INFO, iLayer_bar, lEdge, cont
     Integer:: r, l, Sig, Face, Pij, DIM, ie, j, k, iNode1,iNode2
-    Real:: V, DV, SumRHS, SumH, res, SumLhS,gamma,teste
+    Real:: V, DV, SumRHS, SumH, res, SumLhS, gamma, teste, vel
     Real:: dzp, dzm, SumW, rAux, Aux, VerEddyViscUp,VerEddyViscDown
     Real:: Chezy,sum1,sum0,rhoairCell
     Real:: NearZero = 1e-10
@@ -84,6 +84,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
                 EndDo    
             endif
         EndDo
+    EndIf
         
     !! 1. Convective Term
     !If (HydroParam%iConv == 0) Then
