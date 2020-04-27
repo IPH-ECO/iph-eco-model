@@ -1,0 +1,18 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Mon Apr 27 10:42:45 2020
+        ! This source file is for reference only and may not completely
+        ! represent the generated interface used by the compiler.
+        MODULE READHYDROBOUNDARYCONDITION__genmod
+          INTERFACE 
+            SUBROUTINE READHYDROBOUNDARYCONDITION(HYDROPARAM,           &
+     &HYDROCONFIGURATION,INITIME,FINALTIME,MESHPARAM)
+              USE MESHVARS
+              USE DOMAIN_TYPES
+              USE HYDRODYNAMIC
+              TYPE (HYDRODYNAMICPARAM) :: HYDROPARAM
+              TYPE (HYDRODYNAMICCONFIGURATION) :: HYDROCONFIGURATION
+              INTEGER(KIND=4) :: INITIME
+              INTEGER(KIND=4) :: FINALTIME
+              TYPE (MESHGRIDPARAM) :: MESHPARAM
+            END SUBROUTINE READHYDROBOUNDARYCONDITION
+          END INTERFACE 
+        END MODULE READHYDROBOUNDARYCONDITION__genmod
