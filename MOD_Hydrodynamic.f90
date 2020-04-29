@@ -33,9 +33,25 @@
         Real, Allocatable:: DZiADZ(:)
         Real, Allocatable:: DZiAG(:)
         Integer, Allocatable::  Smallm(:)   !<Lower layer index at the edge of the element
+        Integer, Allocatable::  Smallms(:)   !<Lower layer index at the edge of the element
         Integer, Allocatable :: CapitalM(:) !<greatest layer index at the edge of the element
+        Integer, Allocatable :: CapitalMs(:) !<greatest layer index at the edge of the element !CAYO
         Integer, Allocatable :: ElSmallm(:) !<Lower layer index at the center of the element
+        Integer, Allocatable :: ElSmallms(:) !<Lower layer index at the center of the element
         Integer, Allocatable :: ElCapitalM(:) !<greatest layer index at the center of the element
+        Integer, Allocatable :: ElCapitalMs(:) !<greatest layer index at the center of the element !CAYO
+        
+       
+        Real, Allocatable:: DZK(:) !Sediment Layer
+        
+        Real, Allocatable:: DZsj(:,:)!CAYO
+        Real, Allocatable:: DZsjt(:,:)!CAYO
+        Real, Allocatable:: DZhj(:,:)!CAYO
+        Real, Allocatable:: DZhjt(:,:) !CAYO
+        Real, Allocatable:: DZsi(:,:)!CAYO
+        Real, Allocatable:: DZsit(:,:)!CAYO
+        Real, Allocatable:: DZhi(:,:)!CAYO
+        Real, Allocatable:: DZhit(:,:) !CAYO   
     
         ! 3. Hydrodynamic        
         Real:: SumVerAcum =0
@@ -62,6 +78,11 @@
         Real, Allocatable:: epson(:,:) !< Normal velocity at the edges in each layer, dimension: Kmax,nEdge
         Real, Allocatable:: psi_edge(:,:)
         Real, Allocatable:: psi_cell(:,:)
+        
+        Real, Allocatable:: us(:,:) !< Normal superficial flow velocity at the edges in each layer, dimension: Kmax,nEdge !CAYO
+        Real, Allocatable:: ust(:,:) !< Normal superficial flow  velocity at previous time step, dimension: Kmax,nEdge !CAYO
+        Real, Allocatable:: um(:,:) !<  Kmax,nEdge !CAYO
+        Real, Allocatable:: umt(:,:) !< Kmax,nEdge    !CAYO
         ! 3.1. Others Variables
         Real, Allocatable:: etaInf(:) !< Tidal boundary condition
         Real, Allocatable:: etaplus(:) !< Vertical water balance at current time step  dimension: nElem
@@ -70,8 +91,10 @@
         Real, Allocatable:: eta(:) !< Cell-centered Free-Surface Elevation at current time step  dimension: nElem
         Real, Allocatable:: etan(:)     ! Cell-centered Free-Surface Elevation from previous timestep n (Time Step N+1; Time Step N) dimension: nElem
         Real, Allocatable:: hb(:) !< elevation at the center of each element dimension: nElem
+        Real, Allocatable:: sb(:)
         Real, Allocatable:: H(:) !< depth of the Edge dimension: nEdge
         Real, Allocatable:: hj(:)  !< elevation of the edge dimension: nEdge
+        Real, Allocatable:: sj(:)  !< elevation of the edge dimension: nEdge
         Real, Allocatable:: Hu(:) !< vertically integrated velocity, dimension: nEdge
         Real, Allocatable:: P(:)  !< area (term P in casulli 2000), dimension: nElem
         Real, Allocatable:: Aeta(:) !< Volume in the element
@@ -84,6 +107,10 @@
         Real, Allocatable:: sDRhoW(:,:) !<Water density
         Real, Allocatable:: sDRhoWt(:,:) !<Water density
     
+        Real, Allocatable:: Hs(:) !CAYO
+        !Real, Allocatable:: Kj(:,:), ei(:,:) !Porosity and Hydraulic Conductivity   !CAYO !MOD_Mesh
+        Real, Allocatable:: Vol(:) !<Water Volume in element with porous region             !CAYO 
+        
         ! 4. Turbulence Model    
         Real,Allocatable:: HorViscosity(:,:,:)      !< Horizontal Eddy Viscosity
         Real,Allocatable:: HorDiffusivity(:,:,:)    !< Horizontal Eddy Diffusivity

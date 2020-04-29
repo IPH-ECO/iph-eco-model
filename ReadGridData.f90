@@ -29,7 +29,7 @@ Subroutine ReadGridData(GridDataConfig,MeshParam,HydroParam)
     MeshParam%eta0 = 0.d0
     
     Do i = 1,GridDataConfig%numberOfLayers
-        If (Layers(i)%typeid == 1) Then !< Sediment level (Batrymetry) 
+        If (Layers(i)%typeid == 1) Then !< Sediment level (Bathymetry) 
             call c_f_pointer(Layers(i)%weights, weights, [Layers(i)%numberOfElements])
             Do iElem = 1, MeshParam%nElem
                 HydroParam%hb(iElem) = weights(iElem)
@@ -86,6 +86,12 @@ Subroutine ReadGridData(GridDataConfig,MeshParam,HydroParam)
             Do iElem = 1, MeshParam%nElem
                 MeshParam%OMfraction(iElem) = weights(iElem)
             EndDo
+        ElseIf (Layers(i)%typeid == 7) Then !< Bedrock elevation 
+            MeshParam%iBedrock = 1
+            call c_f_pointer(Layers(i)%weights, weights, [Layers(i)%numberOfElements])
+            Do iElem = 1, MeshParam%nElem
+                HydroParam%sb(iElem) = weights(iElem)
+            EndDo
             
         ElseIf (Layers(i)%typeid == 8) Then !< Free-surface elevation 
             MeshParam%ieta0 = 1
@@ -93,12 +99,13 @@ Subroutine ReadGridData(GridDataConfig,MeshParam,HydroParam)
             Do iElem = 1, MeshParam%nElem
                 MeshParam%eta0(iElem) = weights(iElem)
             EndDo
-            
-            
         EndIf
     EndDo
     
-    
+    If (MeshParam%iBedrock == 0) Then
+            HydroParam%sb =  HydroParam%hb
+    EndIf
+
    
 End Subroutine ReadGridData
     

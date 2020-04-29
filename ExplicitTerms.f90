@@ -13,7 +13,7 @@ Subroutine ExplicitTerms(HydroParam,MeshParam,dt)
     type(MeshGridParam) :: MeshParam
     type(HydrodynamicParam) :: HydroParam
     
-  
+   
     ! Turbulence and Coriolis effect
     If (HydroParam%iConv == 0) Then
         !!$OMP parallel do default(none) shared(MeshParam,HydroParam) private(iLayer,Face,l,r,fc,Fu1,Fu2,DuuDnn,DuuDtt,iNode1,iNode2,dt)
@@ -95,7 +95,15 @@ Subroutine ExplicitTerms(HydroParam,MeshParam,dt)
                     Else
                         If (HydroParam%iCoriolis == 1) Then
                             fc = 2.*HydroParam%Omega*sin(HydroParam%Pi*HydroParam%Lat/180.)
-                            HydroParam%Wu(iLayer,Face) = fc*(Sig(iElem,MeshParam%Right(MeshParam%Edge(iEdge,iElem)),MeshParam%Left(MeshParam%Edge(iEdge,iElem)))*HydroParam%uxy(iLayer,1,MeshParam%Edge(iEdge,iElem))*MeshParam%TangentVector(1,iEdge,iElem) + Sig(iElem,MeshParam%Right(MeshParam%Edge(iEdge,iElem)),MeshParam%Left(MeshParam%Edge(iEdge,iElem)))*HydroParam%uxy(iLayer,2,MeshParam%Edge(iEdge,iElem))*MeshParam%TangentVector(2,iEdge,iElem))
+                            if (iEdge==1) then ! North face
+                                HydroParam%Wu(iLayer,Face) = -fc*Sig(iElem,MeshParam%Right(MeshParam%Edge(iEdge,iElem)),MeshParam%Left(MeshParam%Edge(iEdge,iElem)))*HydroParam%uxy(iLayer,1,MeshParam%Edge(iEdge,iElem))
+                            elseif (iEdge== 2) then !West face
+                                HydroParam%Wu(iLayer,Face) = fc*Sig(iElem,MeshParam%Right(MeshParam%Edge(iEdge,iElem)),MeshParam%Left(MeshParam%Edge(iEdge,iElem)))*HydroParam%uxy(iLayer,2,MeshParam%Edge(iEdge,iElem))
+                            elseif (iEdge== 3) then !South face
+                                HydroParam%Wu(iLayer,Face) = -fc*Sig(iElem,MeshParam%Right(MeshParam%Edge(iEdge,iElem)),MeshParam%Left(MeshParam%Edge(iEdge,iElem)))*HydroParam%uxy(iLayer,1,MeshParam%Edge(iEdge,iElem))
+                            elseif (iEdge== 4) then !East face
+                                HydroParam%Wu(iLayer,Face) = fc*Sig(iElem,MeshParam%Right(MeshParam%Edge(iEdge,iElem)),MeshParam%Left(MeshParam%Edge(iEdge,iElem)))*HydroParam%uxy(iLayer,2,MeshParam%Edge(iEdge,iElem))
+                            endif
                         EndIf
                         
             

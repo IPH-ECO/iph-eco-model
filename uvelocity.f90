@@ -1,4 +1,7 @@
 Subroutine uvelocity(HydroParam,MeshParam,dt)
+    ! List of Modifications: 
+    !   -> 20.08.2019: Routine Update               (Cayo Lopes)
+    
     
     !$ use omp_lib
     Use MeshVars
@@ -146,17 +149,45 @@ Subroutine uvelocity(HydroParam,MeshParam,dt)
                 EndIf
             EndIf
         EndIf  
-        
+                
         ! 10.1 Copy Velocities Above the Free-Surface (du/dz=0) 
         Do iLayer = HydroParam%CapitalM(iEdge) + 1.d0, MeshParam%KMAX
             HydroParam%u(iLayer,iEdge) = 0.d0 !u(CapitalM(Face),Face) 
         EndDo
         ! 10.2 Nullify Velocities Below the Bottom (u=0) 
-        Do iLayer = 1, HydroParam%Smallm(iEdge) - 1.d0
+        Do iLayer = 1, HydroParam%Smallms(iEdge) - 1.d0
             HydroParam%u(iLayer,iEdge) = 0.d0
         EndDo
         HydroParam%Hu(iEdge) = Sum( HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge) )/(HydroParam%CapitalM(iEdge)-HydroParam%Smallm(iEdge)+1.d0)
-        
+    EndDo
+    
+            
+    !Subsuperficial Velocities - !CAYO    
+    Do iEdge = 1, MeshParam%nEdge
+        l = MeshParam%Left(iEdge) 
+        r = MeshParam%Right(iEdge)
+        HydroParam%us(:,iEdge) = 0.d0
+            
+        If (r == 0) Then
+            If (HydroParam%IndexWaterLevelEdge(iEdge)>0.and.-HydroParam%sj(iEdge) + HydroParam%eta(l)>HydroParam%PCRI+NearZero) Then
+                If (HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge)) Then
+                    HydroParam%us(HydroParam%Smallm(iEdge),iEdge)  =   -MeshParam%Kj(HydroParam%Smallm(iEdge),iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
+                Else
+                    Do ILayer = HydroParam%Smallms(iEdge),HydroParam%CapitalMs(iEdge)
+                        HydroParam%us(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
+                    EndDo                    
+                EndIf
+            EndIf
+        Else
+            Do ILayer = HydroParam%Smallms(iEdge),HydroParam%CapitalMs(iEdge)
+                HydroParam%us(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etan(r) - HydroParam%etan(l))/MeshParam%CirDistance(iEdge)
+            EndDo   
+        EndIf
+    EndDo   
+    
+    !Superficial + Subsuperficial Velocities !CAYO
+    Do iEdge = 1, MeshParam%nEdge
+        HydroParam%um(:,iEdge)    = HydroParam%u(:,iEdge) + HydroParam%us(:,iEdge)
     EndDo
     
     Return    
