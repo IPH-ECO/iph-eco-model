@@ -32,7 +32,7 @@
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool" CommandLine="copy &quot;D:\IPH-ECO\Interface\IPH-ECO 2.0\model\iph-eco\iph-eco-model-type - Copy-v9\x64\Debug\iph-eco-model.dll&quot; &quot;C:\Users\FragosoJr\IPH-ECO&quot;"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="copy &quot;D:\iph-eco-model\x64\Debug\iph-eco-model.dll&quot; &quot;D:\Program Files\IPH-ECO&quot;"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" TargetName="iph-eco-model" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" MultiProcessorCompilation="true" Optimization="optimizeFull" InlineFunctionExpansion="expandDisable" FavorSizeOrSpeed="favorNone" HeapArrays="0" OpenMPConditionalCompilation="false" RealKIND="realKIND8" FloatingPointSpeculation="fpSpeculationSafe" RuntimeLibrary="rtMultiThreadedDLL"/>
@@ -42,7 +42,7 @@
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool" CommandLine="copy &quot;C:\IPH-ECO\iph-eco-model-type - Copy-v9\x64\Release\iph-eco-model.dll&quot; &quot;C:\IPH-ECO\Area2\IPH-ECO-A2&quot;"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="copy &quot;D:\iph-eco-model\x64\Release\iph-eco-model.dll&quot; &quot;D:\Program Files\IPH-ECO&quot;"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
 	<Files>
 		<Filter Name="Header Files" Filter="fi;fd;h;inc">
