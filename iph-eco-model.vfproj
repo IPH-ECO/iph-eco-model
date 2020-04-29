@@ -86,7 +86,9 @@
 		<File RelativePath=".\utangvelocity.f90"/>
 		<File RelativePath=".\uvelocity.f90"/>
 		<File RelativePath=".\Velocities.f90"/>
+		<File RelativePath=".\VelocitiesSUB.f90"/>
 		<File RelativePath=".\VerticalWB.f90"/>
+		<File RelativePath=".\Volume.f90"/>
 		<File RelativePath=".\WindVelocity.f90"/>
 		<File RelativePath=".\wvelocity.f90"/></Filter>
 		<Filter Name="I/O Data">
