@@ -88,7 +88,8 @@ Module MeshVars
         Integer, Allocatable:: BANHADO(:)
         Real, Allocatable:: d50(:)
         Real, Allocatable:: OMfraction(:)
-        Real, Allocatable:: eta0(:)
+        Real, Allocatable:: eta0(:
+        Real, Allocatable:: Ki(:)   !CAYO
         Real, Allocatable:: Kj(:,:) !CAYO
         Real, Allocatable:: ei(:,:) !CAYO
         
@@ -150,7 +151,7 @@ Module MeshVars
     
         !transferir para Module Mesh
         this%NCAMMAX = sim%layersLength + 1  !Cayo. Original: this%NCAMMAX = sim%layersLength                    ! Number of Vertical Layers
-        this%zL = sim%minimumVerticalLimit-0.001 !Cayo. Original: sim%minimumVerticalLimit-0.001 -16.001 
+        this%zL = -16.001  !Cayo. Original: sim%minimumVerticalLimit-0.001 -16.001 
         this%zR = sim%maximumVerticalLimit
     
         If (this%NCAMMAX > 0) Then
@@ -159,7 +160,7 @@ Module MeshVars
             Do i = 1,this%NCAMMAX-1 !Cayo. Original: sDo i = 1,this%NCAMMAX
                 this%LIMCAM(i) = layers(i)                   ! Layer levels (m)
             EndDo
-            !%LIMCAM(this%NCAMMAX) = -12 !Cayo (linha adicionada)
+            this%LIMCAM(this%NCAMMAX) = -12 !Cayo (linha adicionada)
         Else
             ALLOCATE (this%LIMCAM(1))
             ALLOCATE (this%LIMCAMAUX(1))
