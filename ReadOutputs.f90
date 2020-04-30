@@ -69,6 +69,7 @@ Subroutine ReadOutputs(sim,simParam,Kmax,nEdge,nElem)
     EndDo
     
     simParam%OutputWQ = 0
+
     If( c_associated(sim%wqOutputParameters) ) Then
     
         Do i = 1, sim%wqoutputParametersLength
@@ -158,7 +159,9 @@ Subroutine ReadOutputs(sim,simParam,Kmax,nEdge,nElem)
                     simParam%OutputWQ(40) = 1
                 EndIf
             EndDo
+
     EndIf    
+
 Return
    
 End Subroutine ReadOutputs

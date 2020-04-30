@@ -29,7 +29,7 @@
   !> @brief IPH-ECO: A dynamic complex tridimensional water quality model
   !> @details This model is based on 
   !> @author Development team: Ecotecnology and Ecological Modelling group (IPH/UFRGS)
-  !> @author main contributors:  Carlos Ruberto Fragoso Jr. and  J. Rafael Cavalcanti
+  !> @author main contributors:  Carlos Ruberto Fragoso Júnior and  J. Rafael Cavalcanti
   !> @version (Current version: 1.2)  
   !> \note Main differences from Interface Official code:
   !> @parblock
