@@ -182,8 +182,8 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
             HydroParam%hb(iElem) = HydroParam%eta(iElem) - HydroParam%Pcri
         EndIf
         
-        If (HydroParam%eta(iElem) - HydroParam%hb(iElem) < HydroParam%Pcri) Then
-            HydroParam%eta(iElem) = HydroParam%hb(iElem)+HydroParam%Pcri !*** Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
+        If (HydroParam%eta(iElem) - HydroParam%sb(iElem) < HydroParam%Pcri) Then
+            HydroParam%eta(iElem) = HydroParam%sb(iElem)+HydroParam%Pcri !*** Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
         EndIf
         
     EndDo
@@ -343,8 +343,8 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
         EndDo        
         
         !1.5 Compute Kj and DZhj/DZsj - Cayo (Loop adicionado)        
-        Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge) ! 
-            If (iLayer >= HydroParam%Smallms(iEdge) .or. HydroParam%Smallms(iEdge) == HydroParam%Smallm(iEdge) ) Then
+        Do iLayer = HydroParam%Smallms(iEdge), HydroParam%CapitalMs(iEdge) ! 
+            If (iLayer >= HydroParam%Smallm(iEdge) .or. HydroParam%Smallms(iEdge) == HydroParam%Smallm(iEdge) ) Then
                 MeshParam%Kj(iLayer,iEdge) = 0.d0
             Else
                 MeshParam%Kj(iLayer,iEdge) = 0.01
