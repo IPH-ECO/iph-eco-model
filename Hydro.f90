@@ -229,21 +229,20 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     !!$OMP end parallel do
     
     
-    !6.6 Assemble Matrix DZK    !CAYO
-    Do iEdge = 1,MeshParam%nEdge       
-        l = MeshParam%Left(iEdge)
-        r = MeshParam%Right(iEdge)
-        If ( HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge) ) Then
-            HydroParam%DZK(iEdge)   = HydroParam%DZj(HydroParam%Smallms(iEdge),iEdge)*MeshParam%Kj(HydroParam%Smallms(iEdge),iEdge) !Sediment Layer
-        Else
-            HydroParam%DZK(iEdge)   = Dot_Product(HydroParam%DZj(HydroParam%Smallms(iEdge):HydroParam%CapitalMs(iEdge),iEdge),MeshParam%Kj(HydroParam%Smallms(iEdge):HydroParam%CapitalMs(iEdge),iEdge) )
-        EndIf  
-    EndDo
-    
+    !6.6 Assemble Matrix DZK    !CAYO Flag
+    HydroParam%DZK(iEdge)   = 0.d0
+    If (MeshParam%iBedrock == 1):
+        Do iEdge = 1,MeshParam%nEdge       
+            If (HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge).and. HydroParam%Smallms(iEdge) == HydroParam%CapitalM(iEdge)) Then !Rever 
+                HydroParam%DZK(iEdge)   = HydroParam%DZj(HydroParam%Smallms(iEdge),iEdge)*MeshParam%Kj(HydroParam%Smallms(iEdge),iEdge) !Sediment Layer
+            Else
+                HydroParam%DZK(iEdge)   = Dot_Product(HydroParam%DZj(HydroParam%Smallms(iEdge):HydroParam%CapitalMs(iEdge),iEdge),MeshParam%Kj(HydroParam%Smallms(iEdge):HydroParam%CapitalMs(iEdge),iEdge) )
+            EndIf
+        EndDo
+    EndIf
+        
     Call Volume(HydroParam,MeshParam) !CAYO
-    
-    
-    
+      
     ! 7. Compute the New Free-Surface Elevation
     ! 7.1 Assemble the Right Hand Side (RHS)
     !!$OMP parallel do default(none) shared(MeshParam,HydroParam,NearZero,dt) private(iElem,iEdge,SumRHS,SumLhS,gamma,Face,Pij)
