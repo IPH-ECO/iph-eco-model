@@ -247,15 +247,10 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
         ! 1.1 Compute Water Depth - Superficial Flow Layer
         l = MeshParam%Left(iEdge)
         r = MeshParam%Right(iEdge)
-        !If (r == 0) Then
-        !    HydroParam%H(iEdge) = Max( HydroParam%PCRI, -HydroParam%hj(iEdge) + HydroParam%eta(l) )
-        !Else
-        !    HydroParam%H(iEdge) = Max( HydroParam%PCRI,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) !Max( PCRI,-hj(iEdge) + (0.5d0)*(eta(l) + eta(r)) ) !
-        !
         If (r == 0) Then
-            HydroParam%H(iEdge) = Max( HydroParam%PCRI, -HydroParam%sj(iEdge) + HydroParam%eta(l) )
+            HydroParam%H(iEdge) = Max( HydroParam%PCRI, -HydroParam%hj(iEdge) + HydroParam%eta(l) )
         Else
-            HydroParam%H(iEdge) = Max( HydroParam%PCRI,-HydroParam%sj(iEdge) + HydroParam%eta(l), -HydroParam%sj(iEdge) + HydroParam%eta(r) )!CAYO
+            HydroParam%H(iEdge) = Max( HydroParam%PCRI,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) !Max( PCRI,-hj(iEdge) + (0.5d0)*(eta(l) + eta(r)) ) !
         EndIf
  
         ! Lower Index - Superficial Flow Layer
