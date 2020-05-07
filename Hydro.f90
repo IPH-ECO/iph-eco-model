@@ -56,7 +56,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     !HydroParam%iConv = 3
     
     
-    
+    HydroParam%DZK(:)   = 0.d0
         
     !! 1. Convective Term
     If (HydroParam%iConv == 0) Then
@@ -230,7 +230,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     
     
     !6.6 Assemble Matrix DZK    !CAYO Flag
-    HydroParam%DZK(iEdge)   = 0.d0
+
     If (MeshParam%iBedrock == 1) Then
         Do iEdge = 1,MeshParam%nEdge       
             If (HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge).and. HydroParam%Smallms(iEdge) == HydroParam%CapitalM(iEdge)) Then !Rever 
