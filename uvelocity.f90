@@ -164,14 +164,14 @@ Subroutine uvelocity(HydroParam,MeshParam,dt)
             
     !Subsuperficial Velocities - !CAYO    Flag
     !HydroParam%us(:,:) = 0.d0
-    If (MeshParam%iBedrock == 1):
+    If (MeshParam%iBedrock == 1) Then
         Do iEdge = 1, MeshParam%nEdge
             l = MeshParam%Left(iEdge) 
             r = MeshParam%Right(iEdge)
             !HydroParam%us(:,iEdge) = 0.d0        
             If (r == 0) Then
                 If (HydroParam%IndexWaterLevelEdge(iEdge)>0.and.-HydroParam%sj(iEdge) + HydroParam%eta(l)>HydroParam%PCRI+NearZero) Then
-                    If ((HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge).and. HydroParam%Smallms(iEdge) == HydroParam%CapitalM(iEdge) ))) Then
+                    If ((HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge).and. HydroParam%Smallms(iEdge) == HydroParam%CapitalM(iEdge) )) Then
                         !HydroParam%us(HydroParam%Smallm(iEdge),iEdge)  =   -MeshParam%Kj(HydroParam%Smallm(iEdge),iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
                         HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  =   -MeshParam%Kj(HydroParam%Smallm(iEdge),iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)                    
                 Else
