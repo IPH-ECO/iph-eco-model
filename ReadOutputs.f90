@@ -69,10 +69,11 @@ Subroutine ReadOutputs(sim,simParam,Kmax,nEdge,nElem)
     EndDo
     
     simParam%OutputWQ = 0
-    if( c_associated(sim%wqOutputParameters) ) then
+
+    If( c_associated(sim%wqOutputParameters) ) Then
     
         Do i = 1, sim%wqoutputParametersLength
-              
+        
                 text = trim(wqOutputParameters(i)%name)
 
                 !Hydrodynamic module
@@ -158,7 +159,9 @@ Subroutine ReadOutputs(sim,simParam,Kmax,nEdge,nElem)
                     simParam%OutputWQ(40) = 1
                 EndIf
             EndDo
-    end if
+
+    EndIf    
+
 Return
    
 End Subroutine ReadOutputs

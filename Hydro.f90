@@ -347,8 +347,8 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     ! 8. Water Level Corrective Step
     !!$OMP parallel do default(none) shared(MeshParam,HydroParam) private(iElem)
     Do iElem = 1,MeshParam%nElem
-        If ( HydroParam%eta(iElem) - HydroParam%hb(iElem) < HydroParam%PCRI/2. ) Then
-            HydroParam%eta(iElem) = HydroParam%hb(iElem) + HydroParam%PCRI/2.
+        If ( HydroParam%eta(iElem) - HydroParam%sb(iElem) < HydroParam%PCRI/2. ) Then
+            HydroParam%eta(iElem) = HydroParam%sb(iElem) + HydroParam%PCRI/2.
         EndIf
     EndDo
     !!$OMP end parallel do
