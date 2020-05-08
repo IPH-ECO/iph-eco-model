@@ -54,19 +54,19 @@
             Face = MeshParam%Edge(iEdge,iElem)
             l = MeshParam%Left(Face) 
             r = MeshParam%Right(Face)
-            if (Face==877) then
-                continue
-            endif
+            !if (Face==877) then
+            !    continue
+            !endif
             
             if (r==0) then
                 small = HydroParam%Smallms(iEdge)
             else
                 small = min(HydroParam%ElSmallms(l),HydroParam%ElSmallms(r))
             endif
-            if (iElem==1160.or.iElem==1163) then
-                continue
-            endif
-            
+            !if (iElem==1160.or.iElem==1163) then
+            !    continue
+            !endif
+            !
 
         
             
@@ -74,8 +74,8 @@
                 med=0.5d0
                 
                 if (r/=0) then
-                    if (HydroParam%ElSmallm(r)<HydroParam%ElSmallm(l)) then
-                        if (ilayer<HydroParam%ElSmallm(l)) then
+                    if (HydroParam%ElSmallms(r)<HydroParam%ElSmallms(l)) then
+                        if (ilayer<HydroParam%ElSmallms(l)) then
                             l=r
                         else
                             l = MeshParam%Left(iEdge)
@@ -268,7 +268,7 @@
                 !Fu(iLayer,Face) = 0.
             EndDo
             ! 3.2 Nullify Velocities Below the Bottom (u=0) 
-            Do iLayer = 1, HydroParam%ElSmallm(iElem) - 1
+            Do iLayer = 1, HydroParam%ElSmallms(iElem) - 1
                 HydroParam%uxy(iLayer,1,Face) = 0. !u(CapitalM(Face),Face) 
                 HydroParam%uxy(iLayer,2,Face) = 0.
                 !Fu(iLayer,Face) = 0.
@@ -390,10 +390,10 @@
         aa(2)=signa(MeshParam%xNode(n2),MeshParam%xNode(n3),MeshParam%xb(iElem),MeshParam%yNode(n2),MeshParam%yNode(n3),MeshParam%yb(iElem))
         aa(3)=signa(MeshParam%xNode(n3),MeshParam%xNode(n4),MeshParam%xb(iElem),MeshParam%yNode(n3),MeshParam%yNode(n4),MeshParam%yb(iElem))
         aa(4)=signa(MeshParam%xNode(n4),MeshParam%xNode(n1),MeshParam%xb(iElem),MeshParam%yNode(n4),MeshParam%yNode(n1),MeshParam%yb(iElem))
-        Do iLayer = HydroParam%ElSmallm(iElem), HydroParam%ElCapitalM(iElem) 
-            If (iElem==293.and.iLayer==1) Then
-                Continue
-            EndIf
+        Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalM(iElem) 
+            !If (iElem==293.and.iLayer==1) Then
+            !    Continue
+            !EndIf
             aa(5)=0.d0
             aaU=0.d0
             aaV=0.d0
@@ -468,18 +468,18 @@
     
     ! 3. Finding k+1/2 Layer-centred horizontal Velocity components
     Do iElem = 1, MeshParam%nElem
-        HydroParam%uxyL(HydroParam%ElSmallm(iElem),1,iElem) = HydroParam%ub(HydroParam%ElSmallm(iElem),1,iElem)
-        HydroParam%uxyL(HydroParam%ElSmallm(iElem),2,iElem) = HydroParam%ub(HydroParam%ElSmallm(iElem),2,iElem)
+        HydroParam%uxyL(HydroParam%ElSmallms(iElem),1,iElem) = HydroParam%ub(HydroParam%ElSmallms(iElem),1,iElem)
+        HydroParam%uxyL(HydroParam%ElSmallms(iElem),2,iElem) = HydroParam%ub(HydroParam%ElSmallms(iElem),2,iElem)
         !HydroParam%uxyL(HydroParam%ElCapitalM(iElem)+1,1,iElem) = HydroParam%ub(HydroParam%ElCapitalM(iElem),1,iElem)
         !HydroParam%uxyL(HydroParam%ElCapitalM(iElem)+1,2,iElem) = HydroParam%ub(HydroParam%ElCapitalM(iElem),2,iElem)
-        if (iElem==39) then
-            continue
-        endif
-        Do iLayer = HydroParam%ElSmallm(iElem)+1, HydroParam%ElCapitalM(iElem)           
+        !if (iElem==39) then
+        !    continue
+        !endif
+        Do iLayer = HydroParam%ElSmallms(iElem)+1, HydroParam%ElCapitalM(iElem)           
                 HydroParam%uxyL(iLayer,1,iElem) = HydroParam%ub(iLayer-1,1,iElem)+((HydroParam%Zb(iLayer,iElem)-HydroParam%Ze(iLayer,iElem))*((HydroParam%ub(iLayer,1,iElem)-HydroParam%ub(iLayer-1,1,iElem))/(HydroParam%Zb(iLayer,iElem)-HydroParam%Zb(iLayer-1,iElem))))
                 HydroParam%uxyL(iLayer,2,iElem) = HydroParam%ub(iLayer-1,2,iElem)+((HydroParam%Zb(iLayer,iElem)-HydroParam%Ze(iLayer,iElem))*((HydroParam%ub(iLayer,2,iElem)-HydroParam%ub(iLayer-1,2,iElem))/(HydroParam%Zb(iLayer,iElem)-HydroParam%Zb(iLayer-1,iElem))))
         EndDo
-        if (HydroParam%ElCapitalM(iElem)==HydroParam%ElSmallm(iElem)) then
+        if (HydroParam%ElCapitalM(iElem)==HydroParam%ElSmallms(iElem)) then
             HydroParam%uxyL(HydroParam%ElCapitalM(iElem)+1,1,iElem) = HydroParam%ub(HydroParam%ElCapitalM(iElem),1,iElem)!+abs((HydroParam%eta(iElem))-(HydroParam%Zb(HydroParam%ElCapitalM(iElem),iElem)))*((HydroParam%ub(HydroParam%ElCapitalM(iElem),1,iElem)-HydroParam%ub(HydroParam%ElCapitalM(iElem)-1,1,iElem))/(abs(abs(HydroParam%Zb(HydroParam%ElCapitalM(iElem)-1,iElem))-abs(HydroParam%Zb(HydroParam%ElCapitalM(iElem),iElem)))))
             HydroParam%uxyL(HydroParam%ElCapitalM(iElem)+1,2,iElem) = HydroParam%ub(HydroParam%ElCapitalM(iElem),2,iElem)!+abs((HydroParam%eta(iElem))-(HydroParam%Zb(HydroParam%ElCapitalM(iElem),iElem)))*((HydroParam%ub(HydroParam%ElCapitalM(iElem),2,iElem)-HydroParam%ub(HydroParam%ElCapitalM(iElem)-1,2,iElem))/(abs(abs(HydroParam%Zb(HydroParam%ElCapitalM(iElem)-1,iElem))-abs(HydroParam%Zb(HydroParam%ElCapitalM(iElem),iElem)))))
         else !if the domain has more then one layer, use lagrange polinomial interpolation
@@ -536,7 +536,7 @@
                     HydroParam%wg(iEdge,iLayer)= HydroParam%w(iLayer,l) !(HydroParam%wfc(iLayer-1,iEdge)+(HydroParam%DZj(iLayer-1,iEdge)/(HydroParam%DZj(iLayer-1,iEdge)+HydroParam%DZj(iLayer,iEdge)))*(HydroParam%wfc(iLayer,iEdge)-HydroParam%wfc(iLayer-1,iEdge)))
                 Endif
             Else
-                If (iLayer>=HydroParam%ElSmallm(r)) Then 
+                If (iLayer>=HydroParam%ElSmallms(r)) Then 
                     !HydroParam%ug(iEdge,iLayer)= 0.5d0*((0.5d0*(HydroParam%uxyL(iLayer,1,r)+HydroParam%uxyL(iLayer,1,l))+HydroParam%uxy(iLayer-1,1,iEdge)+(HydroParam%DZj(iLayer-1,iEdge)/(HydroParam%DZj(iLayer-1,iEdge)+HydroParam%DZj(iLayer,iEdge)))*(HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge))))
                     !HydroParam%vg(iEdge,iLayer)= 0.5d0*((0.5d0*(HydroParam%uxyL(iLayer,2,r)+HydroParam%uxyL(iLayer,2,l))+HydroParam%uxy(iLayer-1,2,iEdge)+(HydroParam%DZj(iLayer-1,iEdge)/(HydroParam%DZj(iLayer-1,iEdge)+HydroParam%DZj(iLayer,iEdge)))*(HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge))))
                     !HydroParam%wg(iEdge,iLayer) = 0.5d0*((0.5d0*(HydroParam%w(iLayer,r)+HydroParam%w(iLayer,l)))+(HydroParam%wfc(iLayer-1,iEdge)+(HydroParam%DZj(iLayer-1,iEdge)/(HydroParam%DZj(iLayer-1,iEdge)+HydroParam%DZj(iLayer,iEdge)))*(HydroParam%wfc(iLayer,iEdge)-HydroParam%wfc(iLayer-1,iEdge))))
@@ -567,7 +567,7 @@
             EndIf
         EndDo
         ! 4.1. Finding ug,vg and wg to bottom and top layers, apllying the boundry conditions
-            if (HydroParam%ElCapitalM(l)==HydroParam%ElSmallm(l)) then
+            if (HydroParam%ElCapitalM(l)==HydroParam%ElSmallms(l)) then
                 HydroParam%ug(iEdge,HydroParam%CapitalM(iEdge)+1)= HydroParam%uxy(HydroParam%CapitalM(iEdge),1,iEdge)!+weitW*((HydroParam%uxy(HydroParam%ElCapitalM(l),1,iEdge)-HydroParam%uxy(HydroParam%ElCapitalM(l)-1,1,iEdge))/(weit))
                 HydroParam%vg(iEdge,HydroParam%CapitalM(iEdge)+1)= HydroParam%uxy(HydroParam%CapitalM(iEdge),2,iEdge)!+weitW*((HydroParam%uxy(HydroParam%ElCapitalM(l),2,iEdge)-HydroParam%uxy(HydroParam%ElCapitalM(l)-1,2,iEdge))/(weit))
            
@@ -850,9 +850,9 @@
     ! 5. Finding Nodal Velocities
     HydroParam%uNode = 0.d0
     Do iNode=1,MeshParam%nNode
-        if (iNode==487.or.iNode==511) then
-            continue 
-        endif
+        !if (iNode==487.or.iNode==511) then
+        !    continue 
+        !endif
         Do iLayer = 1,MeshParam%Kmax+1
             weit=0
             weitU=0
@@ -931,7 +931,7 @@
                     Face = MeshParam%EgdesatNode(j,iNode)
                     r = MeshParam%Right(Face)
                     l = MeshParam%Left(Face)
-                   if (HydroParam%ElCapitalM(l)==HydroParam%ElSmallm(l)) then
+                   if (HydroParam%ElCapitalM(l)==HydroParam%ElSmallms(l)) then
                         HydroParam%uNode(iLayer,1,iNode)=HydroParam%ubV(iLayer-1,1,iNode)!+(weitW)*((HydroParam%ubV(iLayer-1,1,iNode)-HydroParam%ubV(iLayer-2,1,iNode))/(weit))
                         HydroParam%uNode(iLayer,2,iNode)=HydroParam%ubV(iLayer-1,2,iNode)!+(weitW)*((HydroParam%ubV(iLayer-1,2,iNode)-HydroParam%ubV(iLayer-2,2,iNode))/(weit))       
                    else !if the domain has more then one layer, use lagrange polinomial interpolation
