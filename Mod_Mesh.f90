@@ -37,6 +37,7 @@
 Module MeshVars
     
     use domain_types
+    use Sorting
 
     implicit none
     type MeshGridParam
@@ -76,7 +77,7 @@ Module MeshVars
         Integer, Allocatable :: LeftAux(:), RightAux(:) 
         Real, Allocatable:: AbsDelta(:),  EdgeBaryAux(:,:) 
         Integer:: nMaxVertexElem,nMaxEgdesatNode
-    
+        
         !2. Grid Data
         Integer:: iWindRed
         Integer:: iWetland
@@ -134,7 +135,6 @@ Module MeshVars
         !!
         this%dy = this%dx
         
-    
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
         Allocate(this%Quadri(4,this%nElem))
@@ -150,10 +150,11 @@ Module MeshVars
     
     
         !transferir para Module Mesh
-        this%NCAMMAX = sim%layersLength  !Cayo.+1 Original: this%NCAMMAX = sim%layersLength                    ! Number of Vertical Layers
-        this%zL = sim%minimumVerticalLimit-0.001  !Cayo. Original: sim%minimumVerticalLimit-0.001 -16.001 
+        this%NCAMMAX = sim%layersLength           ! Number of Vertical Layers
+        this%zL = sim%minimumVerticalLimit-0.001
         this%zR = sim%maximumVerticalLimit
-    
+        Call SortDecreasing(layers,sim%layersLength)
+        
         If (this%NCAMMAX > 0) Then
             ALLOCATE (this%LIMCAM(this%NCAMMAX))
             ALLOCATE (this%LIMCAMAUX(this%NCAMMAX+1))
