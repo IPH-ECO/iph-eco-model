@@ -12,7 +12,7 @@
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine=" copy &quot;D:\iph-eco-model\iph-eco-model\x64\Debug\iph-eco-model.dll&quot; D:\vIPH-ECO\IPH-ECO\&quot;"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" RuntimeLibrary="rtMultiThreadedDLL"/>

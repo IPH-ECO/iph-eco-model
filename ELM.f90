@@ -103,10 +103,10 @@
         EndDo
         !jump=0
         !do Face = 1,4
-        if (HydroParam%IndexInflowEdge(iEdge)>0.or.HydroParam%IndexInflowEdge(iEdge)>0) then
+        If (HydroParam%IndexInflowEdge(iEdge)>0.or.HydroParam%IndexWaterLevelEdge(iEdge)>0) then
             HydroParam%Fu(:,iEdge)=HydroParam%u(:,iEdge)
             cycle
-        endif
+        EndIf
         !enddo
         !if (jump==1) then
         !    cycle

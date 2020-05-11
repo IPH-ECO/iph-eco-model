@@ -89,6 +89,7 @@ Module MeshVars
         Real, Allocatable:: d50(:)
         Real, Allocatable:: OMfraction(:)
         Real, Allocatable:: eta0(:)
+        Real, Allocatable:: Ki(:)   !CAYO
         Real, Allocatable:: Kj(:,:) !CAYO
         Real, Allocatable:: ei(:,:) !CAYO
         
@@ -129,7 +130,7 @@ Module MeshVars
         
         this%dx = StructuredMeshFeatures%resolution
         !Lock horizontal resolution test
-        this%dx = 0.02d0
+        !this%dx = 0.02d0
         !!
         this%dy = this%dx
         
@@ -149,17 +150,17 @@ Module MeshVars
     
     
         !transferir para Module Mesh
-        this%NCAMMAX = sim%layersLength + 1  !Cayo. Original: this%NCAMMAX = sim%layersLength                    ! Number of Vertical Layers
-        this%zL = sim%minimumVerticalLimit-0.001 !Cayo. Original: sim%minimumVerticalLimit-0.001 -16.001 
+        this%NCAMMAX = sim%layersLength  !Cayo.+1 Original: this%NCAMMAX = sim%layersLength                    ! Number of Vertical Layers
+        this%zL = sim%minimumVerticalLimit-0.001  !Cayo. Original: sim%minimumVerticalLimit-0.001 -16.001 
         this%zR = sim%maximumVerticalLimit
     
         If (this%NCAMMAX > 0) Then
             ALLOCATE (this%LIMCAM(this%NCAMMAX))
             ALLOCATE (this%LIMCAMAUX(this%NCAMMAX+1))
-            Do i = 1,this%NCAMMAX-1 !Cayo. Original: sDo i = 1,this%NCAMMAX
+            Do i = 1,this%NCAMMAX !Cayo.-1 Original: sDo i = 1,this%NCAMMAX
                 this%LIMCAM(i) = layers(i)                   ! Layer levels (m)
             EndDo
-            !%LIMCAM(this%NCAMMAX) = -12 !Cayo (linha adicionada)
+            !this%LIMCAM(this%NCAMMAX) = -12 !Cayo (linha adicionada)
         Else
             ALLOCATE (this%LIMCAM(1))
             ALLOCATE (this%LIMCAMAUX(1))

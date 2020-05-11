@@ -29,10 +29,10 @@ Subroutine Volume(HydroParam,MeshParam)
         HydroParam%Vol(iElem) = 0
         If (V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%hb(iElem)) > 0) Then
             HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) + HydroParam%etaplus(iElem) - HydroParam%hb(iElem))
-            If(HydroParam%Smallms(iElem) == HydroParam%Smallm(iElem)) Then
+            If(HydroParam%ElSmallms(iElem) == HydroParam%ElSmallm(iElem)) Then
                 continue
             Else
-                Do iLayer = HydroParam%Smallms(iElem), HydroParam%CapitalMs(iElem)
+                Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalMs(iElem)
                     HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*MeshParam%ei(iLayer,iElem)*HydroParam%DZj(iLayer,iElem)
                 EndDo
             EndIf
