@@ -234,7 +234,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
 
     If (MeshParam%iBedrock == 1) Then
         Do iEdge = 1,MeshParam%nEdge       
-            If (HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge).and. HydroParam%Smallms(iEdge) == HydroParam%CapitalM(iEdge)) Then !Rever 
+            If (HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge).and.HydroParam%Smallms(iEdge) == HydroParam%CapitalM(iEdge)) Then
                 HydroParam%DZK(iEdge)   = HydroParam%DZj(HydroParam%Smallms(iEdge),iEdge)*MeshParam%Kj(HydroParam%Smallms(iEdge),iEdge) !Sediment Layer
             Else
                 HydroParam%DZK(iEdge)   = Dot_Product(HydroParam%DZj(HydroParam%Smallms(iEdge):HydroParam%CapitalMs(iEdge),iEdge),MeshParam%Kj(HydroParam%Smallms(iEdge):HydroParam%CapitalMs(iEdge),iEdge) )
@@ -621,18 +621,18 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
         Else
             HydroParam%Ze(HydroParam%ElCapitalM(iElem)+1,iElem) = HydroParam%eta(iElem) !- hb(iElem)       ! Free-Surface (verificar com Rafael)    
         EndIf
-        Do iLayer = 1, HydroParam%ElSmallm(iElem) - 1
+        Do iLayer = 1, HydroParam%ElSmallms(iElem) - 1
             HydroParam%Ze(iLayer,iElem) = HydroParam%sb(iElem)
         EndDo      
         
         
         ! 4.1.2.1 Compute the Vertical Mesh Spacing
-        Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalM(iElem) !CAYO
+        Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalM(iElem)
             HydroParam%DZi(iLayer,iElem) = HydroParam%Ze(iLayer+1,iElem) - HydroParam%Ze(iLayer,iElem)
             HydroParam%DZi(iLayer,iElem) = Max(HydroParam%Pcri,HydroParam%DZi(iLayer,iElem)) 
         EndDo
 
-        Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalM(iElem) !CAYO
+        Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalM(iElem) 
             If (iLayer == HydroParam%ElSmallms(iElem)) Then
                 HydroParam%Zb(iLayer,iElem) = 0.5*( HydroParam%Ze(iLayer,iElem) + HydroParam%Ze(iLayer+1,iElem) ) !0.5*( 0. + Ze(iLayer+1,iElem) )   (verificar com Rafael)               
             Else
@@ -641,15 +641,14 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
         EndDo
 
         !Porosity
-        Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalM(iElem) ! Cayo (Loop adicionado)
+        Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalM(iElem)
             If (iLayer >= HydroParam%ElSmallm(iElem) .or.  HydroParam%ElSmallms(iElem) ==  HydroParam%ElSmallm(iElem)) Then
                 MeshParam%ei(iLayer,iElem) = 1
             Else
-                MeshParam%ei(iLayer,iElem) = 0.5
+                MeshParam%ei(iLayer,iElem) = 0.3
             EndIf
         EndDo            
     EndDo
-    
     
     ! 9. Compute the New Horizontal and Vertical Velocity Field 
     HydroParam%ut = HydroParam%u
