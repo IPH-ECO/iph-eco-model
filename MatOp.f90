@@ -33,7 +33,7 @@
     Real:: aGhost
     
     
-    !Coef = HydroParam%g*(HydroParam%Theta*dt)**2
+    Coef = HydroParam%g*(HydroParam%Theta*dt)**2
     !call omp_set_num_threads(1)        
     ! 1. Compute T Matrix (Casulli, 2009)
     
@@ -50,8 +50,9 @@
                 !Sum1 = Sum1 + Coef*( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( (  - a(iElem) ) )*HydroParam%DZiADZ(Face)
                 Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( - a(iElem) )*(HydroParam%Theta*dt)*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face)) 
             Else
-                If (Pij == 0) Then
+                If (Pij == 0) Then !.or.HydroParam%H(Face) <= HydroParam%PCRI+NearZero
                     Sum1 = Sum1
+                    continue
                 Else
                     !Sum1 = Sum1 + Coef*( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*HydroParam%DZiADZ(Face)
                     Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*(HydroParam%Theta*dt)*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))
@@ -66,6 +67,10 @@
             !EndIf
         EndDo
         b(iElem) = b(iElem) - Sum1 
+        
+            !If ( HydroParam%eta(iElem)-HydroParam%sb(iElem) <= HydroParam%PCRI+NearZero ) Then
+            !   b(iElem) = 0.d0
+            !EndIf
         
     EndDo 
     !!$OMP end parallel do

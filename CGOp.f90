@@ -42,9 +42,8 @@ Subroutine CGOp(a,b,dt,HydroParam,MeshParam)
            Return
        EndIf
        Call MatOp(pCG,v,dt,HydroParam,MeshParam)
-       
        lambda = alpha/Dot_Product(pCG,v)
-       b = b + lambda*pCG
+       b = b + lambda*pCG       
        r = r - lambda*v
        alphanew = Dot_Product(r,r)
        pCG = r + alphanew/alpha*pCG

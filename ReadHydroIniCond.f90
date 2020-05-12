@@ -153,39 +153,39 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     
     Do iElem = 1, MeshParam%nElem
         
-        Do iLayer = 1,MeshParam%KMax
-            If (abs(HydroParam%hb(iElem)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<HydroParam%PCRI) then
-                HydroParam%hb(iElem)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)
-            EndIf
-       EndDo
+       ! Do iLayer = 1,MeshParam%KMax
+       !     If (abs(HydroParam%hb(iElem)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<HydroParam%PCRI) then
+       !         HydroParam%hb(iElem)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)
+       !     EndIf
+       !EndDo
         
-        If (MeshParam%KMax==1) Then ! Two-dimensional
-            Do iLayer = 1,MeshParam%KMax
-                If (abs(HydroParam%hb(iElem)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<HydroParam%PCRI) then
-                    HydroParam%hb(iElem)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)
-                EndIf
-            EndDo
-        ElseIf (MeshParam%KMax>1) Then ! Three-dimensional
-            Do iLayer = 1,MeshParam%KMax-1
-                
-                If (HydroParam%hb(iElem)+0.001>=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1).and.HydroParam%hb(iElem)+0.001<MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer)) Then
-                    If (abs(HydroParam%hb(iElem)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<abs(HydroParam%hb(iElem)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer))) Then ! 
-                        HydroParam%hb(iElem)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)
-                    Else
-                        HydroParam%hb(iElem)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer)
-                    EndIf
-                EndIf
-            EndDo
+        !If (MeshParam%KMax==1) Then ! Two-dimensional
+        !    Do iLayer = 1,MeshParam%KMax
+        !        If (abs(HydroParam%hb(iElem)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<HydroParam%PCRI) then
+        !            HydroParam%hb(iElem)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)
+        !        EndIf
+        !    EndDo
+        !ElseIf (MeshParam%KMax>1) Then ! Three-dimensional
+        !    Do iLayer = 1,MeshParam%KMax-1
+        !        
+        !        If (HydroParam%hb(iElem)+0.001>=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1).and.HydroParam%hb(iElem)+0.001<MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer)) Then
+        !            If (abs(HydroParam%hb(iElem)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<abs(HydroParam%hb(iElem)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer))) Then ! 
+        !                HydroParam%hb(iElem)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)
+        !            Else
+        !                HydroParam%hb(iElem)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer)
+        !            EndIf
+        !        EndIf
+        !    EndDo
+        !EndIf
+        
+        
+        
+        If (HydroParam%eta(iElem) - HydroParam%hb(iElem) <= HydroParam%Pcri+NearZero.and.HydroParam%eta(iElem) - HydroParam%hb(iElem) >= 0.) Then
+            HydroParam%hb(iElem) = HydroParam%eta(iElem) - HydroParam%Pcri/2.d0
         EndIf
         
-        
-        
-        If (HydroParam%eta(iElem) - HydroParam%hb(iElem) <= HydroParam%Pcri.and.HydroParam%eta(iElem) - HydroParam%hb(iElem) >= 0.) Then
-            HydroParam%hb(iElem) = HydroParam%eta(iElem) - HydroParam%Pcri
-        EndIf
-        
-        If (HydroParam%eta(iElem) - HydroParam%hb(iElem) < HydroParam%Pcri) Then
-            HydroParam%eta(iElem) = HydroParam%hb(iElem)+HydroParam%Pcri !*** Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
+        If (HydroParam%eta(iElem) - HydroParam%hb(iElem) <= HydroParam%Pcri+NearZero) Then
+            HydroParam%eta(iElem) = HydroParam%hb(iElem)+HydroParam%Pcri/2.d0 !*** Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
         EndIf
         
     EndDo
@@ -219,10 +219,10 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
                 HydroParam%hj(Face) = HydroParam%hb(l) !*** Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
                 HydroParam%sj(Face) = HydroParam%sb(l)
                 Do iLayer = 1,MeshParam%KMax
-                    If (abs(HydroParam%hj(Face)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<HydroParam%PCRI) then
+                    If (abs(HydroParam%hj(Face)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<=HydroParam%PCRI+NearZero) then
                         HydroParam%hj(Face)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)
                     EndIf
-                    If (abs(HydroParam%sj(Face)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<HydroParam%PCRI) then
+                    If (abs(HydroParam%sj(Face)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<=HydroParam%PCRI+NearZero) then
                         HydroParam%sj(Face)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)
                     EndIf
 
@@ -506,7 +506,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
                 r = MeshParam%Right(MeshParam%Edge(iEdge,iElem))
                 !uIniVec(iLayer,1) = -6*(EdgeBary(1,Edge(iEdge,iElem))/100.)**2. + 6*EdgeBary(1,Edge(iEdge,iElem))/100.
                 !uIniVec(iLayer,2) = 0.d0
-                If (r==0.or.HydroParam%H(MeshParam%Edge(iEdge,iElem))<=HydroParam%Pcri) Then ! No slip condition
+                If (r==0.or.HydroParam%H(MeshParam%Edge(iEdge,iElem))<=HydroParam%Pcri+NearZero) Then ! No slip condition
                     HydroParam%u(iLayer,MeshParam%Edge(iEdge,iElem)) = 0.d0
                 Else
                     If (simParam%it > 0) Then

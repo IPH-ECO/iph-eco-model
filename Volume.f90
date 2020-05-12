@@ -22,12 +22,13 @@ Subroutine Volume(HydroParam,MeshParam)
     Implicit None
     Integer:: iElem, iLayer
     Real:: V
+    Real:: NearZero = 1e-10
     type(HydrodynamicParam) :: HydroParam
     type(MeshGridParam) :: MeshParam
 
     Do iElem = 1, MeshParam%nElem
         HydroParam%Vol(iElem) = 0
-        If (V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%hb(iElem)) > 0) Then
+        If (V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%hb(iElem)) > 0) Then !HydroParam%PCRI+NearZero
             HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) + HydroParam%etaplus(iElem) - HydroParam%hb(iElem))
             If(HydroParam%ElSmallms(iElem) == HydroParam%ElSmallm(iElem)) Then
                 continue
@@ -36,7 +37,7 @@ Subroutine Volume(HydroParam,MeshParam)
                     HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*MeshParam%ei(iLayer,iElem)*HydroParam%DZj(iLayer,iElem)
                 EndDo
             EndIf
-        ElseIf (V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%sb(iElem)) > 0) Then
+        ElseIf (V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%sb(iElem)) > 0) Then !HydroParam%PCRI+NearZero
             HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%sb(iElem)))*MeshParam%ei(HydroParam%Smallms(iElem),iElem)
         EndIf
     EndDo
