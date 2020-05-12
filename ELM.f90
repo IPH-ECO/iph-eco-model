@@ -103,10 +103,10 @@
         EndDo
         !jump=0
         !do Face = 1,4
-        if (HydroParam%IndexInflowEdge(iEdge)>0.or.HydroParam%IndexInflowEdge(iEdge)>0) then
+        If (HydroParam%IndexInflowEdge(iEdge)>0.or.HydroParam%IndexWaterLevelEdge(iEdge)>0) then
             HydroParam%Fu(:,iEdge)=HydroParam%u(:,iEdge)
             cycle
-        endif
+        EndIf
         !enddo
         !if (jump==1) then
         !    cycle
@@ -713,7 +713,7 @@
     
         Do iElem = 1,MeshParam%nElem
         
-            If ( HydroParam%eta(iElem) - HydroParam%hb(iElem) < HydroParam%PCRI/2. ) Then
+            If ( HydroParam%eta(iElem) - HydroParam%hb(iElem) <= (HydroParam%PCRI+NearZero)/2. ) Then
                  HydroParam%Fw(:,iElem) = 0.
                 Cycle
             EndIf

@@ -79,7 +79,7 @@ Module SimulationModel
              
             allocate(this%start(int(this%FinalTime/this%dt)+1))
             allocate(this%finish(int(this%FinalTime/this%dt)+1))
-            
+                
             If (.not.associated(this%SaveVariables)) then
                 Allocate(this%SaveVariables)
                 this%RestartTime = 0
