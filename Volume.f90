@@ -29,11 +29,13 @@ Subroutine Volume(HydroParam,MeshParam)
         HydroParam%Vol(iElem) = 0
         If (V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%hb(iElem)) > 0) Then
             HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) + HydroParam%etaplus(iElem) - HydroParam%hb(iElem))
+            If (MeshParam%iBedrock == 1) Then
                 Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalMs(iElem)
                     If (HydroParam%DZhi(iLayer,iElem) > 0) Then
                         HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*MeshParam%ei(iLayer,iElem)*HydroParam%DZi(iLayer,iElem)
                     EndIf
                 EndDo
+            EndIf
         ElseIf (V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%sb(iElem)) > 0) Then
             HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%sb(iElem)))*MeshParam%ei(HydroParam%Smallms(iElem),iElem)
         EndIf
