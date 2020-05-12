@@ -131,7 +131,7 @@ Module MeshVars
         
         this%dx = StructuredMeshFeatures%resolution
         !Lock horizontal resolution test
-        this%dx = 0.02d0
+        !this%dx = 0.02d0
         !!
         this%dy = this%dx
         
