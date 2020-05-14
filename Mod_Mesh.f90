@@ -131,9 +131,10 @@ Module MeshVars
         
         this%dx = StructuredMeshFeatures%resolution
         !Lock horizontal resolution test
-        !this%dx = 0.02d0
+        this%dx = 0.02d0
         !!
         this%dy = this%dx
+        this%dy = 1.0
         
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
@@ -148,8 +149,6 @@ Module MeshVars
             this%Quadri(2,iElem) = verticeIds(4*(iElem-1)+4)
         EndDo
     
-    
-        !transferir para Module Mesh
         this%NCAMMAX = sim%layersLength           ! Number of Vertical Layers
         this%zL = sim%minimumVerticalLimit-0.001
         this%zR = sim%maximumVerticalLimit
@@ -158,10 +157,9 @@ Module MeshVars
         If (this%NCAMMAX > 0) Then
             ALLOCATE (this%LIMCAM(this%NCAMMAX))
             ALLOCATE (this%LIMCAMAUX(this%NCAMMAX+1))
-            Do i = 1,this%NCAMMAX !Cayo.-1 Original: sDo i = 1,this%NCAMMAX
+            Do i = 1,this%NCAMMAX
                 this%LIMCAM(i) = layers(i)                   ! Layer levels (m)
             EndDo
-            !this%LIMCAM(this%NCAMMAX) = -12 !Cayo (linha adicionada)
         Else
             ALLOCATE (this%LIMCAM(1))
             ALLOCATE (this%LIMCAMAUX(1))

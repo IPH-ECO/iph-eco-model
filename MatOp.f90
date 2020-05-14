@@ -52,6 +52,7 @@
             Else
                 If (Pij == 0) Then
                     Sum1 = Sum1
+                    continue
                 Else
                     !Sum1 = Sum1 + Coef*( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*HydroParam%DZiADZ(Face)
                     Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*(HydroParam%Theta*dt)*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))
