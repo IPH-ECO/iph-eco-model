@@ -32,7 +32,7 @@ Subroutine Volume(HydroParam,MeshParam)
             If (MeshParam%iBedrock == 1) Then
                 Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalMs(iElem)
                     If (HydroParam%DZsi(iLayer,iElem) > 0) Then
-                        HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*MeshParam%ei(iLayer,iElem)*HydroParam%DZi(iLayer,iElem)
+                        HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*MeshParam%ei(iLayer,iElem)*HydroParam%DZsi(iLayer,iElem)
                     EndIf
                 EndDo
             EndIf

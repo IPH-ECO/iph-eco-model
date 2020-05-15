@@ -41,7 +41,7 @@
             Cycle
         EndIf
          
-        Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)
+        Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)!CAYO
 
             nnel = l
             jlev =iLayer

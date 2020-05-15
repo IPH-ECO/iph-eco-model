@@ -365,13 +365,13 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
 		HydroParam%DZhj(:,iEdge) = HydroParam%DZj(:,iEdge)
         If (MeshParam%iBedrock == 1) Then
             Do iLayer = HydroParam%Smallms(iEdge), HydroParam%CapitalM(iEdge) ! 
-            
-                If (iLayer >= HydroParam%Smallm(iEdge) .or. HydroParam%Smallms(iEdge) == HydroParam%Smallm(iEdge) ) Then
-                    continue
-                Else
-                    MeshParam%Kj(iLayer,iEdge) = 0.01
-                EndIf
-            
+        
+                !If (iLayer >= HydroParam%Smallm(iEdge) .or. HydroParam%Smallms(iEdge) == HydroParam%Smallm(iEdge) ) Then
+                !    continue
+                !Else
+                !    MeshParam%Kj(iLayer,iEdge) = 0.01
+                !EndIf
+                
                 If (iLayer < HydroParam%Smallm(iEdge)) Then
                     HydroParam%DZhj(iLayer,iEdge) = 0.
                     HydroParam%DZsj(iLayer,iEdge) = HydroParam%DZj(iLayer,iEdge)
@@ -386,7 +386,12 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
                         HydroParam%DZhj(iLayer,iEdge) = 0.
                         HydroParam%DZsj(iLayer,iEdge) = HydroParam%Z(iLayer+1,iEdge) - HydroParam%Z(iLayer,iEdge)
                     EndIf
-                EndIf              
+                EndIf    
+                
+                If (HydroParam%Dzsj(iLayer,iEdge) > 0) Then
+                    MeshParam%Kj(iLayer,iEdge) = 0.01
+                EndIf
+                
             EndDo
 		EndIf
         
@@ -546,6 +551,11 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
                         HydroParam%DZsi(iLayer,iElem) = HydroParam%Ze(iLayer+1,iElem) - HydroParam%Ze(iLayer,iElem)
                     EndIf
                 EndIf                                    
+                
+                If(HydroParam%DZsi(iLayer,iElem)>0) Then
+                    MeshParam%ei(iLayer,iElem) = 0.3
+                EndIf
+                                
             EndDo
 		EndIf
         
