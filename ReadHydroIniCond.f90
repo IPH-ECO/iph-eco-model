@@ -388,7 +388,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
                     EndIf
                 EndIf    
                 
-                If (HydroParam%Dzsj(iLayer,iEdge) > 0) Then
+                If (HydroParam%DZsj(iLayer,iEdge) > 0) Then
                     MeshParam%Kj(iLayer,iEdge) = 0.01
                 EndIf
                 

@@ -160,6 +160,7 @@ Subroutine uvelocity(HydroParam,MeshParam,dt)
             HydroParam%u(iLayer,iEdge) = 0.d0
         EndDo
         HydroParam%Hu(iEdge) = Sum( HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge) )/(HydroParam%CapitalM(iEdge)-HydroParam%Smallm(iEdge)+1.d0)
+        HydroParam%um(:,iEdge) =  HydroParam%u(:,iEdge)!CAYO
     EndDo
     
             
@@ -177,14 +178,16 @@ Subroutine uvelocity(HydroParam,MeshParam,dt)
                         If ((HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge).and.HydroParam%Smallms(iEdge) == HydroParam%CapitalM(iEdge) )) Then
                                 HydroParam%us(HydroParam%Smallms(iEdge),iEdge)  =   -MeshParam%Kj(HydroParam%Smallms(iEdge),iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
                                 !HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  =   -MeshParam%Kj(HydroParam%Smallm(iEdge),iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
-						EndIf
+                        Else
+                            Do iLayer = HydroParam%Smallms(iEdge),HydroParam%CapitalMs(iEdge)
+                                If(HydroParam%DZsj(iLayer,iEdge) > 0) Then  
+                                    HydroParam%us(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
+                                    !HydroParam%u(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
+                                EndIf
+                            EndDo
+                        EndIf
                     Else
-                        Do iLayer = HydroParam%Smallms(iEdge),HydroParam%CapitalMs(iEdge)
-                            If(HydroParam%DZsj(iLayer,iEdge) > 0) Then  
-                                HydroParam%us(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
-                                !HydroParam%u(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
-                            EndIf
-					    EndDo                    
+                        HydroParam%us(iLayer,iEdge)    = 0.d0
                     EndIf
                 Else
                     Do iLayer = HydroParam%Smallms(iEdge),HydroParam%CapitalMs(iEdge)

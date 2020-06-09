@@ -32,29 +32,25 @@
     Real, intent(out) :: b(MeshParam%nElem)
     Real:: aGhost
     
-    
     !Coef = HydroParam%g*(HydroParam%Theta*dt)**2
     !call omp_set_num_threads(1)        
     ! 1. Compute T Matrix (Casulli, 2009)
     
-    
     !!$OMP parallel do default(none) shared(a,b,MeshParam,HydroParam,NearZero,Coef) private(iElem,iEdge,Face,Pij,Sum)
-    Do iElem = 1, MeshParam%nElem
-        b(iElem) = HydroParam%P(iElem)*a(iElem) ! Initializing b
+    Do iElem = 1, MeshParam%nElem       
+        
+        b(iElem) = HydroParam%P(iElem)*a(iElem) !Initializing b vector
         Sum1 = 0.d0
         Do iEdge = 1, 4
             Face = MeshParam%Edge(iEdge,iElem)
             Pij = MeshParam%Neighbor(iEdge,iElem)
             If (HydroParam%IndexWaterLevelEdge(Face)>0) Then
-                !Sum1 = Sum1 !+ Coef*( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( - a(iElem) ) )*HydroParam%DZiADZ(Face) !( EdgeLength(Face)/CirDistance(Face) )*
-                !Sum1 = Sum1 + Coef*( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( (  - a(iElem) ) )*HydroParam%DZiADZ(Face)
                 Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( - a(iElem) )*(HydroParam%Theta*dt)*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face)) 
             Else
                 If (Pij == 0) Then
                     Sum1 = Sum1
                     continue
                 Else
-                    !Sum1 = Sum1 + Coef*( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*HydroParam%DZiADZ(Face)
                     Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*(HydroParam%Theta*dt)*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))
                 EndIf
             EndIf            
@@ -66,11 +62,11 @@
             !    Sum1 = Sum1 + Coef*( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*HydroParam%DZiADZ(Face)
             !EndIf
         EndDo
+        !b(iElem) = n*A*dV + Tn
         b(iElem) = b(iElem) - Sum1 
         
     EndDo 
     !!$OMP end parallel do
    
-    
     Return    
 End Subroutine MatOp

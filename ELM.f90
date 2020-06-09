@@ -70,7 +70,7 @@
                             dtb   = MinVal(MeshParam%InCircle)/vmag ! ( InCircle(lElem)/Sqrt( Veloc(1)**2. + Veloc(2)**2. ), InCircle(r)/Sqrt( Veloc(1)**2. + Veloc(2)**2. ) )
                             ndels = Max(Floor(dt/dtb),HydroParam%NFUT)
                             dtb = dt/ndels !sub-step in backtracking
-                        Else If ( TrajectoryFlag == 1 ) Then       ! User Defined
+                        ElseIf ( TrajectoryFlag == 1 ) Then       ! User Defined
                             ndels = HydroParam%NFUT 
                             dtb = dt/ndels !sub-step in backtracking
                         EndIf

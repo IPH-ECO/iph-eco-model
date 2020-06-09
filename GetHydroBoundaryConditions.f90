@@ -23,7 +23,7 @@ Subroutine GetHydroBoundaryConditions(HydroParam,MeshParam,time,SimTime)
         Call interp_linear( 1, HydroParam%WaterLevelnTime(i), HydroParam%WaterLevelTime(i,1:HydroParam%WaterLevelnTime(i)), HydroParam%WaterLevelValue(i,1:HydroParam%WaterLevelnTime(i)), 1, t_interp, p_interp )
         HydroParam%WaterLevel(i) = p_interp(1,1)
     EndDo
-    !HydroParam%WaterLevel(1) = 0.214 + 0.06*cos(2*HydroParam%pi*(Simtime-5.0d0)/355.0d0) !CAYO
+    HydroParam%WaterLevel(1) = 0.214 + 0.06*cos(2*HydroParam%pi*(Simtime-5.0d0)/355.0d0) !CAYO
     !2. Reading inflow/outflow
     Do i =1,HydroParam%NInflow
         iElem = HydroParam%IndexInflow(i,2)

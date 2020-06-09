@@ -134,7 +134,7 @@ Module MeshVars
         this%dx = 0.02d0
         !!
         this%dy = this%dx
-        this%dy = 1.0
+        this%dy = 6.48 !CAYO
         
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
@@ -142,7 +142,7 @@ Module MeshVars
         
         Do iElem = 1, this%nElem
             this%xb(iElem) = xCoordinates(iElem)
-            this%yb(iElem) = yCoordinates(iElem)
+            this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO
             this%Quadri(3,iElem) = verticeIds(4*(iElem-1)+1)
             this%Quadri(4,iElem) = verticeIds(4*(iElem-1)+2)
             this%Quadri(1,iElem) = verticeIds(4*(iElem-1)+3)
