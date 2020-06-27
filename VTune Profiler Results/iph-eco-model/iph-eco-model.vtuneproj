@@ -2,7 +2,7 @@
 <root>
  <connectionOption>localhost</connectionOption>
  <rdmgr>
-  <timestamp type="u64_t">1589554401</timestamp>
+  <timestamp type="u64_t">1592943965</timestamp>
   <hostname>DESKTOP-D73MGII</hostname>
   <os>windows</os>
   <product>Intel® VTune™ Profiler 2020</product>

@@ -118,13 +118,25 @@ Subroutine VTKOutput(simParam,HydroParam,MeshParam,LimnoParam)
     ! 5. Saves the data variables related to geometric mesh
     ! 5.1 Velocity Vector
     If (simParam%OutputHydro(1)==1) Then
-        Do iElem = 1,MeshParam%nElem
-            Do iLayer = 1,MeshParam%KMax
-                HydroParam%SVector(iElem + (iLayer-1)*MeshParam%nElem,1) = HydroParam%ub(iLayer,1,iElem)
-                HydroParam%SVector(iElem + (iLayer-1)*MeshParam%nElem,2) = HydroParam%ub(iLayer,2,iElem)
-                HydroParam%SVector(iElem + (iLayer-1)*MeshParam%nElem,3) = HydroParam%ub(iLayer,3,iElem)
+        !Subsurface case:
+        If (MeshParam%iBedrock == 1) Then
+            Do iElem = 1,MeshParam%nElem
+                Do iLayer = 1,MeshParam%KMax
+                    HydroParam%SVector(iElem + (iLayer-1)*MeshParam%nElem,1) = HydroParam%ubsub(iLayer,1,iElem)
+                    HydroParam%SVector(iElem + (iLayer-1)*MeshParam%nElem,2) = HydroParam%ubsub(iLayer,2,iElem)
+                    HydroParam%SVector(iElem + (iLayer-1)*MeshParam%nElem,3) = HydroParam%ubsub(iLayer,3,iElem)
+                EndDo
             EndDo
-        EndDo
+        Else
+        !Superficial case:
+           Do iElem = 1,MeshParam%nElem
+                Do iLayer = 1,MeshParam%KMax
+                    HydroParam%SVector(iElem + (iLayer-1)*MeshParam%nElem,1) = HydroParam%ub(iLayer,1,iElem)
+                    HydroParam%SVector(iElem + (iLayer-1)*MeshParam%nElem,2) = HydroParam%ub(iLayer,2,iElem)
+                    HydroParam%SVector(iElem + (iLayer-1)*MeshParam%nElem,3) = HydroParam%ub(iLayer,3,iElem)
+                EndDo
+            EndDo          
+        EndIf
         E_IO = VTK_VAR('vect',MeshParam%nElem*MeshParam%KMax,'VelocityField',HydroParam%SVector(:,1),HydroParam%SVector(:,2),HydroParam%SVector(:,3))
     EndIf
 

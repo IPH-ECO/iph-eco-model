@@ -80,11 +80,11 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     Allocate(HydroParam%Smallm(MeshParam%nEdge)) !lower vertical index in the edge 
     Allocate(HydroParam%Smallms(MeshParam%nEdge)) !lower vertical index in the edge 
     Allocate(HydroParam%CapitalM(MeshParam%nEdge)) !upper vertical index in the edge
-    Allocate(HydroParam%CapitalMs(MeshParam%nEdge)) !upper vertical index in the edge !CAYO
+    Allocate(HydroParam%CapitalMs(MeshParam%nEdge)) !upper vertical index in the edge 
     Allocate(HydroParam%ElSmallm(MeshParam%nElem)) !lower vertical index in the cell
     Allocate(HydroParam%ElSmallms(MeshParam%nElem)) !lower vertical index in the cell
     Allocate(HydroParam%ElCapitalM(MeshParam%nElem)) !upper vertical index in the cell
-    Allocate(HydroParam%ElCapitalMs(MeshParam%nElem)) !upper vertical index in the cell !CAYO
+    Allocate(HydroParam%ElCapitalMs(MeshParam%nElem)) !upper vertical index in the cell 
     Allocate(HydroParam%DZiADZ(MeshParam%nEdge))
     Allocate(HydroParam%DZiAG(MeshParam%nEdge))
     Allocate(HydroParam%HorViscosity(2,MeshParam%KMax,MeshParam%nElem))
@@ -115,25 +115,29 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     !Allocate(HydroParam%Dq(MeshParam%Kmax,MeshParam%nElem))
     !Allocate(HydroParam%Fq(MeshParam%Kmax,MeshParam%nElem))
     
-    Allocate(HydroParam%Vol(MeshParam%nElem)) !CAYO
-    Allocate(MeshParam%ei(MeshParam%Kmax,MeshParam%nElem))!CAYO
-    Allocate(MeshParam%Kj(MeshParam%Kmax,MeshParam%nEdge))!CAYO
-    Allocate(HydroParam%us(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
-    Allocate(HydroParam%ust(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
-    Allocate(HydroParam%um(MeshParam%Kmax,MeshParam%nEdge))!CAYO
-    Allocate(HydroParam%umt(MeshParam%Kmax,MeshParam%nEdge))!CAYO
+    !Coupled Subsurface flow variables:
+    Allocate(HydroParam%Vol(MeshParam%nElem)) 
+    Allocate(MeshParam%ei(MeshParam%Kmax,MeshParam%nElem))
+    Allocate(MeshParam%Kj(MeshParam%Kmax,MeshParam%nEdge))
+    Allocate(HydroParam%us(MeshParam%Kmax,MeshParam%nEdge)) 
+    Allocate(HydroParam%ust(MeshParam%Kmax,MeshParam%nEdge)) 
+    Allocate(HydroParam%um(MeshParam%Kmax,MeshParam%nEdge))
+    Allocate(HydroParam%umt(MeshParam%Kmax,MeshParam%nEdge))
     
-    Allocate(HydroParam%DZsj(MeshParam%Kmax,MeshParam%nEdge)) !CAYO   
-    Allocate(HydroParam%DZsjt(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
-    Allocate(HydroParam%DZhj(MeshParam%Kmax,MeshParam%nEdge)) !CAYO   
-    Allocate(HydroParam%DZhjt(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
+    Allocate(HydroParam%DZsj(MeshParam%Kmax,MeshParam%nEdge))    
+    Allocate(HydroParam%DZsjt(MeshParam%Kmax,MeshParam%nEdge)) 
+    Allocate(HydroParam%DZhj(MeshParam%Kmax,MeshParam%nEdge))    
+    Allocate(HydroParam%DZhjt(MeshParam%Kmax,MeshParam%nEdge)) 
     
-    Allocate(HydroParam%DZsi(MeshParam%Kmax,MeshParam%nElem)) !CAYO   
-    Allocate(HydroParam%DZsit(MeshParam%Kmax,MeshParam%nElem)) !CAYO
-    Allocate(HydroParam%DZhi(MeshParam%Kmax,MeshParam%nElem)) !CAYO   
-    Allocate(HydroParam%DZhit(MeshParam%Kmax,MeshParam%nElem)) !CAYO 
+    Allocate(HydroParam%DZsi(MeshParam%Kmax,MeshParam%nElem))    
+    Allocate(HydroParam%DZsit(MeshParam%Kmax,MeshParam%nElem)) 
+    Allocate(HydroParam%DZhi(MeshParam%Kmax,MeshParam%nElem))    
+    Allocate(HydroParam%DZhit(MeshParam%Kmax,MeshParam%nElem))  
     
-    Allocate(HydroParam%DZK(MeshParam%nEdge)) !Sediment Layer !CAYO 
+    Allocate(HydroParam%DZK(MeshParam%nEdge)) !Sediment Layer 
+    
+    Allocate(HydroParam%ubsub(MeshParam%Kmax,3,MeshParam%nElem))
+    Allocate(HydroParam%uxysub(MeshParam%Kmax,2,MeshParam%nEdge))
     
     ! 3. Hydrodynamic output variables (VTK)
     Allocate(MeshParam%xPoint(MeshParam%nPoint*(MeshParam%Kmax+1)))

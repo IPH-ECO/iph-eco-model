@@ -161,6 +161,7 @@ Subroutine uvelocity(HydroParam,MeshParam,dt)
         EndDo
         HydroParam%Hu(iEdge) = Sum( HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge) )/(HydroParam%CapitalM(iEdge)-HydroParam%Smallm(iEdge)+1.d0)
         HydroParam%um(:,iEdge) =  HydroParam%u(:,iEdge)!CAYO
+        HydroParam%umt(:,iEdge) =  HydroParam%u(:,:)
     EndDo
     
             
@@ -204,9 +205,9 @@ Subroutine uvelocity(HydroParam,MeshParam,dt)
             EndDo            
         EndDo   
         !Superficial + Subsuperficial Velocities !CAYO
+        HydroParam%umt(:,:) =  HydroParam%u(:,:)! Save to quality module
         Do iEdge = 1, MeshParam%nEdge
-            HydroParam%um(:,iEdge) =  HydroParam%u(:,iEdge)
-            HydroParam%u(:,iEdge)   = (HydroParam%u(:,iEdge)*HydroParam%DZhj(:,iEdge) + HydroParam%us(:,iEdge)*HydroParam%DZsj(:,iEdge))/HydroParam%DZj(:,iEdge)
+            HydroParam%um(:,iEdge)   = (HydroParam%u(:,iEdge)*HydroParam%DZhj(:,iEdge) + HydroParam%us(:,iEdge)*HydroParam%DZsj(:,iEdge))/HydroParam%DZj(:,iEdge)
         EndDo
 
     EndIf

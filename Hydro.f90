@@ -52,6 +52,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
         !EndIf
     EndDo
     !
+    HydroParam%u =  HydroParam%umt
     ! 0. Compute turbulence
     Call Turbulence(HydroParam,MeshParam,MeteoParam,dt)
     !HydroParam%iConv = 3
@@ -370,7 +371,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
  
             Face = MeshParam%Edge(iEdge,iElem)
             !SumRHS = SumRHS + Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%EdgeLength(Face)*((1.d0-HydroParam%Theta)*(Dot_product( HydroParam%DZhj(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face),HydroParam%u(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face)) + Dot_product(HydroParam%DZsj(HydroParam%Smallms(Face):HydroParam%CapitalM(Face),Face),HydroParam%us(HydroParam%Smallms(Face):HydroParam%CapitalM(Face),Face))) + HydroParam%Theta*HydroParam%DZiAG(Face))      
-            SumRHS = SumRHS + Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%EdgeLength(Face)*((1.d0-HydroParam%Theta)*(Dot_product( HydroParam%DZhj(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face),HydroParam%um(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face)) + Dot_product(HydroParam%DZsj(HydroParam%Smallms(Face):HydroParam%CapitalM(Face),Face),HydroParam%us(HydroParam%Smallms(Face):HydroParam%CapitalM(Face),Face))) + HydroParam%Theta*HydroParam%DZiAG(Face))      
+            SumRHS = SumRHS + Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%EdgeLength(Face)*((1.d0-HydroParam%Theta)*(Dot_product( HydroParam%DZhj(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face),HydroParam%u(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face)) + Dot_product(HydroParam%DZsj(HydroParam%Smallms(Face):HydroParam%CapitalM(Face),Face),HydroParam%us(HydroParam%Smallms(Face):HydroParam%CapitalM(Face),Face))) + HydroParam%Theta*HydroParam%DZiAG(Face))      
 
             ! 6.1.1 If there is a Pressure Boundary Condition
             Pij = MeshParam%Neighbor(iEdge,iElem) 
@@ -401,7 +402,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     !!$OMP end parallel do
     
     ! 7.2 Newton Loop for Non-Linear Wet- and Dry-ing Algorithm [2]
-    HydroParam%etan = HydroParam%eta   
+    HydroParam%etan = HydroParam%eta
     
     Do iNewton = 1,100
         ! 7.2.1 Assemble Matrices F (System Matrix - Newton Method) and P (Derivative Matrix)
@@ -733,7 +734,9 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     EndDo
     
     ! 12. Compute the New Horizontal and Vertical Velocity Field 
-    HydroParam%ut = HydroParam%u
+    !HydroParam%ut = HydroParam%u
+    !if subsurface on -> um  = weighted averaged velocity, else um = u:
+    HydroParam%ut = HydroParam%um 
     Call uvelocity(HydroParam,MeshParam,dt)
     
     !Call utangvelocity(HydroParam,MeshParam,dt)
@@ -744,6 +747,9 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     Do iElem = 1, MeshParam%nElem
          !12.4 Evaluate the new Vertical Velocity Field
         HydroParam%w(HydroParam%ElSmallms(iElem),iElem)       = 0.       ! No Flux through the Bottom
+        !If (HydroParam%ElSmallms(iElem) == HydroParam%ElCapitalM(iElem) ) Then
+        !    HydroParam%w(2,iElem) = 0.0d0     
+        !Else
         Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalM(iElem) 
             SumW = 0.
             Do iEdge = 1,4
@@ -752,6 +758,8 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
             EndDo
             HydroParam%w(iLayer+1,iElem) = HydroParam%w(iLayer,iElem) - SumW/MeshParam%Area(iElem)         ! w(k+1/2,iElem) [1]
         EndDo
+        !EndIf
+
     EndDo
     
 	!Do iElem = 1, MeshParam%nElem
@@ -792,7 +800,6 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     !print*, HydroParam%w
     !!$OMP end parallel do
     !10. Non-hydrostatic correction
-    
     If (HydroParam%iNonHydro==0.and.MeshParam%Kmax>1) Then 
         Call NonHydroPressure(HydroParam,MeshParam,dt)
     EndIf
@@ -800,9 +807,10 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     ! 12. Compute average and tangential velocities
     !Call Velocities(HydroParam,MeshParam)
     Call VelocitiesSUB(HydroParam,MeshParam) !CAYO
-    
+
+    ! The output velocities in this module is input in water quality model, thus the velocity to input must be the weighted averaged velocity:
+    ! Note that if subsurface coupled flow on -> um  = weighted averaged velocity, else um = u.
     HydroParam%u = HydroParam%um !CAYO
-    !HydroParam%um =  HydroParam%u + HydroParam%us !CAYO
     
    ! Call ExchangeTime(HydroParam,MeshParam,MeteoParam,dt)
     

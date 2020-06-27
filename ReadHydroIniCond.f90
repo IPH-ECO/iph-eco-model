@@ -75,7 +75,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     HydroParam%DZit = HydroParam%Pcri
     HydroParam%Gu = 0.d0
     
-    !CAYO
+    !Coupled subsurface flow:
     MeshParam%ei = 1.d0
     HydroParam%DZK = 0.d0
     MeshParam%Kj = 0.d0
@@ -87,7 +87,10 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     HydroParam%DZsj = HydroParam%Pcri
     HydroParam%us = 0.d0
     HydroParam%um = 0.d0    
+    HydroParam%uxysub = 0.d0
+    HydroParam%ubsub = 0.d0
     
+    !Nonhydrostatic flow:
     HydroParam%rhsnonHydro = 0.d0
     HydroParam%q = 0.d0
     HydroParam%pq = 0.d0
@@ -581,6 +584,8 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
             EndDo
         EndDo
     EndDo
+    HydroParam%um  =  HydroParam%u !CAYO
+    HydroParam%umt =  HydroParam%u !CAYO
     If (simParam%it > 0) Then
         HydroParam%w = simParam%wsave
         Call VelocitiesSub(HydroParam,MeshParam)

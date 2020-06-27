@@ -93,22 +93,24 @@ Subroutine DestroyHydro(HydroParam)
     Deallocate(HydroParam%ElSmallms)
     Deallocate(HydroParam%ElCapitalMs)    
     
-    
-    Deallocate(HydroParam%DZsj) !CAYO
-    Deallocate(HydroParam%DZsjt)!CAYO
-    Deallocate(HydroParam%DZhj)!CAYO
-    Deallocate(HydroParam%DZhjt)!CAYO
-    Deallocate(HydroParam%DZsi) !CAYO
-    Deallocate(HydroParam%DZsit)!CAYO
-    Deallocate(HydroParam%DZhi)!CAYO
-    Deallocate(HydroParam%DZhit)!CAYO
-    Deallocate(HydroParam%Vol)!CAYO
+    ! Coupled Subsurface flow variables:
+    Deallocate(HydroParam%DZsj) 
+    Deallocate(HydroParam%DZsjt)
+    Deallocate(HydroParam%DZhj)
+    Deallocate(HydroParam%DZhjt)
+    Deallocate(HydroParam%DZsi) 
+    Deallocate(HydroParam%DZsit)
+    Deallocate(HydroParam%DZhi)
+    Deallocate(HydroParam%DZhit)
+    Deallocate(HydroParam%Vol)
     Deallocate(HydroParam%DZK) !Sediment Layer
     
-    Deallocate(HydroParam%us)!CAYO
-    Deallocate(HydroParam%ust)!CAYO
-    Deallocate(HydroParam%um)!CAYO
-    Deallocate(HydroParam%umt)!CAYO
+    Deallocate(HydroParam%us)
+    Deallocate(HydroParam%ust)
+    Deallocate(HydroParam%um)
+    Deallocate(HydroParam%umt)
+    Deallocate(HydroParam%ubsub)
+    Deallocate(HydroParam%uxysub)    
     
     Return
 End Subroutine DestroyHydro

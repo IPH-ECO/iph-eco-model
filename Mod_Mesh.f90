@@ -134,7 +134,7 @@ Module MeshVars
         this%dx = 0.02d0
         !!
         this%dy = this%dx
-        this%dy = 6.48 !CAYO
+        this%dy = 4.0 !CAYO
         
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
