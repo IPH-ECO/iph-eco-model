@@ -28,7 +28,13 @@ Subroutine Tension(SurfTensionFlag,BottomTensionFlag,iEdge,kSurf,kBottom,g,ub,vb
     
     ! 2. Shear stress in the bottom
     If (BottomTensionFlag==0) Then
-        GammaB = (g*(ub**2.+vb**2.)**0.5)/(Chezy**2.)
+        
+        If (Chezy > 0) Then 
+            GammaB = (g*(ub**2.+vb**2.)**0.5)/(Chezy**2.)
+        Else
+            GammaB = 0.d0
+        EndIf
+        
     EndIf
 
     

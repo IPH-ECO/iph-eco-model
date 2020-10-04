@@ -44,14 +44,28 @@
         Do iEdge = 1, 4
             Face = MeshParam%Edge(iEdge,iElem)
             Pij = MeshParam%Neighbor(iEdge,iElem)
+            
+            !!bench 02:
+            !if ( 100-NearZero <= MeshParam%EdgeBary(1,Face)<= 100 + NearZero) then
+            !    if (MeshParam%EdgeBary(2,Face) >= 110 - NearZero) then
+            !        Pij = 0
+            !    elseif(MeshParam%EdgeBary(2,Face) <= 90 + NearZero) then
+            !        Pij = 0
+            !    endif
+            !endif        
+            !
             If (HydroParam%IndexWaterLevelEdge(Face)>0) Then
-                Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( - a(iElem) )*(HydroParam%Theta*dt)*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face)) 
+                !Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( - a(iElem) )*(HydroParam%Theta*dt)*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face)) 
+                Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( - a(iElem) )*(HydroParam%Theta*dt)*(HydroParam%Theta*HydroParam%g*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face)) 
+                !Sum1 = Sum1 + ( - a(iElem)/MeshParam%CirDistance(Face))*(HydroParam%Theta*dt)*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))             
             Else
                 If (Pij == 0) Then
                     Sum1 = Sum1
                     continue
                 Else
-                    Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*(HydroParam%Theta*dt)*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))
+                    !Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*(HydroParam%Theta*dt)*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))
+                    Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*(HydroParam%Theta*dt)*(HydroParam%Theta*HydroParam%g*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))
+                    !Sum1 = Sum1 + ( ( a(Pij) - a(iElem) )/MeshParam%CirDistance(Face) )*(HydroParam%Theta*dt)*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))
                 EndIf
             EndIf            
             !If (Pij == 0.or.HydroParam%H(Face) <= HydroParam%PCRI+NearZero) Then

@@ -43,6 +43,9 @@
         
        
         Real, Allocatable:: DZK(:) !Sediment Layer
+
+        Real, Allocatable:: psij(:,:)!CAYO
+        Real, Allocatable:: rj(:,:)!CAYO
         
         Real, Allocatable:: DZsj(:,:)!CAYO
         Real, Allocatable:: DZsjt(:,:)!CAYO
@@ -61,6 +64,7 @@
         Real, Allocatable:: ut(:,:) !< Normal velocity at previous time step, dimension: Kmax,nEdge
         Real, Allocatable:: utang(:,:) !< Normal velocity at the edges in each layer, dimension: Kmax,nEdge
         Real, Allocatable:: uxyback(:,:,:) !< horizontal backtracking velocity components at the edges in each layer, dimension: Kmax,2,nEdge
+        Real, Allocatable:: uArrow(:,:,:)
         Real, Allocatable:: uNode(:,:,:) !< Nodal velocity , dimension: Kmax,2,nNode
         Real, Allocatable:: uxy(:,:,:) !< horizontal velocity components at current time step ,dimension: (Kmax,2,nEdge)
         Real, Allocatable:: uxyL(:,:,:) !< horizontal velocity components in the center of each k+1/2 Layer for eack Element ,dimension: (Kmax+1,2,nElem)
@@ -79,10 +83,14 @@
         Real, Allocatable:: psi_edge(:,:)
         Real, Allocatable:: psi_cell(:,:)
         
+        Real, Allocatable:: uxysub(:,:,:)
+        Real, Allocatable:: ubsub(:,:,:) 
         Real, Allocatable:: us(:,:) !< Normal superficial flow velocity at the edges in each layer, dimension: Kmax,nEdge !CAYO
         Real, Allocatable:: ust(:,:) !< Normal superficial flow  velocity at previous time step, dimension: Kmax,nEdge !CAYO
         Real, Allocatable:: um(:,:) !<  Kmax,nEdge !CAYO
         Real, Allocatable:: umt(:,:) !< Kmax,nEdge    !CAYO
+        Real, Allocatable:: wm(:,:) 
+        Real, Allocatable:: wmt(:,:) 
         ! 3.1. Others Variables
         Real, Allocatable:: etaInf(:) !< Tidal boundary condition
         Real, Allocatable:: etaplus(:) !< Vertical water balance at current time step  dimension: nElem

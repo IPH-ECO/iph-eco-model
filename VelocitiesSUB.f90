@@ -12,12 +12,14 @@
      
 	Implicit none 
     Integer:: r,l,iElem, Elem,iLayer,iEdge,iNode,Sig,Face,icountU, icountV, icountW,kin,j,cond, ncond, lockElem, small
+    Integer:: y1Elem,x1Elem,y2Elem,x2Elem,Facexin,Faceyin,neighElem
     Real ::weit, weitW,signa, weitU, weitV, med
     Real:: aa(5), aaU, aaV, lPoint(2), lArea,luNode(2,4), luEdge(2,4), z1, z2, z3, zp, UiQuad
     Integer:: lEdge(4), lTri(4),n1,n2,n3,n4,iel
     Real:: USUL,UNORTE,VOESTE,VLESTE
     Real:: NearZero = -1!1.e-20
     Real:: NearZero2 = -1!1.e-20
+    Real :: NearZero3 = 1.e-20
     type(MeshGridParam) :: MeshParam
     type(HydrodynamicParam) :: HydroParam
     !type(SimulationParam), intent(in) :: simParam
@@ -31,6 +33,9 @@
  !       EndDo
  !   EndDo
     
+    HydroParam%ubsub=0.d0
+    HydroParam%uxysub=0.d0
+    
     HydroParam%ubV=0.d0
     HydroParam%uNode=0.d0
     HydroParam%uxyL=0.d0
@@ -41,7 +46,7 @@
     HydroParam%wg=0.d0
     HydroParam%uxy=0.d0
     
-	DO iElem = 1, MeshParam%nElem
+	Do iElem = 1, MeshParam%nElem
 		lockElem = 0
 		!Do iEdge = 1, 4
 		!	Face = MeshParam%Edge(iEdge,iElem)
@@ -55,6 +60,17 @@
             l = MeshParam%Left(Face) 
             r = MeshParam%Right(Face)
 
+            !
+            !!bench 02:
+            !if ( 100-NearZero <= MeshParam%EdgeBary(1,Face)<= 100 + NearZero) then
+            !    if (MeshParam%EdgeBary(2,Face) >= 110 - NearZero) then
+            !        r = 0
+            !    elseif(MeshParam%EdgeBary(2,Face) <= 90 + NearZero) then
+            !        r = 0
+            !    endif
+            !endif        
+            !            
+            
             If (r==0) Then
                 !If r==0 the face no have neighbour, this implies that the lower layer with velocity is the Edge Smallms:
                 Small = HydroParam%Smallms(iEdge)
@@ -91,9 +107,9 @@
 							ElseIf (abs (HydroParam%u(iLayer,MeshParam%Edge(4,iElem)))>NearZero2.and.abs (HydroParam%u(iLayer,MeshParam%Edge(2,iElem)))>NearZero2) then
 								HydroParam%uxy(iLayer,1,Face) = 0.5d0*( - Sig(iElem,MeshParam%Right(MeshParam%Edge(2,iElem)),MeshParam%Left(MeshParam%Edge(2,iElem)))*HydroParam%u(iLayer,MeshParam%Edge(2,iElem)) + Sig(iElem,MeshParam%Right(MeshParam%Edge(4,iElem)),MeshParam%Left(MeshParam%Edge(4,iElem)))*HydroParam%u(iLayer,MeshParam%Edge(4,iElem)) )
 							Else
-								HydroParam%uxy(iLayer,1,Face) = 0. !
+								HydroParam%uxy(iLayer,1,Face) = 0.0d0 !
 							EndIf
-						EndIf
+                        EndIf
                     Else
 						Elem=MeshParam%Neighbor(1,iElem)
 						If (abs (HydroParam%u(iLayer,MeshParam%Edge(4,Elem)))>NearZero2 .and. abs (HydroParam%u(iLayer,MeshParam%Edge(2,Elem)))<NearZero2) then
@@ -268,17 +284,356 @@
                 !Fu(iLayer,Face) = 0.
             EndDo
             
+            ! If subsurface flow occurs, uxysub are calculated:
+            If (MeshParam%iBedrock == 1) Then
+                ! Set particle's Z position
+                If (iEdge==1) Then !North Edge
+                    If (r == 0.or.lockElem==1) Then
+					    If (HydroParam%IndexInflowEdge(Face)>0.or.HydroParam%IndexInflowEdge(Face)>0) Then 
+						    HydroParam%uxysub(iLayer,1,Face) = 0. !
+					    Else
+						    If (abs (HydroParam%um(iLayer,MeshParam%Edge(4,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(2,iElem)))<NearZero2) then
+                                HydroParam%uxysub(iLayer,1,Face) = Sig(iElem,MeshParam%Right(MeshParam%Edge(4,iElem)),MeshParam%Left(MeshParam%Edge(4,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(4,iElem))
+                            ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(2,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(4,iElem)))<NearZero2) then
+                                HydroParam%uxysub(iLayer,1,Face) = - Sig(iElem,MeshParam%Right(MeshParam%Edge(2,iElem)),MeshParam%Left(MeshParam%Edge(2,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(2,iElem))
+                            ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(4,iElem)))>NearZero2.and.abs (HydroParam%um(iLayer,MeshParam%Edge(2,iElem)))>NearZero2) then
+                                HydroParam%uxysub(iLayer,1,Face) = 0.5d0*( - Sig(iElem,MeshParam%Right(MeshParam%Edge(2,iElem)),MeshParam%Left(MeshParam%Edge(2,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(2,iElem)) + Sig(iElem,MeshParam%Right(MeshParam%Edge(4,iElem)),MeshParam%Left(MeshParam%Edge(4,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(4,iElem)) )
+                            Else
+							    HydroParam%uxysub(iLayer,1,Face) = 0. !
+						    EndIf
+					    EndIf
+                    Else
+					    Elem=MeshParam%Neighbor(1,iElem)
+					    If (abs (HydroParam%um(iLayer,MeshParam%Edge(4,Elem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(2,Elem)))<NearZero2) then
+						    UNORTE = Sig(Elem,MeshParam%Right(MeshParam%Edge(4,Elem)),MeshParam%Left(MeshParam%Edge(4,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(4,Elem))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(2,Elem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(4,Elem)))<NearZero2) then
+						    UNORTE = - Sig(Elem,MeshParam%Right(MeshParam%Edge(2,Elem)),MeshParam%Left(MeshParam%Edge(2,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(2,Elem))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(4,Elem)))>NearZero2.and.abs (HydroParam%um(iLayer,MeshParam%Edge(2,Elem)))>NearZero2) then
+						    UNORTE = 0.5d0*( - Sig(Elem,MeshParam%Right(MeshParam%Edge(2,Elem)),MeshParam%Left(MeshParam%Edge(2,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(2,Elem)) + Sig(Elem,MeshParam%Right(MeshParam%Edge(4,Elem)),MeshParam%Left(MeshParam%Edge(4,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(4,Elem)) )
+					    Else
+						    UNORTE = 0. !
+                            med=1
+					    EndIf
+						
+					    If (abs (HydroParam%um(iLayer,MeshParam%Edge(4,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(2,iElem)))<NearZero2) then
+						    HydroParam%uxysub(iLayer,1,Face) = med*(UNORTE + (Sig(iElem,MeshParam%Right(MeshParam%Edge(4,iElem)),MeshParam%Left(MeshParam%Edge(4,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(4,iElem))))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(2,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(4,iElem)))<NearZero2) then
+						    HydroParam%uxysub(iLayer,1,Face) = med*(UNORTE + (- Sig(iElem,MeshParam%Right(MeshParam%Edge(2,iElem)),MeshParam%Left(MeshParam%Edge(2,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(2,iElem))))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(4,iElem)))>NearZero2.and.abs (HydroParam%um(iLayer,MeshParam%Edge(2,iElem)))>NearZero2) then
+						    HydroParam%uxysub(iLayer,1,Face) = med*(UNORTE + (0.5d0*( - Sig(iElem,MeshParam%Right(MeshParam%Edge(2,iElem)),MeshParam%Left(MeshParam%Edge(2,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(2,iElem)) + Sig(iElem,MeshParam%Right(MeshParam%Edge(4,iElem)),MeshParam%Left(MeshParam%Edge(4,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(4,iElem)) )))
+					    Else
+						    HydroParam%uxysub(iLayer,1,Face) = UNORTE !
+					    EndIf
+
+                    EndIf
+                    ! Set particle's tangential velocity
+                    HydroParam%uxysub(iLayer,2,Face) = Sig(iElem,MeshParam%Right(MeshParam%Edge(1,iElem)),MeshParam%Left(MeshParam%Edge(1,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(1,iElem)) 
+                ElseIf (iEdge==2) then !West Edge
+                    If (r == 0.or.lockElem==1) Then
+					    If (HydroParam%IndexInflowEdge(Face)>0.or.HydroParam%IndexInflowEdge(Face)>0) then
+						    HydroParam%uxysub(iLayer,2,Face) = 0. !
+					    Else
+						    If (abs (HydroParam%um(iLayer,MeshParam%Edge(1,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(3,iElem)))<NearZero2) then
+							    HydroParam%uxysub(iLayer,2,Face) = Sig(iElem,MeshParam%Right(MeshParam%Edge(1,iElem)),MeshParam%Left(MeshParam%Edge(1,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(1,iElem))
+						    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(3,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(1,iElem)))<NearZero2) then
+							    HydroParam%uxysub(iLayer,2,Face) = - Sig(iElem,MeshParam%Right(MeshParam%Edge(3,iElem)),MeshParam%Left(MeshParam%Edge(3,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(3,iElem))
+						    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(1,iElem)))>NearZero2.and.abs (HydroParam%um(iLayer,MeshParam%Edge(3,iElem)))>NearZero2) then
+							    HydroParam%uxysub(iLayer,2,Face) = 0.5d0*( - Sig(iElem,MeshParam%Right(MeshParam%Edge(3,iElem)),MeshParam%Left(MeshParam%Edge(3,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(3,iElem))+ Sig(iElem,MeshParam%Right(MeshParam%Edge(1,iElem)),MeshParam%Left(MeshParam%Edge(1,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(1,iElem)) )
+						    Else
+							    HydroParam%uxysub(iLayer,2,Face) = 0. !
+						    EndIf
+					    EndIf            
+                    Else
+					    Elem=MeshParam%Neighbor(2,iElem)
+					    If (abs (HydroParam%um(iLayer,MeshParam%Edge(1,Elem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(3,Elem)))<NearZero2) then
+						    VOESTE = Sig(Elem,MeshParam%Right(MeshParam%Edge(1,Elem)),MeshParam%Left(MeshParam%Edge(1,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(1,Elem))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(3,Elem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(1,Elem)))<NearZero2) then
+						    VOESTE = - Sig(Elem,MeshParam%Right(MeshParam%Edge(3,Elem)),MeshParam%Left(MeshParam%Edge(3,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(3,Elem))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(1,Elem)))>NearZero2.and.abs (HydroParam%um(iLayer,MeshParam%Edge(3,Elem)))>NearZero2) then
+						    VOESTE = 0.5d0*( - Sig(Elem,MeshParam%Right(MeshParam%Edge(3,Elem)),MeshParam%Left(MeshParam%Edge(3,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(3,Elem))+ Sig(Elem,MeshParam%Right(MeshParam%Edge(1,Elem)),MeshParam%Left(MeshParam%Edge(1,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(1,Elem)) )
+					    Else
+						    VOESTE = 0. !
+                            med=1
+					    EndIf
+					
+					    If (abs (HydroParam%um(iLayer,MeshParam%Edge(1,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(3,iElem)))<NearZero2) then
+						    HydroParam%uxysub(iLayer,2,Face) = med* (VOESTE +(Sig(iElem,MeshParam%Right(MeshParam%Edge(1,iElem)),MeshParam%Left(MeshParam%Edge(1,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(1,iElem))))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(3,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(1,iElem)))<NearZero2) then
+						    HydroParam%uxysub(iLayer,2,Face) = med* (VOESTE +(- Sig(iElem,MeshParam%Right(MeshParam%Edge(3,iElem)),MeshParam%Left(MeshParam%Edge(3,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(3,iElem))))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(1,iElem)))>NearZero2.and.abs (HydroParam%um(iLayer,MeshParam%Edge(3,iElem)))>NearZero2) then
+						    HydroParam%uxysub(iLayer,2,Face) = med* (VOESTE +(0.5d0*( - Sig(iElem,MeshParam%Right(MeshParam%Edge(3,iElem)),MeshParam%Left(MeshParam%Edge(3,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(3,iElem))+ Sig(iElem,MeshParam%Right(MeshParam%Edge(1,iElem)),MeshParam%Left(MeshParam%Edge(1,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(1,iElem)) )))
+					    Else
+						    HydroParam%uxysub(iLayer,2,Face) = VOESTE !
+					    EndIf
+        
+                    EndIf
+                    ! Set particle's tangential velocity
+                    HydroParam%uxysub(iLayer,1,Face) = - Sig(iElem,MeshParam%Right(MeshParam%Edge(2,iElem)),MeshParam%Left(MeshParam%Edge(2,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(2,iElem))
+                ElseIf (iEdge==3) then !South Edge
+                    If (r == 0.or.lockElem==1) Then
+					    If (HydroParam%IndexInflowEdge(Face)>0.or.HydroParam%IndexInflowEdge(Face)>0) then
+						    HydroParam%uxysub(iLayer,1,Face) = 0. !
+					    Else
+						    If (abs (HydroParam%um(iLayer,MeshParam%Edge(4,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(2,iElem)))<NearZero2) then
+							    HydroParam%uxysub(iLayer,1,Face) = Sig(iElem,MeshParam%Right(MeshParam%Edge(4,iElem)),MeshParam%Left(MeshParam%Edge(4,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(4,iElem))
+						    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(2,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(4,iElem)))<NearZero2) then
+							    HydroParam%uxysub(iLayer,1,Face) = - Sig(iElem,MeshParam%Right(MeshParam%Edge(2,iElem)),MeshParam%Left(MeshParam%Edge(2,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(2,iElem))
+						    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(4,iElem)))>NearZero2.and.abs (HydroParam%um(iLayer,MeshParam%Edge(2,iElem)))>NearZero2) then
+							    HydroParam%uxysub(iLayer,1,Face) = 0.5d0*( - Sig(iElem,MeshParam%Right(MeshParam%Edge(2,iElem)),MeshParam%Left(MeshParam%Edge(2,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(2,iElem)) + Sig(iElem,MeshParam%Right(MeshParam%Edge(4,iElem)),MeshParam%Left(MeshParam%Edge(4,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(4,iElem)) )
+						    Else
+							    HydroParam%uxysub(iLayer,1,Face) = 0. !
+						    EndIf
+					    EndIf
+                    Else 
+					    Elem=MeshParam%Neighbor(3,iElem)
+					    If (abs (HydroParam%um(iLayer,MeshParam%Edge(4,Elem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(2,Elem)))<NearZero2) then
+						    USUL = Sig(Elem,MeshParam%Right(MeshParam%Edge(4,Elem)),MeshParam%Left(MeshParam%Edge(4,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(4,Elem))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(2,Elem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(4,Elem)))<NearZero2) then
+						    USUL = - Sig(Elem,MeshParam%Right(MeshParam%Edge(2,Elem)),MeshParam%Left(MeshParam%Edge(2,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(2,Elem))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(4,Elem)))>NearZero2.and.abs (HydroParam%um(iLayer,MeshParam%Edge(2,Elem)))>NearZero2) then
+						    USUL = 0.5d0*( - Sig(Elem,MeshParam%Right(MeshParam%Edge(2,Elem)),MeshParam%Left(MeshParam%Edge(2,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(2,Elem)) + Sig(Elem,MeshParam%Right(MeshParam%Edge(4,Elem)),MeshParam%Left(MeshParam%Edge(4,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(4,Elem)) )
+					    Else
+						    USUL = 0. !
+                            med=1
+					    EndIf
+					
+					    If (abs (HydroParam%um(iLayer,MeshParam%Edge(4,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(2,iElem)))<NearZero2) then
+						    HydroParam%uxysub(iLayer,1,Face) = med*(USUL + (Sig(iElem,MeshParam%Right(MeshParam%Edge(4,iElem)),MeshParam%Left(MeshParam%Edge(4,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(4,iElem))))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(2,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(4,iElem)))<NearZero2) then
+						    HydroParam%uxysub(iLayer,1,Face) = med*(USUL + (- Sig(iElem,MeshParam%Right(MeshParam%Edge(2,iElem)),MeshParam%Left(MeshParam%Edge(2,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(2,iElem))))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(4,iElem)))>NearZero2.and.abs (HydroParam%um(iLayer,MeshParam%Edge(2,iElem)))>NearZero2) then
+						    HydroParam%uxysub(iLayer,1,Face) = med*(USUL + (0.5d0*( - Sig(iElem,MeshParam%Right(MeshParam%Edge(2,iElem)),MeshParam%Left(MeshParam%Edge(2,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(2,iElem)) + Sig(iElem,MeshParam%Right(MeshParam%Edge(4,iElem)),MeshParam%Left(MeshParam%Edge(4,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(4,iElem)) )))
+					    Else
+						    HydroParam%uxysub(iLayer,1,Face) = USUL !
+					    EndIf
+					
+                    EndIf
+                    ! Set particle's tangential velocity
+                    HydroParam%uxysub(iLayer,2,Face) = - Sig(iElem,MeshParam%Right(MeshParam%Edge(3,iElem)),MeshParam%Left(MeshParam%Edge(3,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(3,iElem))
+                Else  !East Edge
+                    If (r == 0.or.lockElem==1) Then
+					    If (HydroParam%IndexInflowEdge(Face)>0.or.HydroParam%IndexInflowEdge(Face)>0) Then
+						    HydroParam%uxysub(iLayer,2,Face) = 0. !
+					    Else
+						    If (abs(HydroParam%um(iLayer,MeshParam%Edge(1,iElem)))>NearZero2 .and. abs(HydroParam%um(iLayer,MeshParam%Edge(3,iElem)))<NearZero2) Then
+							    HydroParam%uxysub(iLayer,2,Face) = Sig(iElem,MeshParam%Right(MeshParam%Edge(1,iElem)),MeshParam%Left(MeshParam%Edge(1,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(1,iElem))
+						    ElseIf (abs(HydroParam%um(iLayer,MeshParam%Edge(3,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(1,iElem)))<NearZero2) Then
+							    HydroParam%uxysub(iLayer,2,Face) = - Sig(iElem,MeshParam%Right(MeshParam%Edge(3,iElem)),MeshParam%Left(MeshParam%Edge(3,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(3,iElem))
+						    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(1,iElem)))>NearZero2.and.abs (HydroParam%um(iLayer,MeshParam%Edge(3,iElem)))>NearZero2) Then
+							    HydroParam%uxysub(iLayer,2,Face) = 0.5d0*( - Sig(iElem,MeshParam%Right(MeshParam%Edge(3,iElem)),MeshParam%Left(MeshParam%Edge(3,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(3,iElem))+ Sig(iElem,MeshParam%Right(MeshParam%Edge(1,iElem)),MeshParam%Left(MeshParam%Edge(1,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(1,iElem)) )
+						    Else
+							    HydroParam%uxysub(iLayer,2,Face) = 0. !
+						    EndIf
+					    EndIf
+                    Else
+					    Elem=MeshParam%Neighbor(4,iElem)					
+					    If (abs (HydroParam%um(iLayer,MeshParam%Edge(1,Elem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(3,Elem)))<NearZero2) Then
+						    VLESTE = Sig(Elem,MeshParam%Right(MeshParam%Edge(1,Elem)),MeshParam%Left(MeshParam%Edge(1,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(1,Elem))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(3,Elem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(1,Elem)))<NearZero2) Then
+						    VLESTE = - Sig(Elem,MeshParam%Right(MeshParam%Edge(3,Elem)),MeshParam%Left(MeshParam%Edge(3,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(3,Elem))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(1,Elem)))>NearZero2.and.abs (HydroParam%um(iLayer,MeshParam%Edge(3,Elem)))>NearZero2) Then
+						    VLESTE = 0.5d0*( - Sig(Elem,MeshParam%Right(MeshParam%Edge(3,Elem)),MeshParam%Left(MeshParam%Edge(3,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(3,Elem))+ Sig(Elem,MeshParam%Right(MeshParam%Edge(1,Elem)),MeshParam%Left(MeshParam%Edge(1,Elem)))*HydroParam%um(iLayer,MeshParam%Edge(1,Elem)) )
+					    Else
+						    VLESTE = 0. !
+                            med=1
+					    EndIf
+		
+					    If (abs (HydroParam%um(iLayer,MeshParam%Edge(1,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(3,iElem)))<NearZero2) Then
+						    HydroParam%uxysub(iLayer,2,Face) = med* (VLESTE +(Sig(iElem,MeshParam%Right(MeshParam%Edge(1,iElem)),MeshParam%Left(MeshParam%Edge(1,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(1,iElem))))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(3,iElem)))>NearZero2 .and. abs (HydroParam%um(iLayer,MeshParam%Edge(1,iElem)))<NearZero2) Then
+						    HydroParam%uxysub(iLayer,2,Face) = med* (VLESTE +(- Sig(iElem,MeshParam%Right(MeshParam%Edge(3,iElem)),MeshParam%Left(MeshParam%Edge(3,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(3,iElem))))
+					    ElseIf (abs (HydroParam%um(iLayer,MeshParam%Edge(1,iElem)))>NearZero2.and.abs (HydroParam%um(iLayer,MeshParam%Edge(3,iElem)))>NearZero2) Then
+						    HydroParam%uxysub(iLayer,2,Face) = med* (VLESTE +(0.5d0*( - Sig(iElem,MeshParam%Right(MeshParam%Edge(3,iElem)),MeshParam%Left(MeshParam%Edge(3,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(3,iElem))+ Sig(iElem,MeshParam%Right(MeshParam%Edge(1,iElem)),MeshParam%Left(MeshParam%Edge(1,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(1,iElem)) )))
+					    Else
+						    HydroParam%uxysub(iLayer,2,Face) = VLESTE !
+					    EndIf
+                        
+                    EndIf
+                    ! Set particle's tangential velocity
+                    HydroParam%uxysub(iLayer,1,Face) = Sig(iElem,MeshParam%Right(MeshParam%Edge(4,iElem)),MeshParam%Left(MeshParam%Edge(4,iElem)))*HydroParam%um(iLayer,MeshParam%Edge(4,iElem))
+                EndIf
+                                
+                ! 3.1 Copy Velocities Above the Free-Surface (du/dz=0) 
+                Do iLayer = HydroParam%ElCapitalM(iElem) + 1, MeshParam%KMAX
+                    HydroParam%uxysub(iLayer,1,Face) = 0. !u(CapitalM(Face),Face) 
+                    HydroParam%uxysub(iLayer,2,Face) = 0.
+                EndDo
+                ! 3.2 Nullify Velocities Below the Bottom (u=0) 
+                Do iLayer = 1, HydroParam%ElSmallms(iElem) - 1
+                    HydroParam%uxysub(iLayer,1,Face) = 0. !u(CapitalM(Face),Face) 
+                    HydroParam%uxysub(iLayer,2,Face) = 0.
+                EndDo                
+                      
+            EndIf       
+            
         EndDo
         !If (iElem==5) Then
         !    write(*,*) HydroParam%uxy(1,1,MeshParam%Edge(2,iElem)),HydroParam%uxy(1,1,MeshParam%Edge(4,iElem))
         !    Continue
-        !EndIf
-        
-        
-    ENDDO       
-       
-    
-    
+        !EndIf        
+    EndDo
+    !
+    !Do iElem = 1, MeshParam%nElem
+    !    
+    !    Do iEdge = 1,4
+    !        y1Elem = neighElem(MeshParam, MeshParam%Edge(1,iElem))
+    !        x1Elem = neighElem(MeshParam, MeshParam%Edge(2,iElem))            
+    !        y2Elem = neighElem(MeshParam, MeshParam%Edge(3,iElem))
+    !        x2Elem = neighElem(MeshParam, MeshParam%Edge(4,iElem))
+    !    EndDo        
+    !    
+    !    Do iEdge = 1,4
+    !
+    !        Face = MeshParam%Edge(iEdge,iElem)
+    !        l = MeshParam%Left(Face) 
+    !        r = MeshParam%Right(Face) 
+    !
+    !        If (r==0) Then
+    !            r = l
+    !        EndIf
+    !        
+    !        Do iLayer = HydroParam%Smallms(Face), HydroParam%Capitalms(Face)
+    !            
+    !            If (iEdge==1) Then
+    !                
+    !                Faceyin = MeshParam%Edge(4,iElem)                       
+    !                Facexin = MeshParam%Edge(iEdge,x1Elem)
+    !                
+    !                If (iLayer < HydroParam%Smallm(x1Elem)) Then
+    !                    Facexin = Face
+    !                Else
+    !                    Facexin = MeshParam%Edge(iEdge,x1Elem)
+    !                EndIf                    
+    !   
+    !                If (HydroParam%uxy(iLayer,1,Face) + HydroParam%uxy(iLayer,1,Facexin)>=0) Then                      
+    !                    HydroParam%uxy(iLayer,1,Face) = (HydroParam%uxy(iLayer,1,Face)*HydroParam%H(MeshParam%Edge(4,iElem)) + HydroParam%uxy(iLayer,1,Facexin)*HydroParam%H(MeshParam%Edge(2,iElem)))/(HydroParam%H(MeshParam%Edge(4,iElem)) + HydroParam%H(MeshParam%Edge(2,iElem)))
+    !                Else
+    !                    If (iLayer < HydroParam%Smallm(x2Elem)) Then
+    !                        Facexin = Face
+    !                    Else
+    !                        Facexin = MeshParam%Edge(iEdge,x2Elem)
+    !                    EndIf
+    !                    HydroParam%uxy(iLayer,1,Face) = (HydroParam%uxy(iLayer,1,Face)*HydroParam%H(MeshParam%Edge(2,iElem)) + HydroParam%uxy(iLayer,1,Facexin)*HydroParam%H(MeshParam%Edge(4,iElem)))/(HydroParam%H(MeshParam%Edge(2,iElem)) + HydroParam%H(MeshParam%Edge(4,iElem)))
+    !                EndIf
+    !    
+    !    
+    !                If (HydroParam%uxy(iLayer,2,Face) + HydroParam%uxy(iLayer,2,Faceyin)>=0) Then
+    !                    HydroParam%uxy(iLayer,2,Face) = (HydroParam%uxy(iLayer,2,Face)*HydroParam%H(Face) + HydroParam%uxy(iLayer,2,Faceyin)*HydroParam%H(Faceyin))/(HydroParam%H(Face) + HydroParam%H(Faceyin))            
+    !                Else
+    !                    If (iLayer < HydroParam%Smallm(y1Elem)) Then
+    !                        Faceyin = Face
+    !                    Else                            
+    !                        Faceyin = MeshParam%Edge(iEdge,y1Elem)
+    !                    EndIf
+    !                    HydroParam%uxy(iLayer,2,Face) = (HydroParam%uxy(iLayer,2,Face)*HydroParam%H(Face) + HydroParam%uxy(iLayer,2,Faceyin)*HydroParam%H(Faceyin))/(HydroParam%H(Face) + HydroParam%H(Faceyin))            
+    !                                
+    !                EndIf       
+    !            ElseIf (iEdge==2) Then
+    !    
+    !                Faceyin = MeshParam%Edge(iEdge,y2Elem)                       
+    !                Facexin = MeshParam%Edge(iEdge,x1Elem)                    
+    !                
+    !                If (iLayer < HydroParam%Smallm(x1Elem)) Then
+    !                    Facexin = Face
+    !                Else
+    !                    Facexin = MeshParam%Edge(iEdge,x1Elem)
+    !                EndIf                    
+    !                ! x-direction component:
+    !                If (HydroParam%uxy(iLayer,1,Face) + HydroParam%uxy(iLayer,1,Facexin)>=0) Then                         
+    !                    HydroParam%uxy(iLayer,1,Face) = (HydroParam%uxy(iLayer,1,Face)*HydroParam%H(Face) + HydroParam%uxy(iLayer,1,Facexin)*HydroParam%H(Facexin))/(HydroParam%H(Face) + HydroParam%H(Facexin))
+    !                Else
+    !                    HydroParam%uxy(iLayer,1,Face) = (HydroParam%uxy(iLayer,1,Face)*HydroParam%H(Face) + HydroParam%uxy(iLayer,1,4)*HydroParam%H(MeshParam%Edge(4,iElem)))/(HydroParam%H(Face) + HydroParam%H(MeshParam%Edge(4,iElem)))
+    !                EndIf
+    !                ! y-direction component:        
+    !                If (iLayer < HydroParam%Smallm(y2Elem)) Then
+    !                    Faceyin = Face
+    !                Else
+    !                    Faceyin = MeshParam%Edge(iEdge,y2Elem)
+    !                EndIf                       
+    !                
+    !                If (HydroParam%uxy(iLayer,2,Face) + HydroParam%uxy(iLayer,2,Faceyin)>=0) Then
+    !                    HydroParam%uxy(iLayer,2,Face) = (HydroParam%uxy(iLayer,2,Face)*HydroParam%H(MeshParam%Edge(1,iElem)) + HydroParam%uxy(iLayer,2,Faceyin)*HydroParam%H(MeshParam%Edge(3,iElem)))/(HydroParam%H(MeshParam%Edge(1,iElem)) + HydroParam%H(MeshParam%Edge(3,iElem)))            
+    !                Else
+    !                    If (iLayer < HydroParam%Smallm(y1Elem)) Then
+    !                        Faceyin = Face
+    !                    Else                            
+    !                        Faceyin = MeshParam%Edge(iEdge,y1Elem)
+    !                    EndIf                       
+    !                    HydroParam%uxy(iLayer,2,Face) = (HydroParam%uxy(iLayer,2,Face)*HydroParam%H(MeshParam%Edge(3,iElem)) + HydroParam%uxy(iLayer,2,Faceyin)*HydroParam%H(MeshParam%Edge(1,iElem)))/(HydroParam%H(MeshParam%Edge(3,iElem)) + HydroParam%H(MeshParam%Edge(1,iElem)))                                  
+    !                EndIf
+    !            ElseIf (iEdge == 3) Then
+    !                
+    !                Faceyin = MeshParam%Edge(3,y2Elem)                       
+    !                Facexin = MeshParam%Edge(iEdge,x1Elem)
+    !                ! x-direction component:
+    !                If (iLayer < HydroParam%Smallm(x1Elem)) Then
+    !                    Facexin = Face
+    !                Else
+    !                    Facexin = MeshParam%Edge(iEdge,x1Elem)
+    !                EndIf                    
+    !   
+    !                If (HydroParam%uxy(iLayer,1,Face) + HydroParam%uxy(iLayer,1,Facexin)>=0) Then                      
+    !                    HydroParam%uxy(iLayer,1,Face) = (HydroParam%uxy(iLayer,1,Face)*HydroParam%H(MeshParam%Edge(4,iElem)) + HydroParam%uxy(iLayer,1,Facexin)*HydroParam%H(MeshParam%Edge(2,iElem)))/(HydroParam%H(MeshParam%Edge(4,iElem)) + HydroParam%H(MeshParam%Edge(2,iElem)))
+    !                Else
+    !                    If (iLayer < HydroParam%Smallm(x2Elem)) Then
+    !                        Facexin = Face
+    !                    Else
+    !                        Facexin = MeshParam%Edge(iEdge,x2Elem)
+    !                    EndIf
+    !                    HydroParam%uxy(iLayer,1,Face) = (HydroParam%uxy(iLayer,1,Face)*HydroParam%H(MeshParam%Edge(2,iElem)) + HydroParam%uxy(iLayer,1,Facexin)*HydroParam%H(MeshParam%Edge(4,iElem)))/(HydroParam%H(MeshParam%Edge(4,iElem)) + HydroParam%H(MeshParam%Edge(2,iElem)))
+    !                EndIf
+    !                ! y-direction component:
+    !                If (iLayer < HydroParam%Smallm(y2Elem)) Then
+    !                    Faceyin = Face
+    !                Else                            
+    !                    Faceyin = MeshParam%Edge(iEdge,y2Elem)
+    !                EndIf
+    !
+    !                If (HydroParam%uxy(iLayer,2,Face) + HydroParam%uxy(iLayer,2,Faceyin)>=0) Then
+    !                    HydroParam%uxy(iLayer,2,Face) = (HydroParam%uxy(iLayer,2,Face)*HydroParam%H(Face) + HydroParam%uxy(iLayer,2,Faceyin)*HydroParam%H(Faceyin))/(HydroParam%H(Face) + HydroParam%H(Faceyin))            
+    !                Else
+    !                    Faceyin = MeshParam%Edge(1,iElem)
+    !                    HydroParam%uxy(iLayer,2,Face) = (HydroParam%uxy(iLayer,2,Face)*HydroParam%H(Face) + HydroParam%uxy(iLayer,2,Faceyin)*HydroParam%H(Faceyin))/(HydroParam%H(Face) + HydroParam%H(Faceyin))                                             
+    !                EndIf                
+    !            Else
+    !                !iEdge = 4                    
+    !                Faceyin = MeshParam%Edge(iEdge,y2Elem)                       
+    !                Facexin = MeshParam%Edge(2,iElem)                    
+    !           
+    !                ! x-direction component:
+    !                If (HydroParam%uxy(iLayer,1,Face) + HydroParam%uxy(iLayer,1,Facexin)>=0) Then                         
+    !                    HydroParam%uxy(iLayer,1,Face) = (HydroParam%uxy(iLayer,1,Face)*HydroParam%H(Face) + HydroParam%uxy(iLayer,1,Facexin)*HydroParam%H(Facexin))/(HydroParam%H(Face) + HydroParam%H(Facexin))
+    !                Else
+    !                    If (iLayer < HydroParam%Smallm(x2Elem)) Then
+    !                        Facexin = Face
+    !                    Else
+    !                        Facexin = MeshParam%Edge(iEdge,x2Elem)
+    !                    EndIf                                                 
+    !                    HydroParam%uxy(iLayer,1,Face) = (HydroParam%uxy(iLayer,1,Face)*HydroParam%H(Face) + HydroParam%uxy(iLayer,1,Facexin)*HydroParam%H(Facexin))/(HydroParam%H(Face) + HydroParam%H(Facexin))
+    !                EndIf
+    !
+    !                ! y-direction component:        
+    !                If (iLayer < HydroParam%Smallm(y2Elem)) Then
+    !                    Faceyin = Face
+    !                Else
+    !                    Faceyin = MeshParam%Edge(iEdge,y2Elem)
+    !                EndIf                       
+    !                
+    !                If (HydroParam%uxy(iLayer,2,Face) + HydroParam%uxy(iLayer,2,Faceyin)>=0) Then
+    !                    HydroParam%uxy(iLayer,2,Face) = (HydroParam%uxy(iLayer,2,Face)*HydroParam%H(MeshParam%Edge(1,iElem)) + HydroParam%uxy(iLayer,2,Faceyin)*HydroParam%H(MeshParam%Edge(3,iElem)))/(HydroParam%H(MeshParam%Edge(1,iElem)) + HydroParam%H(MeshParam%Edge(3,iElem)))            
+    !                Else
+    !                    If (iLayer < HydroParam%Smallm(y1Elem)) Then
+    !                        Faceyin = Face
+    !                    Else                            
+    !                        Faceyin = MeshParam%Edge(iEdge,y1Elem)
+    !                    EndIf                       
+    !                    HydroParam%uxy(iLayer,2,Face) = (HydroParam%uxy(iLayer,2,Face)*HydroParam%H(MeshParam%Edge(3,iElem)) + HydroParam%uxy(iLayer,2,Faceyin)*HydroParam%H(MeshParam%Edge(1,iElem)))/(HydroParam%H(MeshParam%Edge(3,iElem)) + HydroParam%H(MeshParam%Edge(1,iElem)))                                  
+    !                EndIf       
+    !            EndIf           
+    !        EndDo          
+    !    EndDo
+    !EndDo
+    !
 	!Do iElem = 1, MeshParam%nElem
  !       Do iEdge = 1, 4
  !           Face = MeshParam%Edge(iEdge,iElem)
@@ -407,7 +762,6 @@
                 If (abs(HydroParam%uxy(iLayer,2,Face))>NearZero) then !if iEdge has flux in Y direction
                     aaV=aaV+aa(iEdge) !Total area contribution.
                 EndIf
-                
             EndDo
             
             If (aaU==0) Then
@@ -428,9 +782,31 @@
                 If (abs(HydroParam%uxy(iLayer,2,Face))>NearZero.and.aaV>NearZero) then !if iEdge has flux in X direction
                     HydroParam%ub(iLayer,2,iElem) = HydroParam%ub(iLayer,2,iElem) + HydroParam%uxy(iLayer,2,Face)*aa(iEdge)/aaV
                 EndIf
-                    
+                
             EndDo
             HydroParam%ub(iLayer,3,iElem) = 0.5*( HydroParam%w(iLayer,iElem) + HydroParam%w(iLayer+1,iElem) )
+
+            ! If subsurface flow occurs, ubsub calculate as output:
+            If (MeshParam%iBedrock == 1) Then
+                If (aaU==0) Then
+                    HydroParam%ubsub(iLayer,1,iElem) = 0
+                EndIf
+                If (aaV==0) Then
+                    HydroParam%ubsub(iLayer,2,iElem) = 0
+                EndIf            
+            
+                Do iEdge=1,4                  
+
+                    If (abs(HydroParam%uxysub(iLayer,1,Face))>NearZero.and.aaU>NearZero) then !if iEdge has flux in Y direction
+                        HydroParam%ubsub(iLayer,1,iElem) = HydroParam%ubsub(iLayer,1,iElem) + HydroParam%uxysub(iLayer,1,Face)*aa(iEdge)/aaU
+                    EndIf
+                    If (abs(HydroParam%uxysub(iLayer,2,Face))>NearZero.and.aaV>NearZero) then !if iEdge has flux in X direction
+                        HydroParam%ubsub(iLayer,2,iElem) = HydroParam%ubsub(iLayer,2,iElem) + HydroParam%uxysub(iLayer,2,Face)*aa(iEdge)/aaV     
+                    EndIf
+                EndDo
+                HydroParam%ubsub(iLayer,3,iElem) = 0.5*( HydroParam%wm(iLayer,iElem) + HydroParam%wm(iLayer+1,iElem) )
+            EndIf  
+                   
         EndDo
     EndDo   
     
@@ -438,6 +814,16 @@
     Do iEdge=1,MeshParam%nEdge
         l = MeshParam%Left(iEdge)
         r = MeshParam%Right(iEdge)
+        
+        !!bench 02:
+        !if ( 100-NearZero <= MeshParam%EdgeBary(1,iEdge)<= 100 + NearZero) then
+        !    if (MeshParam%EdgeBary(2,iEdge) >= 110 - NearZero) then
+        !        r = 0
+        !    elseif(MeshParam%EdgeBary(2,iEdge) <= 90 + NearZero) then
+        !        r = 0
+        !    endif
+        !endif            
+        !
         If (r==0) Then
             HydroParam%wfc(:,iEdge)= HydroParam%ub(:,3,l)
         Else        
@@ -485,6 +871,16 @@
     Do iEdge=1,MeshParam%nEdge
         l = MeshParam%Left(iEdge)
         r = MeshParam%Right(iEdge)
+        
+        !!bench 02:
+        !if ( 100-NearZero <= MeshParam%EdgeBary(1,iEdge)<= 100 + NearZero) then
+        !    if (MeshParam%EdgeBary(2,iEdge) >= 110 - NearZero) then
+        !        r = 0
+        !    elseif(MeshParam%EdgeBary(2,iEdge) <= 90 + NearZero) then
+        !        r = 0
+        !    endif
+        !endif                
+        
         !Bottom and top horizontal velocitys are iqual to cell center velocities - layer "k" is defined in the center of each cell
         !Bottom vertical Velocity is = 0, top layer vertical velocity is = w top layer velocity
         !if (r==0) then
@@ -509,10 +905,10 @@
             If (r==0) Then !Velocity in lateral boundaries is equal to cell center velocity
                 If (HydroParam%uxy(iLayer,1,iEdge)==0.and.HydroParam%uxy(iLayer,2,iEdge)/=0) then !no flux in U direction
                      HydroParam%ug(iEdge,iLayer)=0
-                     HydroParam%vg(iEdge,iLayer)= HydroParam%uxy(iLayer-1,2,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l)))*(HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge)))
+                     HydroParam%vg(iEdge,iLayer)= HydroParam%uxy(iLayer-1,2,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l) + NearZero3))*(HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge)))
                      HydroParam%wg(iEdge,iLayer)= HydroParam%w(iLayer,l) 
                 Elseif (HydroParam%uxy(iLayer,2,iEdge)==0.and.HydroParam%uxy(iLayer,1,iEdge)/=0) then !no flux in V direction
-                     HydroParam%ug(iEdge,iLayer)= HydroParam%uxy(iLayer-1,1,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l)))*(HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge)))
+                     HydroParam%ug(iEdge,iLayer)= HydroParam%uxy(iLayer-1,1,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l) + NearZero3 ))*(HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge)))
                      HydroParam%vg(iEdge,iLayer)=0
                      HydroParam%wg(iEdge,iLayer)= HydroParam%w(iLayer,l)
                 Elseif (HydroParam%uxy(iLayer,2,iEdge)==0.and.HydroParam%uxy(iLayer,1,iEdge)==0) then !no flux in U or V direction
@@ -520,8 +916,8 @@
                      HydroParam%vg(iEdge,iLayer)=0
                      HydroParam%wg(iEdge,iLayer)= HydroParam%w(iLayer,l) !(HydroParam%wfc(iLayer-1,iEdge)+(HydroParam%DZj(iLayer-1,iEdge)/(HydroParam%DZj(iLayer-1,iEdge)+HydroParam%DZj(iLayer,iEdge)))*(HydroParam%wfc(iLayer,iEdge)-HydroParam%wfc(iLayer-1,iEdge)))
                 Else !Flux in U and V direction
-                    HydroParam%ug(iEdge,iLayer)= HydroParam%uxy(iLayer-1,1,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l)))*(HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge)))
-                    HydroParam%vg(iEdge,iLayer)= HydroParam%uxy(iLayer-1,2,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l)))*(HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge)))
+                    HydroParam%ug(iEdge,iLayer)= HydroParam%uxy(iLayer-1,1,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l) + NearZero3))*(HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge)))
+                    HydroParam%vg(iEdge,iLayer)= HydroParam%uxy(iLayer-1,2,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l) + NearZero3))*(HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge)))
                 !HydroParam%ug(iEdge,iLayer)=HydroParam%uxyL(iLayer,1,l)
                 !HydroParam%vg(iEdge,iLayer)= HydroParam%uxyL(iLayer,2,l)
                     HydroParam%wg(iEdge,iLayer)= HydroParam%w(iLayer,l) !(HydroParam%wfc(iLayer-1,iEdge)+(HydroParam%DZj(iLayer-1,iEdge)/(HydroParam%DZj(iLayer-1,iEdge)+HydroParam%DZj(iLayer,iEdge)))*(HydroParam%wfc(iLayer,iEdge)-HydroParam%wfc(iLayer-1,iEdge)))
@@ -531,16 +927,16 @@
                     !HydroParam%ug(iEdge,iLayer)= 0.5d0*((0.5d0*(HydroParam%uxyL(iLayer,1,r)+HydroParam%uxyL(iLayer,1,l))+HydroParam%uxy(iLayer-1,1,iEdge)+(HydroParam%DZj(iLayer-1,iEdge)/(HydroParam%DZj(iLayer-1,iEdge)+HydroParam%DZj(iLayer,iEdge)))*(HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge))))
                     !HydroParam%vg(iEdge,iLayer)= 0.5d0*((0.5d0*(HydroParam%uxyL(iLayer,2,r)+HydroParam%uxyL(iLayer,2,l))+HydroParam%uxy(iLayer-1,2,iEdge)+(HydroParam%DZj(iLayer-1,iEdge)/(HydroParam%DZj(iLayer-1,iEdge)+HydroParam%DZj(iLayer,iEdge)))*(HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge))))
                     !HydroParam%wg(iEdge,iLayer) = 0.5d0*((0.5d0*(HydroParam%w(iLayer,r)+HydroParam%w(iLayer,l)))+(HydroParam%wfc(iLayer-1,iEdge)+(HydroParam%DZj(iLayer-1,iEdge)/(HydroParam%DZj(iLayer-1,iEdge)+HydroParam%DZj(iLayer,iEdge)))*(HydroParam%wfc(iLayer,iEdge)-HydroParam%wfc(iLayer-1,iEdge))))
-                    HydroParam%ug(iEdge,iLayer)= HydroParam%uxy(iLayer-1,1,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l)))*(HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge)))
-                    HydroParam%vg(iEdge,iLayer)= HydroParam%uxy(iLayer-1,2,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l)))*(HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge)))
+                    HydroParam%ug(iEdge,iLayer)= HydroParam%uxy(iLayer-1,1,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l) + NearZero3))*(HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge)))
+                    HydroParam%vg(iEdge,iLayer)= HydroParam%uxy(iLayer-1,2,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l) + NearZero3))*(HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge)))
                     HydroParam%wg(iEdge,iLayer) = 0.5d0*(HydroParam%w(iLayer,r)+HydroParam%w(iLayer,l))!+(HydroParam%wfc(iLayer-1,iEdge)+(HydroParam%DZj(iLayer-1,iEdge)/(HydroParam%DZj(iLayer-1,iEdge)+HydroParam%DZj(iLayer,iEdge)))*(HydroParam%wfc(iLayer,iEdge)-HydroParam%wfc(iLayer-1,iEdge))))
                 Else
                     If (HydroParam%uxy(iLayer,1,iEdge)==0.and.HydroParam%uxy(iLayer,2,iEdge)/=0) then
                          HydroParam%ug(iEdge,iLayer)=0
-                         HydroParam%vg(iEdge,iLayer)= HydroParam%uxy(iLayer-1,2,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l)))*(HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge)))
+                         HydroParam%vg(iEdge,iLayer)= HydroParam%uxy(iLayer-1,2,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l) + NearZero3))*(HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge)))
                          HydroParam%wg(iEdge,iLayer)= HydroParam%w(iLayer,l) 
                     Elseif (HydroParam%uxy(iLayer,2,iEdge)==0.and.HydroParam%uxy(iLayer,1,iEdge)/=0) then
-                         HydroParam%ug(iEdge,iLayer)= HydroParam%uxy(iLayer-1,1,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l)))*(HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge)))
+                         HydroParam%ug(iEdge,iLayer)= HydroParam%uxy(iLayer-1,1,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l) + NearZero3))*(HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge)))
                          HydroParam%vg(iEdge,iLayer)=0
                          HydroParam%wg(iEdge,iLayer)= HydroParam%w(iLayer,l)
                     Elseif (HydroParam%uxy(iLayer,2,iEdge)==0.and.HydroParam%uxy(iLayer,1,iEdge)==0) then
@@ -548,8 +944,8 @@
                          HydroParam%vg(iEdge,iLayer)=0
                          HydroParam%wg(iEdge,iLayer)= HydroParam%w(iLayer,l) !(HydroParam%wfc(iLayer-1,iEdge)+(HydroParam%DZj(iLayer-1,iEdge)/(HydroParam%DZj(iLayer-1,iEdge)+HydroParam%DZj(iLayer,iEdge)))*(HydroParam%wfc(iLayer,iEdge)-HydroParam%wfc(iLayer-1,iEdge)))
                     Else
-                        HydroParam%ug(iEdge,iLayer)= HydroParam%uxy(iLayer-1,1,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l)))*(HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge)))
-                        HydroParam%vg(iEdge,iLayer)= HydroParam%uxy(iLayer-1,2,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l)))*(HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge)))
+                        HydroParam%ug(iEdge,iLayer)= HydroParam%uxy(iLayer-1,1,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l) + NearZero3))*(HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge)))
+                        HydroParam%vg(iEdge,iLayer)= HydroParam%uxy(iLayer-1,2,iEdge)+(((HydroParam%Zb(iLayer,l)-HydroParam%Ze(iLayer,l))/(HydroParam%Zb(iLayer,l)-HydroParam%Zb(iLayer-1,l) + NearZero3))*(HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge)))
                         !HydroParam%ug(iEdge,iLayer)=HydroParam%uxyL(iLayer,1,l)
                         !HydroParam%vg(iEdge,iLayer)=HydroParam%uxyL(iLayer,2,l)
                         HydroParam%wg(iEdge,iLayer)= HydroParam%w(iLayer,l) !(HydroParam%wfc(iLayer-1,iEdge)+(HydroParam%DZj(iLayer-1,iEdge)/(HydroParam%DZj(iLayer-1,iEdge)+HydroParam%DZj(iLayer,iEdge)))*(HydroParam%wfc(iLayer,iEdge)-HydroParam%wfc(iLayer-1,iEdge)))
@@ -826,6 +1222,11 @@
                 else
                     HydroParam%ubV(iLayer,3,iNode) = 0.d0
                 EndIf
+                
+                If(Face == 536 .or. Face == 565 .or. Face == 571) then
+                    continue
+                endif
+                
             
         EndDo
     EndDo   
@@ -966,7 +1367,19 @@
         enddo
     enddo
     
-
 	Return
     End Subroutine VelocitiesSUB  
     
+       
+    Function neighElem(MeshParam,Face)
+
+    use MeshVars
+    Implicit none
+    Integer:: Face, neighElem
+    type(MeshGridParam) :: MeshParam
+    neighElem = MeshParam%Right(Face)
+    If (neighElem == 0) Then
+        neighElem = MeshParam%Left(Face)
+    EndIf
+    
+    End Function neighElem  

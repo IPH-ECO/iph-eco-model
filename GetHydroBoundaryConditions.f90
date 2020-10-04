@@ -1,5 +1,5 @@
 !> This subroutine reads the hydrodynamic boundaru conditions. 
-Subroutine GetHydroBoundaryConditions(HydroParam,MeshParam,time,SimTime)
+Subroutine GetHydroBoundaryConditions(HydroParam,MeshParam,dt,time,SimTime)
     
     Use Hydrodynamic
     Use MeshVars
@@ -11,7 +11,7 @@ Subroutine GetHydroBoundaryConditions(HydroParam,MeshParam,time,SimTime)
     Real:: t_interp(1)
     Real:: p_interp(1,1)
     Real:: NearZero = 1e-10
-    Real:: Q_aux,SimTime
+    Real:: Q_aux,SimTime,dt
     Integer:: Sig,l
     Real:: time
     type(HydrodynamicParam) :: HydroParam
@@ -23,7 +23,9 @@ Subroutine GetHydroBoundaryConditions(HydroParam,MeshParam,time,SimTime)
         Call interp_linear( 1, HydroParam%WaterLevelnTime(i), HydroParam%WaterLevelTime(i,1:HydroParam%WaterLevelnTime(i)), HydroParam%WaterLevelValue(i,1:HydroParam%WaterLevelnTime(i)), 1, t_interp, p_interp )
         HydroParam%WaterLevel(i) = p_interp(1,1)
     EndDo
-    HydroParam%WaterLevel(1) = 0.214 + 0.06*cos(2*HydroParam%pi*(Simtime-5.0d0)/355.0d0) !CAYO
+
+    HydroParam%WaterLevel(1) = 0.214 + 0.06*cos(2*HydroParam%pi*(Simtime-dt)/(355.0d0)) !CAYO
+    !HydroParam%WaterLevel(1) = 2.14 + 0.6*cos(2*HydroParam%pi*(Simtime-dt)/(355.0d0)) !CAYO
     !2. Reading inflow/outflow
     Do i =1,HydroParam%NInflow
         iElem = HydroParam%IndexInflow(i,2)

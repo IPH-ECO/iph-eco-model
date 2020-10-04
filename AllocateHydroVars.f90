@@ -31,9 +31,14 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     Allocate(HydroParam%Fvu(MeshParam%Kmax,MeshParam%nEdge))
     Allocate(HydroParam%Fuv(MeshParam%Kmax,MeshParam%nEdge))
     Allocate(HydroParam%u(MeshParam%Kmax,MeshParam%nEdge))
+    
+    Allocate(HydroParam%psij(MeshParam%Kmax,MeshParam%nEdge))
+    Allocate(HydroParam%rj(MeshParam%Kmax,MeshParam%nEdge))
+    
     Allocate(HydroParam%utang(MeshParam%Kmax,MeshParam%nEdge))
     Allocate(HydroParam%Wu(MeshParam%Kmax,MeshParam%nEdge))
     Allocate(HydroParam%uxyback(MeshParam%Kmax,2,MeshParam%nEdge))
+    Allocate(HydroParam%uArrow(MeshParam%Kmax,3,MeshParam%nEdge))    
     Allocate(HydroParam%ubBack(MeshParam%Kmax,3,MeshParam%nElem))
     Allocate(HydroParam%uxy(MeshParam%Kmax,2,MeshParam%nEdge))
     Allocate(HydroParam%uxyL(MeshParam%Kmax+1,2,MeshParam%nElem))
@@ -48,7 +53,7 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     Allocate(HydroParam%epson(MeshParam%Kmax,MeshParam%nEdge))
     Allocate(HydroParam%psi_edge(MeshParam%Kmax,MeshParam%nEdge))
     Allocate(HydroParam%psi_cell(MeshParam%Kmax,MeshParam%nElem))
-    
+
     
     ! 2.2. Others Variables
     Allocate(HydroParam%etaInf(MeshParam%nElem))
@@ -122,6 +127,11 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     Allocate(HydroParam%ust(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
     Allocate(HydroParam%um(MeshParam%Kmax,MeshParam%nEdge))!CAYO
     Allocate(HydroParam%umt(MeshParam%Kmax,MeshParam%nEdge))!CAYO
+    Allocate(HydroParam%wm(MeshParam%Kmax+1,MeshParam%nElem))
+    Allocate(HydroParam%wmt(MeshParam%Kmax+1,MeshParam%nElem))
+    
+    Allocate(HydroParam%uxysub(MeshParam%Kmax,2,MeshParam%nEdge))
+    Allocate(HydroParam%ubsub(MeshParam%Kmax,3,MeshParam%nElem))
     
     Allocate(HydroParam%DZsj(MeshParam%Kmax,MeshParam%nEdge)) !CAYO   
     Allocate(HydroParam%DZsjt(MeshParam%Kmax,MeshParam%nEdge)) !CAYO

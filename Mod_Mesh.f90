@@ -131,10 +131,10 @@ Module MeshVars
         
         this%dx = StructuredMeshFeatures%resolution
         !Lock horizontal resolution test
-        this%dx = 0.02d0
-        !!
+        this%dx = 0.020d0
+
         this%dy = this%dx
-        this%dy = 6.48 !CAYO
+        this%dy = 6.48d0 !CAYO
         
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
@@ -143,6 +143,7 @@ Module MeshVars
         Do iElem = 1, this%nElem
             this%xb(iElem) = xCoordinates(iElem)
             this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO
+            !this%yb(iElem) = yCoordinates(iElem) !CAYO
             this%Quadri(3,iElem) = verticeIds(4*(iElem-1)+1)
             this%Quadri(4,iElem) = verticeIds(4*(iElem-1)+2)
             this%Quadri(1,iElem) = verticeIds(4*(iElem-1)+3)
@@ -167,9 +168,8 @@ Module MeshVars
             this%LIMCAMAUX = this%zL
         EndIf            
         
-        
         ! Number of Vertical Layers
-        If (this%NCAMMAX ==0) then !Two-dimensional
+        If (this%NCAMMAX == 0) then !Two-dimensional
             this%KMax = 1
             this%LIMCAMAUX(this%KMax)=this%zL
         ElseIf (this%NCAMMAX >= 1) then !Three-dimensional

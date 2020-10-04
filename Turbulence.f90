@@ -44,6 +44,11 @@ Subroutine Turbulence(HydroParam,MeshParam,MeteoParam,dt)
     type(HydrodynamicParam) :: HydroParam
     type(MeteorologicalParam) :: MeteoParam
     
+    
+    ! Note: HydroParam%DZit == HydroParam%DZhit, in subsurface coupled case DZhit is equivalent to Surface Water thickness in cell
+    ! in only surface case the DZhit = DZit.
+    ! Same case for HydroParm%DZj == HydroParam%DZhj, with DZhj for Edge.
+    
     ! 1. Define the Cell centered Horizontal Eddy-Viscosity:
     If (HydroParam%iHTurb == 0) Then         ! User-defined Horizontal Diffusion
         !!$OMP parallel do default(none) shared(MeshParam,HydroParam) private(iLayer,iElem)
@@ -111,13 +116,13 @@ Subroutine Turbulence(HydroParam,MeshParam,MeteoParam,dt)
                         HydroParam%VerEddyDiff(iLayer,iEdge) = 0. 
                     Else !Intermediary (k-1/2) or Surface layer (M-1/2)
                         If (r == 0) Then
-                            drhodz = (HydroParam%sDRhoW(iLayer,l)-HydroParam%sDRhoW(iLayer-1,l))/((HydroParam%DZj(iLayer,iEdge)+HydroParam%DZj(iLayer-1,iEdge))/2.)
+                            drhodz = (HydroParam%sDRhoW(iLayer,l)-HydroParam%sDRhoW(iLayer-1,l))/((HydroParam%DZhj(iLayer,iEdge)+HydroParam%DZhj(iLayer-1,iEdge))/2.)
                         Else
-                            drhodz = (0.5*(HydroParam%sDRhoW(iLayer,l)+HydroParam%sDRhoW(iLayer,r))-0.5*(HydroParam%sDRhoW(iLayer-1,l)+HydroParam%sDRhoW(iLayer-1,r)))/((HydroParam%DZj(iLayer,iEdge)+HydroParam%DZj(iLayer-1,iEdge))/2.)
+                            drhodz = (0.5*(HydroParam%sDRhoW(iLayer,l)+HydroParam%sDRhoW(iLayer,r))-0.5*(HydroParam%sDRhoW(iLayer-1,l)+HydroParam%sDRhoW(iLayer-1,r)))/((HydroParam%DZhj(iLayer,iEdge)+HydroParam%DZhj(iLayer-1,iEdge))/2.)
                         EndIf
 		                bvf    = -HydroParam%G*(drhodz/HydroParam%rho0+HydroParam%G/1.5e3**2.)
-                        dundz  = (HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge))/((HydroParam%DZj(iLayer,iEdge)+HydroParam%DZj(iLayer-1,iEdge))/2.)
-		                dutdz  = (HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge))/((HydroParam%DZj(iLayer,iEdge)+HydroParam%DZj(iLayer-1,iEdge))/2.)
+                        dundz  = (HydroParam%uxy(iLayer,1,iEdge)-HydroParam%uxy(iLayer-1,1,iEdge))/((HydroParam%DZhj(iLayer,iEdge)+HydroParam%DZhj(iLayer-1,iEdge))/2.)
+		                dutdz  = (HydroParam%uxy(iLayer,2,iEdge)-HydroParam%uxy(iLayer-1,2,iEdge))/((HydroParam%DZhj(iLayer,iEdge)+HydroParam%DZhj(iLayer-1,iEdge))/2.)
                         shear2 = dundz**2. + dutdz**2.
 		                shear2 = max(shear2,1.0d-10)
 		                rich   = max(bvf/shear2,0.0d0)
@@ -239,7 +244,7 @@ Subroutine TwoEq_KC(HydroParam,MeshParam,MeteoParam,dt)
             Cycle
         Else
             Do iLayer = HydroParam%ElSmallm(iElem), HydroParam%ElCapitalM(iElem) - 1
-                dzp     = 0.5*( HydroParam%Dzit(iLayer+1,iElem) + HydroParam%Dzit(iLayer,iElem) )
+                dzp     = 0.5*( HydroParam%DZhit(iLayer+1,iElem) + HydroParam%DZhit(iLayer,iElem) )
                 RhoAv   = 0.5*( HydroParam%sDRhoW(iLayer+1,iElem) + HydroParam%sDRhoW(iLayer,iElem) ) !+ 1000.
                 drhodz  = ( HydroParam%sDRhoW(iLayer+1,iElem) - HydroParam%sDRhoW(iLayer,iElem) )/dzp
                 ShearSq = ( (HydroParam%ub(iLayer+1,1,iElem) - HydroParam%ub(iLayer,1,iElem))/dzp )**2. + ( (HydroParam%ub(iLayer+1,2,iElem) - HydroParam%ub(iLayer,2,iElem))/dzp )**2.
@@ -278,7 +283,7 @@ Subroutine TwoEq_KC(HydroParam,MeshParam,MeteoParam,dt)
         End If      ! Bidimensional Cell
         ! 2.3 Correction for Shallow Surface Elements
         ! Obs.: This is how SI3D does it. I don't agree with this. Need to double check!
-        If ( HydroParam%Dzit(HydroParam%ElCapitalM(iElem),iElem) < 1.E-2 ) Then
+        If ( HydroParam%DZhit(HydroParam%ElCapitalM(iElem),iElem) < 1.E-2 ) Then
             HydroParam%VerEddyViscCell(HydroParam%ElCapitalM(iElem),iElem) = Max(HydroParam%VerEddyViscCell(HydroParam%ElCapitalM(iElem),iElem),1.E-4)
             HydroParam%VerEddyDiffCell(HydroParam%ElCapitalM(iElem),iElem) = Max(HydroParam%VerEddyDiffCell(HydroParam%ElCapitalM(iElem),iElem),1.E-4)
         Else
@@ -367,7 +372,7 @@ Subroutine SolveTKE_LengthScale(HydroParam,MeshParam,MeteoParam,dt,q2pp,q2lpp,q2
             ! 2. Compute the Array of Vertical Distances from the Bottom of the Water Column to the Top of each layer
             zfromb0 = 0.
             Do iLayer = HydroParam%ElSmallm(iElem) + 1, HydroParam%ElCapitalM(iElem)
-                zfromb0 = zfromb0 + HydroParam%Dzit(iLayer,iElem)
+                zfromb0 = zfromb0 + HydroParam%DZhit(iLayer,iElem)
                 zfromb(iLayer) = zfromb0
             End Do      ! Layer Loop
             zfromb(HydroParam%ElSmallm(iElem))     = 0.
@@ -376,7 +381,7 @@ Subroutine SolveTKE_LengthScale(HydroParam,MeshParam,MeteoParam,dt,q2pp,q2lpp,q2
             ! 3. Compute the Array of Vertical Distances from the Top of the Water Column to the Top of each layer
             zfromt0 = 0.
             Do iLayer = HydroParam%ElCapitalM(iElem), HydroParam%ElSmallm(iElem) + 1, -1
-                zfromt0 = zfromt0 + HydroParam%Dzit(iLayer-1,iElem)
+                zfromt0 = zfromt0 + HydroParam%DZhit(iLayer-1,iElem)
                 zfromt(iLayer) = zfromt0
             End Do      ! Layer Loop
             zfromt(HydroParam%ElSmallm(iElem))     = V(HydroParam%etan(iElem),HydroParam%hb(iElem))
@@ -390,7 +395,7 @@ Subroutine SolveTKE_LengthScale(HydroParam,MeshParam,MeteoParam,dt,q2pp,q2lpp,q2
             ! 5. Compute Shear and Buoyancy source Terms            
             Do iLayer = HydroParam%ElSmallm(iElem), HydroParam%ElCapitalM(iElem) - 1
                 ! ----- Density Gradients -----
-                dzp     = 0.5*( HydroParam%Dzit(iLayer+1,iElem) + HydroParam%Dzit(iLayer,iElem) )
+                dzp     = 0.5*( HydroParam%DZhit(iLayer+1,iElem) + HydroParam%DZhit(iLayer,iElem) )
                 RhoAv   = 0.5*( HydroParam%sDRhoW(iLayer+1,iElem) + HydroParam%sDRhoW(iLayer,iElem) ) !+ 1000.
                 drhodz  = ( HydroParam%sDRhoW(iLayer+1,iElem) - HydroParam%sDRhoW(iLayer,iElem) )/dzp
                 ShearSq = ( (HydroParam%ub(iLayer+1,1,iElem) - HydroParam%ub(iLayer,1,iElem))/dzp )**2. + ( (HydroParam%ub(iLayer+1,2,iElem) - HydroParam%ub(iLayer,2,iElem))/dzp )**2.
@@ -410,11 +415,11 @@ Subroutine SolveTKE_LengthScale(HydroParam,MeshParam,MeteoParam,dt,q2pp,q2lpp,q2
             ! 7. Form Tridiagonal Matrix
             ! ----- Define Upper Diagonal Terms -----
             aaTh(3,HydroParam%ElSmallm(iElem)) = 0.
-            aaTh(3,HydroParam%ElSmallm(iElem)+1:HydroParam%ElCapitalM(iElem)) = -dCoeff(HydroParam%ElSmallm(iElem)+1:HydroParam%ElCapitalM(iElem))/( HydroParam%Dzi(HydroParam%ElSmallm(iElem)+1:HydroParam%ElCapitalM(iElem),iElem)*0.5*( HydroParam%Dzit(HydroParam%ElSmallm(iElem)+1:HydroParam%ElCapitalM(iElem),iElem) + HydroParam%Dzit(HydroParam%ElSmallm(iElem):HydroParam%ElCapitalM(iElem)-1,iElem) ) )
+            aaTh(3,HydroParam%ElSmallm(iElem)+1:HydroParam%ElCapitalM(iElem)) = -dCoeff(HydroParam%ElSmallm(iElem)+1:HydroParam%ElCapitalM(iElem))/( HydroParam%Dzi(HydroParam%ElSmallm(iElem)+1:HydroParam%ElCapitalM(iElem),iElem)*0.5*( HydroParam%DZhit(HydroParam%ElSmallm(iElem)+1:HydroParam%ElCapitalM(iElem),iElem) + HydroParam%DZhit(HydroParam%ElSmallm(iElem):HydroParam%ElCapitalM(iElem)-1,iElem) ) )
             aaTh(3,HydroParam%ElCapitalM(iElem)+1) = 0.
             ! ----- Define Lower Diagonal Terms -----
             aaTh(1,HydroParam%ElSmallm(iElem)) = 0.
-            aaTh(1,HydroParam%ElSmallm(iElem)+1:HydroParam%ElCapitalM(iElem)) = -dCoeff(HydroParam%ElSmallm(iElem)+2:HydroParam%ElCapitalM(iElem)+1)/( HydroParam%DZit(HydroParam%ElSmallm(iElem):HydroParam%ElCapitalM(iElem)-1,iElem)*0.5*( HydroParam%Dzit(HydroParam%ElSmallm(iElem)+1:HydroParam%ElCapitalM(iElem),iElem) + HydroParam%Dzit(HydroParam%ElSmallm(iElem):HydroParam%ElCapitalM(iElem)-1,iElem) ) )
+            aaTh(1,HydroParam%ElSmallm(iElem)+1:HydroParam%ElCapitalM(iElem)) = -dCoeff(HydroParam%ElSmallm(iElem)+2:HydroParam%ElCapitalM(iElem)+1)/( HydroParam%DZhit(HydroParam%ElSmallm(iElem):HydroParam%ElCapitalM(iElem)-1,iElem)*0.5*( HydroParam%DZhit(HydroParam%ElSmallm(iElem)+1:HydroParam%ElCapitalM(iElem),iElem) + HydroParam%DZhit(HydroParam%ElSmallm(iElem):HydroParam%ElCapitalM(iElem)-1,iElem) ) )
             aaTh(1,HydroParam%ElCapitalM(iElem)+1) = 0.
             ! ----- Define Main Diagonal Terms -----
             aaTh(2,HydroParam%ElSmallm(iElem)) = 3./(2.*dt)
