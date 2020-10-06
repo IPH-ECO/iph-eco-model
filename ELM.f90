@@ -27,7 +27,7 @@
     !Use SimulationModel 
     
     Implicit None
-    Integer:: iElem,iEdge,lEdge,iLayer,jlev,l,r,nnel,ndels,Sig,Face,n1,n2,n3,n4,iNode,icount,j,fac,kin,TrajectoryFlag,FuFw_flag,jump,psi_flag,ntals
+    Integer:: iElem,iEdge,lEdge,iLayer,jlev,l,r,nnel,ndels,Sig,Face,n1,n2,n3,n4,iNode,icount,j,fac,kin,TrajectoryFlag,FuFw_flag,jump,psi_flag,ntals, iEdge0
     Real::x0,y0,z0,xt,yt,zt,uuint,vvint,wwint,hhint,wdown,wup,vmag,dtb,aa(4),weit
     Real:: NearZero = 1e-10
     Real::dt, tal
@@ -107,8 +107,9 @@
                         EndIf
                         
                         FuFw_flag = 0
+                        iEdge0 = iEdge
                         Call btrack(ndels,dtb,dt,uuint,vvint,wwint,hhint,&
-                        &x0,y0,z0,xt,yt,zt,nnel,jlev,iEdge,HydroParam,MeshParam, FuFw_flag, iLayer, iEdge)
+                        &x0,y0,z0,xt,yt,zt,nnel,jlev,iEdge0,HydroParam,MeshParam, FuFw_flag, iLayer, iEdge)
                         !
                         !! Conservative Scheme:
                         !If (HydroParam%iConv == 4) Then                          
@@ -261,9 +262,9 @@
     Implicit none
     
     Real, parameter :: small1=1e-6
-    integer, intent(in) :: ndelt, id0, FuFw_flag, iLayer
+    integer, intent(in) :: ndelt, FuFw_flag, iLayer
     Real, intent(inout) :: dtb, dt
-    integer, intent(inout) :: nnel,jlev
+    integer, intent(inout) :: nnel,jlev, id0
     Real, intent(inout) :: uuint,vvint,wwint,x0,y0,z0, hhint
     Real, intent(out) :: xt,yt,zt
     Real :: uuNode(3,9), vvNode(3,9), wwNode(3,9), xxNode(3,9), yyNode(3,9), zzNode(3,9), hhNode(3,9)
@@ -276,7 +277,7 @@
     Integer:: i34 = 4
     type(MeshGridParam) :: MeshParam
     type(HydrodynamicParam) :: HydroParam
-    Integer:: ELM_flag = 1
+    Integer:: ELM_flag = 0
     Integer :: Interpolate_Flag = 1
     Real:: xaux,yaux,zaux
 
@@ -292,7 +293,7 @@
     HydroParam%uArrow(iLayer,1,iEdge) = uuint
     HydroParam%uArrow(iLayer,2,iEdge) = vvint
     HydroParam%uArrow(iLayer,3,iEdge) = wwint
-    dtb = 5.0d0
+    dtb = dt
     tal = min(MeshParam%dx/abs(uuint), MeshParam%dy/abs(vvint), (zzNode(3,5) - zzNode(1,5))/abs(wwint))
     if (tal > 0 ) then
         dtb = min(tal,dt,dtb)
@@ -308,7 +309,7 @@
         yt=y0-dtb*vvint
         zt=z0-dtb*wwint 
     
-        if (id0==10 .and. timeAcum == 2.00) then
+        if (id0==564) then
             continue
         endif
         !xt = x0-dtb*HydroParam%uArrow(iLayer,1,iEdge)
@@ -317,11 +318,11 @@
         
         !Call RK4order(uuint, vvint, wwint, dtb, nnel, id0, jlev, xaux,yaux,zaux, xt,yt,zt, Interpolate_Flag, HydroParam, MeshParam)
         
-        !Call quicksearch(1,nnel,jlev,dtb,x0,y0,z0,xt,yt,zt,iflqs1,idt,id0,i34,HydroParam,MeshParam)   
+        Call quicksearch(1,nnel,jlev,dtb,x0,y0,z0,xt,yt,zt,iflqs1,idt,id0,i34,HydroParam,MeshParam)   
 
-        xt=x0
-        yt=y0
-        zt=z0    
+        !xt=x0
+        !yt=y0
+        !zt=z0    
         !r = MeshParam%Right(iedge)
                 
         !Do iEdge = 1, 4 
@@ -361,7 +362,8 @@
 
             If (ELM_flag==0) Then !iBilinear Interpolation
                 If (FuFw_flag==0) Then !grid for U velocitys
-                    Call FuVelocities2(uuNode(:,:), vvNode(:,:), wwNode(:,:), xxNode(:,:), yyNode(:,:), zzNode(:,:), nnel,jlev, xt,yt,zt,x0,y0,z0, id0, HydroParam,MeshParam)
+                    !Call FuVelocities2(uuNode(:,:), vvNode(:,:), wwNode(:,:), xxNode(:,:), yyNode(:,:), zzNode(:,:), nnel,jlev, xt,yt,zt,x0,y0,z0, id0, HydroParam,MeshParam)
+                    Call FuVelocities3(uuNode(:,:), vvNode(:,:), wwNode(:,:), xxNode(:,:), yyNode(:,:), zzNode(:,:), nnel,jlev, xt,yt,zt,x0,y0,z0, id0, HydroParam,MeshParam)
                 Else !grid for W velocitys
                     Call FwVelocities2(uuNode(:,:), vvNode(:,:), wwNode(:,:), xxNode(:,:), yyNode(:,:), zzNode(:,:), nnel,jlev, jjlev, xt,yt,zt,x0,y0,z0, HydroParam,MeshParam)
                 EndIf
@@ -582,10 +584,10 @@
     Implicit none
     
     Real, parameter :: small1=1e-5
-    Integer, intent(in) :: iloc,idt,id0,i34
+    Integer, intent(in) :: iloc,idt,i34
     Real, intent(in) :: dtb,x0,y0,z0
     Integer, intent(out) :: nfl
-    Integer, intent(inout) :: nnel,jlev
+    Integer, intent(inout) :: nnel,jlev,id0
     Real:: xpoly(4),ypoly(4)
     Real, intent(inout) :: xt,yt,zt
     Real:: trm,aa,aa1,ae,xcg,ycg,pathl,xin,yin,zin,tt1,tt2,dist,xvel,yvel,zvel,hvel
@@ -734,6 +736,7 @@
         !For horizontal exit and dry elements, compute tangential vel.,
         !update target (xt,yt,zt) and continue.
         isd = MeshParam%Edge(nel_j,nel)
+        id0 = isd
         r = MeshParam%Right(isd)
         
         if (nel==179) then
@@ -1446,6 +1449,409 @@
      
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
+ Subroutine FuVelocities3(uuNode, vvNode, wwNode, xxNode, yyNode, zzNode, nnel,jlev, xt,yt,zt,x0,y0,z0, id0, HydroParam,MeshParam)
+    
+    Use MeshVars !, Only: Quadri,EdgeDef,xNode,yNode,Area,Edge,EdgeNodes,EdgeBary,Left,Right
+    Use Hydrodynamic !, Only: Smallm,ElSmallm,ElCapitalM,CapitalM,Z,DZj,Ze,DZi,uNode,uxy,Ze,DZi,w
+    
+    Implicit none
+    
+    integer, intent(in) :: nnel,jlev
+    Real, intent(in) ::  xt,yt,zt,x0,y0,z0
+    Real, intent(out) ::  uuNode(3,9), vvNode(3,9), wwNode(3,9), xxNode(3,9), yyNode(3,9), zzNode(3,9)
+    Integer:: idt,iflqs1,i,j,l,nd,nn,lev,n1,n2,n3,n4, iEdge,iNode, Nodes(4), F1, F2, F3, F4, id0, NodeFlag
+    Real:: NearZero = 1e-10 !< Small Number
+    Integer:: i34 = 4
+    type(MeshGridParam) :: MeshParam
+    type(HydrodynamicParam) :: HydroParam
+    !Integer:: ELM_flag = 1
+    
+    F1=MeshParam%Edge(1,nnel)
+	F2=MeshParam%Edge(2,nnel)
+	F3=MeshParam%Edge(3,nnel)
+	F4=MeshParam%Edge(4,nnel)
+    !if (jlev==HydroParam%ElSmallm(nnel)) then and.jlev/=HydroParam%ElSmallm(nnel).and.jlev/=HydroParam%ElCapitalM(nnel)
+    !MeshParam%Neighbor(1,nnel)
+	if (id0==F1) then
+        if (xt>=x0) then !Right side
+            n1=F1
+            n2=F3
+            n3=MeshParam%Quadri(4,nnel) + 1
+            n4=MeshParam%Quadri(1,nnel) + 1
+			NodeFlag = 1
+        else !left side
+            n1=F1
+            n2=MeshParam%Quadri(2,nnel) + 1
+            n3=MeshParam%Quadri(3,nnel) + 1
+            n4=F3
+			NodeFlag = 2
+        endif
+        Nodes(1:4)= (/ n1, n2, n3, n4 /)
+    elseif (id0==F2) then
+        if (yt>=y0) then !North side
+            n1=F2
+            n2=F4
+            n3=MeshParam%Quadri(1,nnel) + 1
+            n4=MeshParam%Quadri(2,nnel) + 1
+			NodeFlag = 1
+        else !South side
+            n1=F2
+            n2=MeshParam%Quadri(3,nnel) + 1
+            n3=MeshParam%Quadri(4,nnel) + 1
+            n4=F4
+			NodeFlag = 2
+        endif
+        Nodes(1:4)= (/ n1, n2, n3, n4 /)
+    elseif (id0==F3) then
+        if (xt>=x0) then !Right side
+            n1=F3
+            n2=MeshParam%Quadri(4,nnel) + 1
+            n3=MeshParam%Quadri(1,nnel) + 1
+            n4=F1
+			NodeFlag = 2
+        else !left side
+            n1=F3
+            n2=F1
+            n3=MeshParam%Quadri(2,nnel) + 1
+            n4=MeshParam%Quadri(3,nnel) + 1
+			NodeFlag = 1
+        endif
+        Nodes(1:4)= (/ n1, n2, n3, n4 /)
+	else !(id0==F4)
+        if (yt>=y0) then !North side
+            n1=F4
+            n2=MeshParam%Quadri(1,nnel) + 1
+            n3=MeshParam%Quadri(2,nnel) + 1
+            n4=F2
+			NodeFlag = 2
+        else !South side
+            n1=F4
+            n2=F2
+            n3=MeshParam%Quadri(3,nnel) + 1
+            n4=MeshParam%Quadri(4,nnel) + 1	
+			NodeFlag = 1
+        endif
+        Nodes(1:4)= (/ n1, n2, n3, n4 /)
+    endif
+	 if (NodeFlag == 1) then !n1 and n2 = Face; n3 and n4 = Nodes;
+        If (HydroParam%ElSmallm(nnel)==HydroParam%ElCapitalM(nnel)) Then !2D/ 1 Layer
+            lev=jlev
+                
+			uuNode(1,1)=HydroParam%uxy(jlev,1,Nodes(1));   vvNode(1,1)=HydroParam%uxy(jlev,2,Nodes(1));   wwNode(1,1)=HydroParam%wfc(jlev,Nodes(1))
+			uuNode(1,2)=HydroParam%uxy(jlev,1,Nodes(2));   vvNode(1,2)=HydroParam%uxy(jlev,2,Nodes(2));   wwNode(1,2)=HydroParam%wfc(jlev,Nodes(2))
+			uuNode(1,3)=HydroParam%ubv(jlev,1,Nodes(3));   vvNode(1,3)=HydroParam%ubv(jlev,2,Nodes(3));   wwNode(1,3)=HydroParam%ubv(jlev,3,Nodes(3))
+			uuNode(1,4)=HydroParam%ubv(jlev,1,Nodes(4));   vvNode(1,4)=HydroParam%ubv(jlev,2,Nodes(4));   wwNode(1,4)=HydroParam%ubv(jlev,3,Nodes(4))
+			if (zt<z0) then !Down
+                lev=jlev
+				uuNode(2,1)=HydroParam%ug(Nodes(1),lev);        vvNode(2,1)=HydroParam%vg(Nodes(1),lev);        wwNode(2,1)=HydroParam%wg(Nodes(1),lev)
+				uuNode(2,2)=HydroParam%ug(Nodes(2),lev);        vvNode(2,2)=HydroParam%vg(Nodes(2),lev);        wwNode(2,2)=HydroParam%wg(Nodes(2),lev)
+				uuNode(2,3)=HydroParam%uNode(lev,1,Nodes(3));   vvNode(2,3)=HydroParam%uNode(lev,2,Nodes(3));   wwNode(2,3)=HydroParam%uNode(lev,3,Nodes(3))
+				uuNode(2,4)=HydroParam%uNode(lev,1,Nodes(4));   vvNode(2,4)=HydroParam%uNode(lev,2,Nodes(4));   wwNode(2,4)=HydroParam%uNode(lev,3,Nodes(4))
+            else !up
+                lev=jlev+1
+				uuNode(2,1)=HydroParam%ug(Nodes(1),lev);        vvNode(2,1)=HydroParam%vg(Nodes(1),lev);        wwNode(2,1)=HydroParam%wg(Nodes(1),lev)
+				uuNode(2,2)=HydroParam%ug(Nodes(2),lev);        vvNode(2,2)=HydroParam%vg(Nodes(2),lev);        wwNode(2,2)=HydroParam%wg(Nodes(2),lev)
+				uuNode(2,3)=HydroParam%uNode(lev,1,Nodes(3));   vvNode(2,3)=HydroParam%uNode(lev,2,Nodes(3));   wwNode(2,3)=HydroParam%uNode(lev,3,Nodes(3))
+				uuNode(2,4)=HydroParam%uNode(lev,1,Nodes(4));   vvNode(2,4)=HydroParam%uNode(lev,2,Nodes(4));   wwNode(2,4)=HydroParam%uNode(lev,3,Nodes(4))
+                lev=jlev
+			endif
+			xxNode(1,1) = MeshParam%EdgeBary(1,Nodes(1)); yyNode(1,1) = MeshParam%EdgeBary(2,Nodes(1)); zzNode(1,1)=HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			xxNode(1,2) = MeshParam%EdgeBary(1,Nodes(2)); yyNode(1,2) = MeshParam%EdgeBary(2,Nodes(2)); zzNode(1,2)=HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			xxNode(1,3) = MeshParam%xNode(Nodes(3)); yyNode(1,3) = MeshParam%yNode(Nodes(3)); zzNode(1,3)=HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			xxNode(1,4) = MeshParam%xNode(Nodes(4)); yyNode(1,4) = MeshParam%yNode(Nodes(4)); zzNode(1,4)=HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			if (zt<z0) then !Down
+                lev=jlev
+				xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1)); yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1)); zzNode(2,1)=HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel)
+				xxNode(2,2) = MeshParam%EdgeBary(1,Nodes(2)); yyNode(2,2) = MeshParam%EdgeBary(2,Nodes(2)); zzNode(2,2)=HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel)
+				xxNode(2,3) = MeshParam%xNode(Nodes(3)); yyNode(2,3) = MeshParam%yNode(Nodes(3)); zzNode(2,3)= HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel)
+				xxNode(2,4) = MeshParam%xNode(Nodes(4)); yyNode(2,4) = MeshParam%yNode(Nodes(4)); zzNode(2,4)= HydroParam%Ze(lev,nnel)
+            else !Up
+                lev=jlev+1
+				xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1)); yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1)); zzNode(2,1)=HydroParam%Z(lev,Nodes(1))
+				xxNode(2,2) = MeshParam%EdgeBary(1,Nodes(2)); yyNode(2,2) = MeshParam%EdgeBary(2,Nodes(2)); zzNode(2,2)=HydroParam%Z(lev,Nodes(2))
+				xxNode(2,3) = MeshParam%xNode(Nodes(3)); yyNode(2,3) = MeshParam%yNode(Nodes(3)); zzNode(2,3)= HydroParam%peta(Nodes(3))
+				xxNode(2,4) = MeshParam%xNode(Nodes(4)); yyNode(2,4) = MeshParam%yNode(Nodes(4)); zzNode(2,4)= HydroParam%peta(Nodes(4))
+                lev=jlev
+			endif
+        else
+		    if (jlev==HydroParam%ElCapitalM(nnel)) then
+
+			    if (zt>=z0) then !up
+				    lev=jlev+1
+			    else !(zt<z0) down
+				    lev=jlev-1
+			    endif
+			    uuNode(1,1)=HydroParam%uxy(jlev,1,Nodes(1));   vvNode(1,1)=HydroParam%uxy(jlev,2,Nodes(1));   wwNode(1,1)=HydroParam%wfc(jlev,Nodes(1))
+			    uuNode(1,2)=HydroParam%uxy(jlev,1,Nodes(2));   vvNode(1,2)=HydroParam%uxy(jlev,2,Nodes(2));   wwNode(1,2)=HydroParam%wfc(jlev,Nodes(2))
+			    uuNode(1,3)=HydroParam%ubv(jlev,1,Nodes(3));   vvNode(1,3)=HydroParam%ubv(jlev,2,Nodes(3));   wwNode(1,3)=HydroParam%ubv(jlev,3,Nodes(3))
+			    uuNode(1,4)=HydroParam%ubv(jlev,1,Nodes(4));   vvNode(1,4)=HydroParam%ubv(jlev,2,Nodes(4));   wwNode(1,4)=HydroParam%ubv(jlev,3,Nodes(4))
+			    if (zt>=z0) then !up
+				    uuNode(2,1)=HydroParam%ug(Nodes(1),lev);        vvNode(2,1)=HydroParam%vg(Nodes(1),lev);        wwNode(2,1)=HydroParam%wg(Nodes(1),lev)
+				    uuNode(2,2)=HydroParam%ug(Nodes(2),lev);        vvNode(2,2)=HydroParam%vg(Nodes(2),lev);        wwNode(2,2)=HydroParam%wg(Nodes(2),lev)
+				    uuNode(2,3)=HydroParam%uNode(lev,1,Nodes(3));   vvNode(2,3)=HydroParam%uNode(lev,2,Nodes(3));   wwNode(2,3)=HydroParam%uNode(lev,3,Nodes(3))
+				    uuNode(2,4)=HydroParam%uNode(lev,1,Nodes(4));   vvNode(2,4)=HydroParam%uNode(lev,2,Nodes(4));   wwNode(2,4)=HydroParam%uNode(lev,3,Nodes(4))
+			    else !down
+				    uuNode(2,1)=HydroParam%uxy(lev,1,Nodes(1));   vvNode(2,1)=HydroParam%uxy(lev,2,Nodes(1));   wwNode(2,1)=HydroParam%wfc(lev,Nodes(1))
+				    uuNode(2,2)=HydroParam%uxy(lev,1,Nodes(2));   vvNode(2,2)=HydroParam%uxy(lev,2,Nodes(2));   wwNode(2,2)=HydroParam%wfc(lev,Nodes(2))
+				    uuNode(2,3)=HydroParam%ubv(lev,1,Nodes(3));   vvNode(2,3)=HydroParam%ubv(lev,2,Nodes(3));   wwNode(2,3)=HydroParam%ubv(lev,3,Nodes(3))
+				    uuNode(2,4)=HydroParam%ubv(lev,1,Nodes(4));   vvNode(2,4)=HydroParam%ubv(lev,2,Nodes(4));   wwNode(2,4)=HydroParam%ubv(lev,3,Nodes(4))
+			    endif
+			    xxNode(1,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(1,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(1,1)=0.5d0*(HydroParam%Z(jlev,Nodes(1)) + HydroParam%hj(Nodes(1)) + HydroParam%Z(jlev+1,Nodes(1)))
+			    xxNode(1,2) = MeshParam%EdgeBary(1,Nodes(2));   yyNode(1,2) = MeshParam%EdgeBary(2,Nodes(2));   zzNode(1,2)=0.5d0*(HydroParam%Z(jlev,Nodes(2)) + HydroParam%hj(Nodes(2)) + HydroParam%Z(jlev+1,Nodes(2)))
+			    xxNode(1,3) = MeshParam%xNode(Nodes(3));        yyNode(1,3) = MeshParam%yNode(Nodes(3));        zzNode(1,3)=0.5d0*(HydroParam%peta(Nodes(3)) + HydroParam%hb(nnel) + HydroParam%Ze(jlev,nnel))
+			    xxNode(1,4) = MeshParam%xNode(Nodes(4));        yyNode(1,4) = MeshParam%yNode(Nodes(4));        zzNode(1,4)=0.5d0*(HydroParam%peta(Nodes(4)) + HydroParam%hb(nnel) + HydroParam%Ze(jlev,nnel))
+			    if (zt>=z0) then !up
+				    xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = HydroParam%Z(lev,Nodes(1))
+				    xxNode(2,2) = MeshParam%EdgeBary(1,Nodes(2));   yyNode(2,2) = MeshParam%EdgeBary(2,Nodes(2));   zzNode(2,2) = HydroParam%Z(lev,Nodes(2))
+				    xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = HydroParam%peta(Nodes(3))
+				    xxNode(2,4) = MeshParam%xNode(Nodes(4));        yyNode(2,4) = MeshParam%yNode(Nodes(4));        zzNode(2,4) = HydroParam%peta(Nodes(4))
+                else !down
+                    xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1)= HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+                    xxNode(2,2) = MeshParam%EdgeBary(1,Nodes(2));   yyNode(2,2) = MeshParam%EdgeBary(2,Nodes(2));   zzNode(2,2)= HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+                    xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3)= HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+                    xxNode(2,4) = MeshParam%xNode(Nodes(4));        yyNode(2,4) = MeshParam%yNode(Nodes(4));        zzNode(2,4)= HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+                endif
+           
+		    ElseIf (jlev==HydroParam%ElSmallm(nnel)) Then
+			    If (zt>=z0) Then !up
+				    lev=jlev+1
+			    Else !(zt<z0) down
+				    lev=jlev
+			    EndIf
+			    uuNode(1,1)=HydroParam%uxy(jlev,1,Nodes(1));   vvNode(1,1)=HydroParam%uxy(jlev,2,Nodes(1));   wwNode(1,1)=HydroParam%wfc(jlev,Nodes(1))
+			    uuNode(1,2)=HydroParam%uxy(jlev,1,Nodes(2));   vvNode(1,2)=HydroParam%uxy(jlev,2,Nodes(2));   wwNode(1,2)=HydroParam%wfc(jlev,Nodes(2))
+			    uuNode(1,3)=HydroParam%ubv(jlev,1,Nodes(3));   vvNode(1,3)=HydroParam%ubv(jlev,2,Nodes(3));   wwNode(1,3)=HydroParam%ubv(jlev,3,Nodes(3))
+			    uuNode(1,4)=HydroParam%ubv(jlev,1,Nodes(4));   vvNode(1,4)=HydroParam%ubv(jlev,2,Nodes(4));   wwNode(1,4)=HydroParam%ubv(jlev,3,Nodes(4))
+			    if (zt<z0) then !Down
+                
+				    uuNode(2,1)=HydroParam%ug(Nodes(1),lev);        vvNode(2,1)=HydroParam%vg(Nodes(1),lev);        wwNode(2,1)=HydroParam%wg(Nodes(1),lev)
+				    uuNode(2,2)=HydroParam%ug(Nodes(2),lev);        vvNode(2,2)=HydroParam%vg(Nodes(2),lev);        wwNode(2,2)=HydroParam%wg(Nodes(2),lev)
+				    uuNode(2,3)=HydroParam%uNode(lev,1,Nodes(3));   vvNode(2,3)=HydroParam%uNode(lev,2,Nodes(3));   wwNode(2,3)=HydroParam%uNode(lev,3,Nodes(3))
+				    uuNode(2,4)=HydroParam%uNode(lev,1,Nodes(4));   vvNode(2,4)=HydroParam%uNode(lev,2,Nodes(4));   wwNode(2,4)=HydroParam%uNode(lev,3,Nodes(4))
+                Else !up
+				    uuNode(2,1)=HydroParam%uxy(lev,1,Nodes(1));   vvNode(2,1)=HydroParam%uxy(lev,2,Nodes(1));   wwNode(2,1)=HydroParam%wfc(lev,Nodes(1))
+				    uuNode(2,2)=HydroParam%uxy(lev,1,Nodes(2));   vvNode(2,2)=HydroParam%uxy(lev,2,Nodes(2));   wwNode(2,2)=HydroParam%wfc(lev,Nodes(2))
+				    uuNode(2,3)=HydroParam%ubv(lev,1,Nodes(3));   vvNode(2,3)=HydroParam%ubv(lev,2,Nodes(3));   wwNode(2,3)=HydroParam%ubv(lev,3,Nodes(3))
+				    uuNode(2,4)=HydroParam%ubv(lev,1,Nodes(4));   vvNode(2,4)=HydroParam%ubv(lev,2,Nodes(4));   wwNode(2,4)=HydroParam%ubv(lev,3,Nodes(4))
+                
+			    Endif
+			    xxNode(1,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(1,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(1,1) = HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			    xxNode(1,2) = MeshParam%EdgeBary(1,Nodes(2));   yyNode(1,2) = MeshParam%EdgeBary(2,Nodes(2));   zzNode(1,2) = HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			    xxNode(1,3) = MeshParam%xNode(Nodes(3));        yyNode(1,3) = MeshParam%yNode(Nodes(3));        zzNode(1,3) = HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			    xxNode(1,4) = MeshParam%xNode(Nodes(4));        yyNode(1,4) = MeshParam%yNode(Nodes(4));        zzNode(1,4) = HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			    If (zt<z0) Then !Down
+				    xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel)
+				    xxNode(2,2) = MeshParam%EdgeBary(1,Nodes(2));   yyNode(2,2) = MeshParam%EdgeBary(2,Nodes(2));   zzNode(2,2) = HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel)
+				    xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel)
+				    xxNode(2,4) = MeshParam%xNode(Nodes(4));        yyNode(2,4) = MeshParam%yNode(Nodes(4));        zzNode(2,4) = HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel)
+                Else !Up
+                    If (lev == HydroParam%ElCapitalM(nnel)) Then
+                        xxNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = 0.5d0*(HydroParam%Z(lev,Nodes(1)) + HydroParam%hj(Nodes(1)) + HydroParam%Z(lev+1,Nodes(1)))
+			            xxNode(2,2) = MeshParam%EdgeBary(2,Nodes(2));   yyNode(2,2) = MeshParam%EdgeBary(2,Nodes(2));   zzNode(2,2) = 0.5d0*(HydroParam%Z(lev,Nodes(2)) + HydroParam%hj(Nodes(2)) + HydroParam%Z(lev+1,Nodes(2)))
+			            xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = 0.5d0*(HydroParam%peta(Nodes(3)) + HydroParam%hb(nnel) + HydroParam%Ze(lev,nnel))
+			            xxNode(2,4) = MeshParam%xNode(Nodes(4));        yyNode(2,4) = MeshParam%yNode(Nodes(4));        zzNode(2,4) = 0.5d0*(HydroParam%peta(Nodes(4)) + HydroParam%hb(nnel) + HydroParam%Ze(lev,nnel))
+                    Else
+				        xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+				        xxNode(2,2) = MeshParam%EdgeBary(1,Nodes(2));   yyNode(2,2) = MeshParam%EdgeBary(2,Nodes(2));   zzNode(2,2) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+				        xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+				        xxNode(2,4) = MeshParam%xNode(Nodes(4));        yyNode(2,4) = MeshParam%yNode(Nodes(4));        zzNode(2,4) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+			        EndIf
+                EndIf
+		    Else 
+			    If (zt>=z0) Then !up
+				    lev=jlev+1
+			    Else !(zt<z0) down
+				    lev=jlev-1
+			    EndIf
+			    uuNode(1,1) = HydroParam%uxy(jlev,1,Nodes(1));   vvNode(1,1) = HydroParam%uxy(jlev,2,Nodes(1));   wwNode(1,1) = HydroParam%wfc(jlev,Nodes(1))
+			    uuNode(1,2) = HydroParam%uxy(jlev,1,Nodes(2));   vvNode(1,2) = HydroParam%uxy(jlev,2,Nodes(2));   wwNode(1,2) = HydroParam%wfc(jlev,Nodes(2))
+			    uuNode(1,3) = HydroParam%ubv(jlev,1,Nodes(3));   vvNode(1,3) = HydroParam%ubv(jlev,2,Nodes(3));   wwNode(1,3) = HydroParam%ubv(jlev,3,Nodes(3))
+			    uuNode(1,4) = HydroParam%ubv(jlev,1,Nodes(4));   vvNode(1,4) = HydroParam%ubv(jlev,2,Nodes(4));   wwNode(1,4) = HydroParam%ubv(jlev,3,Nodes(4))
+
+			    uuNode(2,1) = HydroParam%uxy(lev,1,Nodes(1));   vvNode(2,1) = HydroParam%uxy(lev,2,Nodes(1));   wwNode(2,1) = HydroParam%wfc(lev,Nodes(1))
+			    uuNode(2,2) = HydroParam%uxy(lev,1,Nodes(2));   vvNode(2,2) = HydroParam%uxy(lev,2,Nodes(2));   wwNode(2,2) = HydroParam%wfc(lev,Nodes(2))
+			    uuNode(2,3) = HydroParam%ubv(lev,1,Nodes(3));   vvNode(2,3) = HydroParam%ubv(lev,2,Nodes(3));   wwNode(2,3) = HydroParam%ubv(lev,3,Nodes(3))
+			    uuNode(2,4) = HydroParam%ubv(lev,1,Nodes(4));   vvNode(2,4) = HydroParam%ubv(lev,2,Nodes(4));   wwNode(2,4) = HydroParam%ubv(lev,3,Nodes(4))
+
+			    xxNode(1,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(1,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(1,1) = HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			    xxNode(1,2) = MeshParam%EdgeBary(1,Nodes(2));   yyNode(1,2) = MeshParam%EdgeBary(2,Nodes(2));   zzNode(1,2) = HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			    xxNode(1,3) = MeshParam%xNode(Nodes(3));        yyNode(1,3) = MeshParam%yNode(Nodes(3));        zzNode(1,3) = HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			    xxNode(1,4) = MeshParam%xNode(Nodes(4));        yyNode(1,4) = MeshParam%yNode(Nodes(4));        zzNode(1,4) = HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			    If (lev== HydroParam%ElCapitalM(nnel)) Then
+                    xxNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = 0.5d0*(HydroParam%Z(lev,Nodes(1)) + HydroParam%hj(Nodes(1)) + HydroParam%Z(lev+1,Nodes(1)))
+			        xxNode(2,2) = MeshParam%EdgeBary(2,Nodes(2));   yyNode(2,2) = MeshParam%EdgeBary(2,Nodes(2));   zzNode(2,2) = 0.5d0*(HydroParam%Z(lev,Nodes(2)) + HydroParam%hj(Nodes(2)) + HydroParam%Z(lev+1,Nodes(2)))
+			        xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = 0.5d0*(HydroParam%peta(Nodes(3)) + HydroParam%hb(nnel) + HydroParam%Ze(lev,nnel))
+			        xxNode(2,4) = MeshParam%xNode(Nodes(4));        yyNode(2,4) = MeshParam%yNode(Nodes(4));        zzNode(2,4) = 0.5d0*(HydroParam%peta(Nodes(4)) + HydroParam%hb(nnel) + HydroParam%Ze(lev,nnel))
+                Else
+		            xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+		            xxNode(2,2) = MeshParam%EdgeBary(1,Nodes(2));   yyNode(2,2) = MeshParam%EdgeBary(2,Nodes(2));   zzNode(2,2) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+		            xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+		            xxNode(2,4) = MeshParam%xNode(Nodes(4));        yyNode(2,4) = MeshParam%yNode(Nodes(4));        zzNode(2,4) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+               EndIf
+            Endif
+        EndIf
+     Else !NodeFlag == 2 -> n1 and n4 = Face; n2 and n3 = Nodes;
+		 If (HydroParam%ElSmallm(nnel)==HydroParam%ElCapitalM(nnel)) Then !2D Case/ 1 Layer
+            lev=jlev
+            
+			uuNode(1,1) = HydroParam%uxy(jlev,1,Nodes(1));   vvNode(1,1) = HydroParam%uxy(jlev,2,Nodes(1));   wwNode(1,1) = HydroParam%wfc(jlev,Nodes(1))
+			uuNode(1,4) = HydroParam%uxy(jlev,1,Nodes(4));   vvNode(1,4) = HydroParam%uxy(jlev,2,Nodes(4));   wwNode(1,4) = HydroParam%wfc(jlev,Nodes(4))
+			uuNode(1,3) = HydroParam%ubv(jlev,1,Nodes(3));   vvNode(1,3) = HydroParam%ubv(jlev,2,Nodes(3));   wwNode(1,3) = HydroParam%ubv(jlev,3,Nodes(3))
+			uuNode(1,2) = HydroParam%ubv(jlev,1,Nodes(2));   vvNode(1,2) = HydroParam%ubv(jlev,2,Nodes(2));   wwNode(1,2) = HydroParam%ubv(jlev,3,Nodes(2))
+			If (zt>=z0) Then !up
+                lev=jlev+1
+				uuNode(2,1) = HydroParam%ug(Nodes(1),lev);        vvNode(2,1) = HydroParam%vg(Nodes(1),lev);        wwNode(2,1) = HydroParam%wg(Nodes(1),lev)
+				uuNode(2,4) = HydroParam%ug(Nodes(4),lev);        vvNode(2,4) = HydroParam%vg(Nodes(4),lev);        wwNode(2,4) = HydroParam%wg(Nodes(4),lev)
+				uuNode(2,3) = HydroParam%uNode(lev,1,Nodes(3));   vvNode(2,3) = HydroParam%uNode(lev,2,Nodes(3));   wwNode(2,3) = HydroParam%uNode(lev,3,Nodes(3))
+				uuNode(2,2) = HydroParam%uNode(lev,1,Nodes(2));   vvNode(2,2) = HydroParam%uNode(lev,2,Nodes(2));   wwNode(2,2) = HydroParam%uNode(lev,3,Nodes(2))
+                lev=jlev
+            Else !down
+                lev=jlev
+                uuNode(2,1) = HydroParam%ug(Nodes(1),lev);        vvNode(2,1) = HydroParam%vg(Nodes(1),lev);        wwNode(2,1) = HydroParam%wg(Nodes(1),lev)
+				uuNode(2,4) = HydroParam%ug(Nodes(4),lev);        vvNode(2,4) = HydroParam%vg(Nodes(4),lev);        wwNode(2,4) = HydroParam%wg(Nodes(4),lev)
+				uuNode(2,3) = HydroParam%uNode(lev,1,Nodes(3));   vvNode(2,3) = HydroParam%uNode(lev,2,Nodes(3));   wwNode(2,3) = HydroParam%uNode(lev,3,Nodes(3))
+				uuNode(2,2) = HydroParam%uNode(lev,1,Nodes(2));   vvNode(2,2) = HydroParam%uNode(lev,2,Nodes(2));   wwNode(2,2) = HydroParam%uNode(lev,3,Nodes(2))
+            EndIf
+			xxNode(1,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(1,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(1,1)=0.5d0*(HydroParam%Z(jlev,Nodes(1)) + HydroParam%hj(Nodes(1)) + HydroParam%Z(jlev+1,Nodes(1)))
+			xxNode(1,4) = MeshParam%EdgeBary(1,Nodes(4));   yyNode(1,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(1,4)=0.5d0*(HydroParam%Z(jlev,Nodes(4)) + HydroParam%hj(Nodes(4)) + HydroParam%Z(jlev+1,Nodes(4)))
+			xxNode(1,3) = MeshParam%xNode(Nodes(3));        yyNode(1,3) = MeshParam%yNode(Nodes(3));        zzNode(1,3)=0.5d0*(HydroParam%peta(Nodes(3)) + HydroParam%hb(nnel) + HydroParam%Ze(jlev,nnel))
+			xxNode(1,2) = MeshParam%xNode(Nodes(2));        yyNode(1,2) = MeshParam%yNode(Nodes(2));        zzNode(1,2)=0.5d0*(HydroParam%peta(Nodes(2)) + HydroParam%hb(nnel) + HydroParam%Ze(jlev,nnel))
+			If (zt>=z0) then !up
+                lev=jlev+1
+				xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = HydroParam%Z(lev,Nodes(1))
+				xxNode(2,4) = MeshParam%EdgeBary(1,Nodes(4));   yyNode(2,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(2,4) = HydroParam%Z(lev,Nodes(4))
+				xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = HydroParam%peta(Nodes(3))
+				xxNode(2,2) = MeshParam%xNode(Nodes(2));        yyNode(2,2) = MeshParam%yNode(Nodes(2));        zzNode(2,2) = HydroParam%peta(Nodes(2))
+                lev=jlev
+            Else !down
+                lev=jlev
+				xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = HydroParam%Ze(lev,nnel)+ HydroParam%hb(nnel)
+				xxNode(2,4) = MeshParam%EdgeBary(1,Nodes(4));   yyNode(2,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(2,4) = HydroParam%Ze(lev,nnel)+ HydroParam%hb(nnel)
+				xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = HydroParam%Ze(lev,nnel)+ HydroParam%hb(nnel)
+				xxNode(2,2) = MeshParam%xNode(Nodes(2));        yyNode(2,2) = MeshParam%yNode(Nodes(2));        zzNode(2,2) = HydroParam%Ze(lev,nnel)+ HydroParam%hb(nnel)
+			EndIf    
+        Else
+		    if (jlev==HydroParam%ElCapitalM(nnel)) then
+			    if (zt>=z0) then !up
+				    lev=jlev+1
+			    else !(zt<z0) down
+				    lev=jlev-1
+			    endif
+			    uuNode(1,1)=HydroParam%uxy(jlev,1,Nodes(1));   vvNode(1,1)=HydroParam%uxy(jlev,2,Nodes(1));   wwNode(1,1)=HydroParam%wfc(jlev,Nodes(1))
+			    uuNode(1,4)=HydroParam%uxy(jlev,1,Nodes(4));   vvNode(1,4)=HydroParam%uxy(jlev,2,Nodes(4));   wwNode(1,4)=HydroParam%wfc(jlev,Nodes(4))
+			    uuNode(1,3)=HydroParam%ubv(jlev,1,Nodes(3));   vvNode(1,3)=HydroParam%ubv(jlev,2,Nodes(3));   wwNode(1,3)=HydroParam%ubv(jlev,3,Nodes(3))
+			    uuNode(1,2)=HydroParam%ubv(jlev,1,Nodes(2));   vvNode(1,2)=HydroParam%ubv(jlev,2,Nodes(2));   wwNode(1,2)=HydroParam%ubv(jlev,3,Nodes(2))
+			    if (zt>=z0) then !up
+				    uuNode(2,1)=HydroParam%ug(Nodes(1),lev);        vvNode(2,1)=HydroParam%vg(Nodes(1),lev);        wwNode(2,1)=HydroParam%wg(Nodes(1),lev)
+				    uuNode(2,4)=HydroParam%ug(Nodes(4),lev);        vvNode(2,4)=HydroParam%vg(Nodes(4),lev);        wwNode(2,4)=HydroParam%wg(Nodes(4),lev)
+				    uuNode(2,3)=HydroParam%uNode(lev,1,Nodes(3));   vvNode(2,3)=HydroParam%uNode(lev,2,Nodes(3));   wwNode(2,3)=HydroParam%uNode(lev,3,Nodes(3))
+				    uuNode(2,2)=HydroParam%uNode(lev,1,Nodes(2));   vvNode(2,2)=HydroParam%uNode(lev,2,Nodes(2));   wwNode(2,2)=HydroParam%uNode(lev,3,Nodes(2))
+			    else !down
+				    uuNode(2,1)=HydroParam%uxy(lev,1,Nodes(1));   vvNode(2,1)=HydroParam%uxy(lev,2,Nodes(1));   wwNode(2,1)=HydroParam%wfc(lev,Nodes(1))
+				    uuNode(2,4)=HydroParam%uxy(lev,1,Nodes(4));   vvNode(2,4)=HydroParam%uxy(lev,2,Nodes(4));   wwNode(2,4)=HydroParam%wfc(lev,Nodes(4))
+				    uuNode(2,3)=HydroParam%ubv(lev,1,Nodes(3));   vvNode(2,3)=HydroParam%ubv(lev,2,Nodes(3));   wwNode(2,3)=HydroParam%ubv(lev,3,Nodes(3))
+				    uuNode(2,2)=HydroParam%ubv(lev,1,Nodes(2));   vvNode(2,2)=HydroParam%ubv(lev,2,Nodes(2));   wwNode(2,2)=HydroParam%ubv(lev,3,Nodes(2))
+			    endif
+			    xxNode(1,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(1,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(1,1) = 0.5d0*(HydroParam%Z(jlev,Nodes(1)) + HydroParam%hj(Nodes(1)) + HydroParam%Z(jlev+1,Nodes(1)))
+			    xxNode(1,4) = MeshParam%EdgeBary(1,Nodes(4));   yyNode(1,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(1,4) = 0.5d0*(HydroParam%Z(jlev,Nodes(4)) + HydroParam%hj(Nodes(4)) + HydroParam%Z(jlev+1,Nodes(4)))
+			    xxNode(1,3) = MeshParam%xNode(Nodes(3));        yyNode(1,3) = MeshParam%yNode(Nodes(3));        zzNode(1,3) = 0.5d0*(HydroParam%peta(Nodes(3)) + HydroParam%hb(nnel) + HydroParam%Ze(jlev,nnel))
+			    xxNode(1,2) = MeshParam%xNode(Nodes(2));        yyNode(1,2) = MeshParam%yNode(Nodes(2));        zzNode(1,2) = 0.5d0*(HydroParam%peta(Nodes(2)) + HydroParam%hb(nnel) + HydroParam%Ze(jlev,nnel))
+			    if (zt>=z0) then !up
+				    xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = HydroParam%Z(lev,Nodes(1))
+				    xxNode(2,4) = MeshParam%EdgeBary(1,Nodes(4));   yyNode(2,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(2,4) = HydroParam%Z(lev,Nodes(4))
+				    xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = HydroParam%peta(Nodes(3))
+				    xxNode(2,2) = MeshParam%xNode(Nodes(2));        yyNode(2,2) = MeshParam%yNode(Nodes(2));        zzNode(2,2) = HydroParam%peta(Nodes(2))
+			    else !down
+				    xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+				    xxNode(2,4) = MeshParam%EdgeBary(1,Nodes(4));   yyNode(2,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(2,4) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+				    xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+				    xxNode(2,2) = MeshParam%xNode(Nodes(2));        yyNode(2,2) = MeshParam%yNode(Nodes(2));        zzNode(2,2) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+			    endif
+		    elseif (jlev==HydroParam%ElSmallm(nnel)) then
+			    if (zt>=z0) then !up
+				    lev=jlev+1
+			    else !(zt<z0) down
+				    lev=jlev
+			    endif
+			    uuNode(1,1)=HydroParam%uxy(jlev,1,Nodes(1));   vvNode(1,1)=HydroParam%uxy(jlev,2,Nodes(1));   wwNode(1,1)=HydroParam%wfc(jlev,Nodes(1))
+			    uuNode(1,4)=HydroParam%uxy(jlev,1,Nodes(4));   vvNode(1,4)=HydroParam%uxy(jlev,2,Nodes(4));   wwNode(1,4)=HydroParam%wfc(jlev,Nodes(4))
+			    uuNode(1,3)=HydroParam%ubv(jlev,1,Nodes(3));   vvNode(1,3)=HydroParam%ubv(jlev,2,Nodes(3));   wwNode(1,3)=HydroParam%ubv(jlev,3,Nodes(3))
+			    uuNode(1,2)=HydroParam%ubv(jlev,1,Nodes(2));   vvNode(1,2)=HydroParam%ubv(jlev,2,Nodes(2));   wwNode(1,2)=HydroParam%ubv(jlev,3,Nodes(2))
+			    if (zt<z0) then !Down
+				    uuNode(2,1)=HydroParam%ug(Nodes(1),lev);        vvNode(2,1)=HydroParam%vg(Nodes(1),lev);        wwNode(2,1)=HydroParam%wg(Nodes(1),lev)
+				    uuNode(2,4)=HydroParam%ug(Nodes(4),lev);        vvNode(2,4)=HydroParam%vg(Nodes(4),lev);        wwNode(2,4)=HydroParam%wg(Nodes(4),lev)
+				    uuNode(2,3)=HydroParam%uNode(lev,1,Nodes(3));   vvNode(2,3)=HydroParam%uNode(lev,2,Nodes(3));   wwNode(2,3)=HydroParam%uNode(lev,3,Nodes(3))
+				    uuNode(2,2)=HydroParam%uNode(lev,1,Nodes(2));   vvNode(2,2)=HydroParam%uNode(lev,2,Nodes(2));   wwNode(2,2)=HydroParam%uNode(lev,3,Nodes(2))
+			    else !up
+				    uuNode(2,1)=HydroParam%uxy(lev,1,Nodes(1));   vvNode(2,1)=HydroParam%uxy(lev,2,Nodes(1));   wwNode(2,1) = HydroParam%wfc(lev,Nodes(1))
+				    uuNode(2,4)=HydroParam%uxy(lev,1,Nodes(4));   vvNode(2,4)=HydroParam%uxy(lev,2,Nodes(4));   wwNode(2,4) = HydroParam%wfc(lev,Nodes(4))
+				    uuNode(2,3)=HydroParam%ubv(lev,1,Nodes(3));   vvNode(2,3)=HydroParam%ubv(lev,2,Nodes(3));   wwNode(2,3) = HydroParam%ubv(lev,3,Nodes(3))
+				    uuNode(2,2)=HydroParam%ubv(lev,1,Nodes(2));   vvNode(2,2)=HydroParam%ubv(lev,2,Nodes(2));   wwNode(2,2) = HydroParam%ubv(lev,3,Nodes(2))
+			    endif
+			    xxNode(1,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(1,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(1,1) = HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			    xxNode(1,4) = MeshParam%EdgeBary(1,Nodes(4));   yyNode(1,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(1,4) = HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			    xxNode(1,3) = MeshParam%xNode(Nodes(3));        yyNode(1,3) = MeshParam%yNode(Nodes(3));        zzNode(1,3) = HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			    xxNode(1,2) = MeshParam%xNode(Nodes(2));        yyNode(1,2) = MeshParam%yNode(Nodes(2));        zzNode(1,2) = HydroParam%Zb(jlev,nnel) + HydroParam%hb(nnel)/2
+			    if (zt<z0) then !Down
+				    xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel)
+				    xxNode(2,4) = MeshParam%EdgeBary(1,Nodes(4));   yyNode(2,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(2,4) = HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel)
+				    xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel)
+				    xxNode(2,2) = MeshParam%xNode(Nodes(2));        yyNode(2,2) = MeshParam%yNode(Nodes(2));        zzNode(2,2) = HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel)
+                else !Up
+                    if (lev== HydroParam%ElCapitalM(nnel))then
+                        xxNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = 0.5d0*(HydroParam%Z(lev,Nodes(1)) + HydroParam%hj(Nodes(1)) + HydroParam%Z(lev+1,Nodes(1)))
+			            xxNode(2,4) = MeshParam%EdgeBary(2,Nodes(4));   yyNode(2,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(2,4) = 0.5d0*(HydroParam%Z(lev,Nodes(4)) + HydroParam%hj(Nodes(4)) + HydroParam%Z(lev+1,Nodes(4)))
+			            xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = 0.5d0*(HydroParam%peta(Nodes(3)) + HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel))
+			            xxNode(2,2) = MeshParam%xNode(Nodes(2));        yyNode(2,2) = MeshParam%yNode(Nodes(2));        zzNode(2,2) = 0.5d0*(HydroParam%peta(Nodes(2)) + HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel))
+                    else
+				        xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+				        xxNode(2,4) = MeshParam%EdgeBary(1,Nodes(4));   yyNode(2,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(2,4) = HydroParam%Zb(lev,nnel)+ HydroParam%hb(nnel)/2
+				        xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+				        xxNode(2,2) = MeshParam%xNode(Nodes(2));        yyNode(2,2) = MeshParam%yNode(Nodes(2));        zzNode(2,2) = HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+			        endif
+                endif
+		    else
+			    if (zt>=z0) then !up
+				    lev=jlev+1
+			    else !(zt<z0) down
+				    lev=jlev-1
+			    endif
+			    uuNode(1,1)=HydroParam%uxy(jlev,1,Nodes(1));   vvNode(1,1)=HydroParam%uxy(jlev,2,Nodes(1));   wwNode(1,1)=HydroParam%wfc(jlev,Nodes(1))
+			    uuNode(1,4)=HydroParam%uxy(jlev,1,Nodes(4));   vvNode(1,4)=HydroParam%uxy(jlev,2,Nodes(4));   wwNode(1,4)=HydroParam%wfc(jlev,Nodes(4))
+			    uuNode(1,3)=HydroParam%ubv(jlev,1,Nodes(3));   vvNode(1,3)=HydroParam%ubv(jlev,2,Nodes(3));   wwNode(1,3)=HydroParam%ubv(jlev,3,Nodes(3))
+			    uuNode(1,2)=HydroParam%ubv(jlev,1,Nodes(2));   vvNode(1,2)=HydroParam%ubv(jlev,2,Nodes(2));   wwNode(1,2)=HydroParam%ubv(jlev,3,Nodes(2))
+
+			    uuNode(2,1)=HydroParam%uxy(lev,1,Nodes(1));   vvNode(2,1)=HydroParam%uxy(lev,2,Nodes(1));   wwNode(2,1)=HydroParam%wfc(lev,Nodes(1))
+			    uuNode(2,4)=HydroParam%uxy(lev,1,Nodes(4));   vvNode(2,4)=HydroParam%uxy(lev,2,Nodes(4));   wwNode(2,4)=HydroParam%wfc(lev,Nodes(4))
+			    uuNode(2,3)=HydroParam%ubv(lev,1,Nodes(3));   vvNode(2,3)=HydroParam%ubv(lev,2,Nodes(3));   wwNode(2,3)=HydroParam%ubv(lev,3,Nodes(3))
+			    uuNode(2,2)=HydroParam%ubv(lev,1,Nodes(2));   vvNode(2,2)=HydroParam%ubv(lev,2,Nodes(2));   wwNode(2,2)=HydroParam%ubv(lev,3,Nodes(2))
+
+			    xxNode(1,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(1,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(1,1)=HydroParam%Zb(jlev,nnel)
+			    xxNode(1,4) = MeshParam%EdgeBary(1,Nodes(4));   yyNode(1,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(1,4)=HydroParam%Zb(jlev,nnel)
+			    xxNode(1,3) = MeshParam%xNode(Nodes(3));        yyNode(1,3) = MeshParam%yNode(Nodes(3));        zzNode(1,3)=HydroParam%Zb(jlev,nnel)
+			    xxNode(1,2) = MeshParam%xNode(Nodes(2));        yyNode(1,2) = MeshParam%yNode(Nodes(2));        zzNode(1,2)=HydroParam%Zb(jlev,nnel)
+			
+                if (lev == HydroParam%ElCapitalM(nnel))then 
+                    xxNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1)=0.5d0*(HydroParam%Z(lev,Nodes(1)) + HydroParam%hj(Nodes(1)) + HydroParam%Z(lev+1,Nodes(1)))
+			        xxNode(2,4) = MeshParam%EdgeBary(2,Nodes(4));   yyNode(2,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(2,4)=0.5d0*(HydroParam%Z(lev,Nodes(4)) + HydroParam%hj(Nodes(4)) + HydroParam%Z(lev+1,Nodes(4)))
+			        xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3)=0.5d0*(HydroParam%peta(Nodes(3)) + HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel))
+			        xxNode(2,2) = MeshParam%xNode(Nodes(2));        yyNode(2,2) = MeshParam%yNode(Nodes(2));        zzNode(2,2)=0.5d0*(HydroParam%peta(Nodes(2)) + HydroParam%Ze(lev,nnel) + HydroParam%hb(nnel))
+                else
+			        xxNode(2,1) = MeshParam%EdgeBary(1,Nodes(1));   yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1));   zzNode(2,1)= HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+			        xxNode(2,4) = MeshParam%EdgeBary(1,Nodes(4));   yyNode(2,4) = MeshParam%EdgeBary(2,Nodes(4));   zzNode(2,4)= HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+			        xxNode(2,3) = MeshParam%xNode(Nodes(3));        yyNode(2,3) = MeshParam%yNode(Nodes(3));        zzNode(2,3)= HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+			        xxNode(2,2) = MeshParam%xNode(Nodes(2));        yyNode(2,2) = MeshParam%yNode(Nodes(2));        zzNode(2,2)= HydroParam%Zb(lev,nnel) + HydroParam%hb(nnel)/2
+                endif
+            
+            endif
+        endif
+	endif
+    
+    return
+ End Subroutine FuVelocities3
+ 
+ 
     Subroutine FuVelocities2(uuNode, vvNode, wwNode, xxNode, yyNode, zzNode, nnel,jlev, xt,yt,zt,x0,y0,z0, id0, HydroParam,MeshParam)
     
     Use MeshVars !, Only: Quadri,EdgeDef,xNode,yNode,Area,Edge,EdgeNodes,EdgeBary,Left,Right
@@ -1642,7 +2048,7 @@
 				xxNode(2,3) = MeshParam%xNode(Nodes(3)); yyNode(2,3) = MeshParam%yNode(Nodes(3)); zzNode(2,3)= HydroParam%Ze(lev,nnel)
 				xxNode(2,4) = MeshParam%xNode(Nodes(4)); yyNode(2,4) = MeshParam%yNode(Nodes(4)); zzNode(2,4)= HydroParam%Ze(lev,nnel)
             else !Up
-                if (lev== HydroParam%ElCapitalM(nnel))then
+                if (lev== HydroParam%ElCapitalM(nnel)) then
                     xxNode(2,1) = MeshParam%EdgeBary(2,Nodes(1)); yyNode(2,1) = MeshParam%EdgeBary(2,Nodes(1)); zzNode(2,1)=0.5d0*(HydroParam%Z(lev,Nodes(1))+HydroParam%Z(lev+1,Nodes(1)))
 			        xxNode(2,2) = MeshParam%EdgeBary(2,Nodes(2)); yyNode(2,2) = MeshParam%EdgeBary(2,Nodes(2)); zzNode(2,2)=0.5d0*(HydroParam%Z(lev,Nodes(2))+HydroParam%Z(lev+1,Nodes(2)))
 			        xxNode(2,3) = MeshParam%xNode(Nodes(3)); yyNode(2,3) = MeshParam%yNode(Nodes(3)); zzNode(2,3)=0.5d0*(HydroParam%peta(Nodes(3))+HydroParam%Ze(lev,nnel))
