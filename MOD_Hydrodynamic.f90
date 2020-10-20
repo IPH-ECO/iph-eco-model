@@ -82,6 +82,15 @@
         Real, Allocatable:: epson(:,:) !< Normal velocity at the edges in each layer, dimension: Kmax,nEdge
         Real, Allocatable:: psi_edge(:,:)
         Real, Allocatable:: psi_cell(:,:)
+
+        
+        Real, Allocatable:: uNodet(:,:,:) !< Nodal velocity , dimension: Kmax,2,nNode
+        Real, Allocatable:: uxyt(:,:,:) !< horizontal velocity components at current time step ,dimension: (Kmax,2,nEdge)
+        Real, Allocatable:: uxyLt(:,:,:)        
+        Real, Allocatable:: ugt(:,:),vgt(:,:),wgt(:,:) !< Velocities in each face in k+1/2 Layer dimension: (nEdge,Kmax+1)
+        Real, Allocatable:: ubt(:,:,:)  !< cell-centered three components of velocity, dimension: ub(Kmax,3,nElem)
+        Real, Allocatable:: ubVt(:,:,:) 
+        Real, Allocatable:: wfct(:,:) 
         
         Real, Allocatable:: uxysub(:,:,:)
         Real, Allocatable:: ubsub(:,:,:) 

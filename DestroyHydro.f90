@@ -25,6 +25,17 @@ Subroutine DestroyHydro(HydroParam)
     Deallocate(HydroParam%psij)
     Deallocate(HydroParam%rj)
     
+    Deallocate(HydroParam%ubt)
+    Deallocate(HydroParam%uxyt)
+    Deallocate(HydroParam%uNodet)  
+    Deallocate(HydroParam%ugt)
+    Deallocate(HydroParam%vgt)
+    Deallocate(HydroParam%wgt)
+    Deallocate(HydroParam%ubVt)
+    Deallocate(HydroParam%uxyLt)
+    Deallocate(HydroParam%wfct)
+    
+    
     Deallocate(HydroParam%etaInf)
     Deallocate(HydroParam%etaplus)
     Deallocate(HydroParam%peta)

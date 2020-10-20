@@ -77,22 +77,22 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
             !    HydroParam%Fu(iLayer,iEdge) = (1.-HydroParam%epson(iLayer,iEdge))*HydroParam%Fu(iLayer,iEdge) 
             !EndDo
             
-            if (HydroParam%IndexWaterLevelEdge(iEdge)>0) then
-                l = MeshParam%Left(iEdge)
-                Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)
-                    cont=0
-                    vel=0
-                    Do lEdge=1,4 
-                        If (HydroParam%Fu(iLayer,MeshParam%Edge(lEdge,l))>0.and.HydroParam%IndexWaterLevelEdge(MeshParam%Edge(lEdge,l))==0) Then
-                            cont=cont+1
-                            vel = vel + HydroParam%Fu(iLayer,MeshParam%Edge(lEdge,l))
-                        EndIf
-                    EndDo
-                    if (cont>0) then    
-                        HydroParam%Fu(iLayer,iEdge) = vel/cont
-                    endif
-                EndDo    
-            endif 
+            !if (HydroParam%IndexWaterLevelEdge(iEdge)>0) then
+            !    l = MeshParam%Left(iEdge)
+            !    Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)
+            !        cont=0
+            !        vel=0
+            !        Do lEdge=1,4 
+            !            If (HydroParam%Fu(iLayer,MeshParam%Edge(lEdge,l))>0.and.HydroParam%IndexWaterLevelEdge(MeshParam%Edge(lEdge,l))==0) Then
+            !                cont=cont+1
+            !                vel = vel + HydroParam%Fu(iLayer,MeshParam%Edge(lEdge,l))
+            !            EndIf
+            !        EndDo
+            !        if (cont>0) then    
+            !            HydroParam%Fu(iLayer,iEdge) = vel/cont
+            !        endif
+            !    EndDo    
+            !endif 
         EndDo
         
     ElseIf (HydroParam%iConv == 1) Then
@@ -143,7 +143,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     !Getting hydrodynamic boundary condition values at current step time
     Call GetHydroBoundaryConditions(HydroParam,MeshParam,dt,time,SimTime) !CAYO
     
-    if(simtime == 200) then
+    if(simtime == 205) then
         continue
     endif
 
@@ -549,19 +549,19 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     HydroParam%wt = HydroParam%w
     !Call wvelocity(HydroParam,MeshParam,dt)
     
-    ! Vertical Velocity Field to Surface Flow:
-    Do iElem = 1, MeshParam%nElem
-         !12.4 Evaluate the new Vertical Velocity Field
-        HydroParam%w(HydroParam%ElSmallm(iElem),iElem)       = 0.       ! No Flux through the Bottom
-        Do iLayer = HydroParam%ElSmallm(iElem), HydroParam%ElCapitalM(iElem) 
-            SumW = 0.
-            Do iEdge = 1,4
-                Face = MeshParam%Edge(iEdge,iElem)
-                SumW = SumW + (Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%Edgelength(Face)*HydroParam%DZhjt(iLayer,Face)*HydroParam%u(iLayer,Face))
-            EndDo
-            HydroParam%w(iLayer+1,iElem) = HydroParam%w(iLayer,iElem) - SumW/MeshParam%Area(iElem)         ! w(k+1/2,iElem) [1]
-        EndDo
-    EndDo
+    !! Vertical Velocity Field to Surface Flow:
+    !Do iElem = 1, MeshParam%nElem
+    !     !12.4 Evaluate the new Vertical Velocity Field
+    !    HydroParam%w(HydroParam%ElSmallm(iElem),iElem)       = 0.       ! No Flux through the Bottom
+    !    Do iLayer = HydroParam%ElSmallm(iElem), HydroParam%ElCapitalM(iElem) 
+    !        SumW = 0.
+    !        Do iEdge = 1,4
+    !            Face = MeshParam%Edge(iEdge,iElem)
+    !            SumW = SumW + (Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%Edgelength(Face)*HydroParam%DZhjt(iLayer,Face)*HydroParam%u(iLayer,Face))
+    !        EndDo
+    !        HydroParam%w(iLayer+1,iElem) = HydroParam%w(iLayer,iElem) - SumW/MeshParam%Area(iElem)         ! w(k+1/2,iElem) [1]
+    !    EndDo
+    !EndDo
     
     HydroParam%wmt = HydroParam%wm
     ! Vertical Velocity Field to Surface Flow:
@@ -579,7 +579,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
                     !    HydroParam%u(iLayer,Face) = HydroParam%us(iLayer,Face)
                     !EndIf        
                 EndDo
-                HydroParam%wm(iLayer+1,iElem) = HydroParam%wm(iLayer,iElem) - SumW/MeshParam%Area(iElem)         ! w(k+1/2,iElem) [1]
+                HydroParam%w(iLayer+1,iElem) = HydroParam%w(iLayer,iElem) - SumW/MeshParam%Area(iElem)         ! w(k+1/2,iElem) [1]
             EndDo
         EndDo
     Else

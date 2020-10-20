@@ -16,7 +16,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     type(HydrodynamicParameter), pointer :: hydroParameters(:)
     type(SimulationParam) :: simParam
     character(len=200):: text
-    Real:: sum1,sum0,AuxVel,V, e0,k0
+    Real:: sum1,sum0,AuxVel,V
     Real:: NearZero = 1e-10
     type(MeshGridParam) :: MeshParam
     type(HydrodynamicParam) :: HydroParam
@@ -76,6 +76,13 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     HydroParam%Gu = 0.d0
     
     !CAYO
+    HydroParam%ug = 0.d0    
+    HydroParam%vg = 0.d0
+    HydroParam%wg = 0.d0
+    HydroParam%ubV = 0.d0
+    HydroParam%uxyL = 0.d0
+    HydroParam%wfc = 0.d0
+    
     MeshParam%ei = 1.d0
     HydroParam%DZK = 0.d0
     MeshParam%Kj = 0.d0
@@ -90,8 +97,6 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     HydroParam%uxysub = 0.d0
     HydroParam%ubsub = 0.d0
     
-    e0 = 0.3
-    k0 = 0.01
     
     HydroParam%rhsnonHydro = 0.d0
     HydroParam%q = 0.d0
@@ -107,6 +112,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     EndIf
     
     !HydroParam%eta(1) = 0.01    
+    
     
     If (simParam%it > 0) Then
         HydroParam%eta = simParam%etasave
@@ -254,8 +260,6 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
             Else
                 HydroParam%hj(Face) = Max(HydroParam%hb(l),HydroParam%hb(r))  !  (0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) !Max(Hbat(I,J),HBat(IViz,JViz))!*** !(0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
                 HydroParam%sj(Face) = Max(HydroParam%sb(l),HydroParam%sb(r))
-                !HydroParam%hj(Face) = Min(HydroParam%hb(l),HydroParam%hb(r))  !  (0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) !Max(Hbat(I,J),HBat(IViz,JViz))!*** !(0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
-                !HydroParam%sj(Face) = Min(HydroParam%sb(l),HydroParam%sb(r))                
                 Do iLayer = 1,MeshParam%KMax
                     If (abs(HydroParam%hj(Face)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<HydroParam%PCRI) then
                         HydroParam%hj(Face)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)
@@ -278,15 +282,6 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
         ! 1.1 Compute Water Depth
         l = MeshParam%Left(iEdge)
         r = MeshParam%Right(iEdge)
-        
-        !!bench 02:
-        !if ( 100-NearZero <= MeshParam%EdgeBary(1,iEdge)<= 100 + NearZero) then
-        !    if (MeshParam%EdgeBary(2,iEdge) >= 110 - NearZero) then
-        !        r = 0
-        !    elseif(MeshParam%EdgeBary(2,iEdge) <= 90 + NearZero) then
-        !        r = 0
-        !    endif
-        !endif       
 
         If (r == 0) Then
             HydroParam%H(iEdge) = Max( HydroParam%PCRI, -HydroParam%sj(iEdge) + HydroParam%eta(l) )
@@ -408,8 +403,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
                 EndIf    
                 
                 If (HydroParam%DZsj(iLayer,iEdge) > 0) Then
-                    !MeshParam%Kj(iLayer,iEdge) = 0.01
-                    MeshParam%Kj(iLayer,iEdge) = k0
+                    MeshParam%Kj(iLayer,iEdge) = 0.01
                 EndIf
                 
             EndDo
@@ -553,8 +547,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
                 If (iLayer >= HydroParam%ElSmallm(iElem) .or.  HydroParam%ElSmallms(iElem) ==  HydroParam%ElSmallm(iElem)) Then
                     continue
                 Else
-                    !MeshParam%ei(iLayer,iElem) = 0.3
-                    MeshParam%ei(iLayer,iElem) = e0
+                    MeshParam%ei(iLayer,iElem) = 0.3
                 EndIf
 
                 If (iLayer < HydroParam%ElSmallm(iElem)) Then
@@ -574,8 +567,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
                 EndIf                                    
                 
                 If(HydroParam%DZsi(iLayer,iElem)>0) Then
-                    !MeshParam%ei(iLayer,iElem) = 0.3
-                    MeshParam%ei(iLayer,iElem) = e0
+                    MeshParam%ei(iLayer,iElem) = 0.3
                 EndIf
                                 
             EndDo

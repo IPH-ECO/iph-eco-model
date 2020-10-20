@@ -54,6 +54,16 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     Allocate(HydroParam%psi_edge(MeshParam%Kmax,MeshParam%nEdge))
     Allocate(HydroParam%psi_cell(MeshParam%Kmax,MeshParam%nElem))
 
+    Allocate (HydroParam%ugt(MeshParam%nEdge,MeshParam%kMax+1))
+    Allocate (HydroParam%vgt(MeshParam%nEdge,MeshParam%kMax+1))
+    Allocate (HydroParam%wgt(MeshParam%nEdge,MeshParam%kMax+1)) 
+    Allocate(HydroParam%ubt(MeshParam%Kmax,3,MeshParam%nElem))
+    Allocate(HydroParam%ubVt(MeshParam%Kmax,3,MeshParam%nNode))
+    Allocate(HydroParam%uxyt(MeshParam%Kmax,2,MeshParam%nEdge))
+    Allocate(HydroParam%uxyLt(MeshParam%Kmax+1,2,MeshParam%nElem))
+    Allocate(HydroParam%uNodet(MeshParam%Kmax+1,3,MeshParam%nNode))
+    Allocate(HydroParam%wfct(MeshParam%Kmax,MeshParam%nEdge))
+    
     
     ! 2.2. Others Variables
     Allocate(HydroParam%etaInf(MeshParam%nElem))
