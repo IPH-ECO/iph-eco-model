@@ -802,12 +802,17 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
         
         !! 9.1 Compute Index Smallm(j) and CapitalM(j)
         !! Smallm and CapitalM are related to mj and Mj in [1]
+        !If (r == 0) Then
+        !    HydroParam%H(iEdge) = Max( HydroParam%PCRI/2.0d0, -HydroParam%sj(iEdge) + HydroParam%eta(l) )
+        !Else
+        !    HydroParam%H(iEdge) = Max( HydroParam%PCRI/2.0d0, -HydroParam%sj(iEdge) + HydroParam%eta(l) + 0.5*psi(2)*HydroParam%eta(MeshParam%NeibGrad02(iEdge)) - HydroParam%eta(MeshParam%NeibGrad03(iEdge)), -HydroParam%sj(iEdge) + HydroParam%eta(r) + 0.5*psi(1)*(HydroParam%eta(MeshParam%NeibGrad01(iEdge)) - HydroParam%eta(MeshParam%NeibGrad02(iEdge))))
+        !EndIf
+        
         If (r == 0) Then
             HydroParam%H(iEdge) = Max( HydroParam%PCRI/2.0d0, -HydroParam%sj(iEdge) + HydroParam%eta(l) )
         Else
-            HydroParam%H(iEdge) = Max( HydroParam%PCRI/2.0d0, -HydroParam%sj(iEdge) + HydroParam%eta(l) + 0.5*psi(2)*HydroParam%eta(MeshParam%NeibGrad02(iEdge)) - HydroParam%eta(MeshParam%NeibGrad03(iEdge)), -HydroParam%sj(iEdge) + HydroParam%eta(r) + 0.5*psi(1)*(HydroParam%eta(MeshParam%NeibGrad01(iEdge)) - HydroParam%eta(MeshParam%NeibGrad02(iEdge))))
+            HydroParam%H(iEdge) = Max( HydroParam%PCRI/2.0d0, -HydroParam%sj(iEdge) + HydroParam%eta(l), -HydroParam%sj(iEdge) + HydroParam%eta(r))
         EndIf
-        
         !If(r==0)Then
         !    r = l
         !EndIf

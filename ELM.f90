@@ -332,7 +332,7 @@
         zzNode(1,9)=HydroParam%Ze(jlev,nnel) + sum(HydroParam%DZsi(:,nnel));    zzNode(2,9)=HydroParam%Zb(jlev,nnel) + sum(HydroParam%DZsi(:,nnel))/2;  zzNode(3,9)=HydroParam%Ze(jlev+1,nnel)                                     
                     
     EndIf 
-    dtb = dt
+    !dtb = dt
     tal = min(MeshParam%dx/abs(uuint), MeshParam%dy/abs(vvint), (zzNode(3,5) - zzNode(1,5))/abs(wwint))
     if (tal > 0 ) then
         dtb = min(tal,dt,dtb)
@@ -344,11 +344,11 @@
         
         trat = dble(idt)/ndelt !Ponderador no tempo para interpolação a velocidade entre n e n+1
         !Posição da partícula no primeiro subpasso de tempo
-        xt=x0-dtb*uuint
-        yt=y0-dtb*vvint
-        zt=z0-dtb*wwint 
+        !xt=x0-dtb*uuint
+        !yt=y0-dtb*vvint
+        !zt=z0-dtb*wwint 
         
-        Call RK4order(uuint, vvint, wwint, dtb, nnel, id0, jlev, xtaux, ytaux, ztaux, x0, y0, z0, dt, timeAcum + dtb, Interpolate_Flag, HydroParam, MeshParam)
+        Call RK4order(uuint, vvint, wwint, dtb, nnel, id0, jlev, xt, yt, zt, x0, y0, z0, dt, timeAcum + dtb, Interpolate_Flag, HydroParam, MeshParam)
         
         dtin = dtb
         Call quicksearch(1,nnel,jlev,dtb,dtin,x0,y0,z0,xt,yt,zt,iflqs1,idt,id0,i34,uuint,vvint,wwint,BoundConditionFlag,nel_j,HydroParam,MeshParam)   
@@ -873,7 +873,12 @@
             
             !If has a intersection point PI(xin, yin), the Edge i is crosses in particle trajectory:
             if(iflag.eq.1) then
-                nel_j=j !next front edge          
+                nel_j=j !next front edge     
+                
+                if(sqrt((x0-xin)**0.5+(y0-yin)**0.5)>small1 .and. abs(sqrt(uuint**0.5+vvint**0.5))>0 )then
+                     dtin = sqrt((x0-xin)**0.5+(y0-yin)**0.5)/sqrt(uuint**0.5+vvint**0.5)
+                endif                
+                
                 cycle loop4
             endif
             
