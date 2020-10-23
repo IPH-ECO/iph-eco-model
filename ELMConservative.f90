@@ -1994,8 +1994,8 @@
         ! Set Stencil:
         iEdgein = 3
         n7 = 2
-        rElem = MeshParam%Right(MeshParam%Edge(4,l))
-        lElem = MeshParam%Right(MeshParam%Edge(2,l))
+        rElem = MeshParam%Neighbor(4,l)
+        lElem = MeshParam%Neighbor(2,l)
         
         !bench 02:
         if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(4,l))<= 100 + NearZero) then
@@ -2177,8 +2177,8 @@
         
         iEdgein = 4
         n7 = 3
-        rElem = MeshParam%Right(MeshParam%Edge(1,l)) 
-        lElem = MeshParam%Right(MeshParam%Edge(3,l))
+        rElem = MeshParam%Neighbor(1,l)
+        lElem = MeshParam%Neighbor(3,l)
         
         !bench 02:
         if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(1,l))<= 100 + NearZero) then
@@ -2360,8 +2360,8 @@
         
         iEdgein = 1
         n7 = 4
-        rElem = MeshParam%Right(MeshParam%Edge(2,l)) 
-        lElem = MeshParam%Right(MeshParam%Edge(4,l))
+        rElem = MeshParam%Neighbor(2,l)
+        lElem = MeshParam%Neighbor(4,l)
         
         !bench 02:
         if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(2,l))<= 100 + NearZero) then
@@ -2548,10 +2548,10 @@
         
         iEdgein = 2
         n7 = 1
-        rElem = MeshParam%Right(MeshParam%Edge(3,l)) 
-        lElem = MeshParam%Right(MeshParam%Edge(1,l))
+        rElem = MeshParam%Neighbor(3,l)
+        lElem = MeshParam%Neighbor(1,l)
 
-                !bench 02:
+        !bench 02:
         if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(3,l))<= 100 + NearZero) then
             if (MeshParam%EdgeBary(2,MeshParam%Edge(3,l)) >= 110 - NearZero) then
                 relem = 0
@@ -5854,13 +5854,13 @@
     !nr = n9, nu = n4, nu1 = n5, nl = n6
     
     !bench 02:
-    if ( 100-NearZero <= MeshParam%EdgeBary(1,n3)<= 100 + NearZero) then
-        if (MeshParam%EdgeBary(2,n3) >= 110 - NearZero) then
-            r = 0
-        elseif(MeshParam%EdgeBary(2,n3) <= 90 + NearZero) then
-            r = 0
-        endif
-    endif
+    !if ( 100-NearZero <= MeshParam%EdgeBary(1,n3)<= 100 + NearZero) then
+    !    if (MeshParam%EdgeBary(2,n3) >= 110 - NearZero) then
+    !        r = 0
+    !    elseif(MeshParam%EdgeBary(2,n3) <= 90 + NearZero) then
+    !        r = 0
+    !    endif
+    !endif
     
     nu = r              
     If (nu == 0) Then

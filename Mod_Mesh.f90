@@ -55,6 +55,8 @@ Module MeshVars
         Integer:: EdgeDef(2,4)
         Integer, Allocatable:: Left(:)    !< ID of the left neighbour element for each edge
         Integer, Allocatable:: Right(:)   !<ID of the right neighbour element for each edge
+        Integer, Allocatable:: Rightplus(:)
+        Integer, Allocatable:: Leftplus(:)
         Integer, Allocatable:: nVertexElem(:)
         Integer, Allocatable:: VertexElem(:,:)
         Integer:: nEdge, nNode, nElem, nPoint
@@ -339,6 +341,10 @@ Module MeshVars
     
         Allocate(this%Left(this%nEdge))
         Allocate(this%Right(this%nEdge))
+        
+        Allocate(this%Leftplus(this%nEdge))
+        Allocate(this%Rightplus(this%nEdge))
+        
         Allocate(this%EdgeLength(this%nEdge))
         Allocate(this%CirDistance(this%nEdge))
         Allocate(this%AbsDelta(this%nEdge))

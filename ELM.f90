@@ -90,7 +90,7 @@
             
             ! In cases that the velocity magnitude in layer is very low or the iEdge no has neighbour Element (r==0), the backtracking 
             ! velocity in layer is set equal the iEdge:
-            If(vmag.le.1.e-6 .or. NWaterFlag == 1) Then ! No activity or Water Level Condition
+            If(vmag.le.1.e-6 .or. NWaterFlag==1) Then ! No activity or Water Level Condition
                 HydroParam%uxyback(iLayer,1:2,iEdge) = (/ uuint, vvint /)          
             Else
             ! Else, the backtracking process is initialized:
@@ -279,7 +279,7 @@
     Real ::  uuBtrack, vvBtrack, wwBtrack, hhBTrack, uuBtrack2, vvBtrack2, wwBtrack2, theta, Umax, Umin
     Real :: staint(8),t_xi(4),s_xi(4),sig(4),subrat(4)
     Integer:: nnelIni,idt,iflqs1,i,j,l,nd,nn,lev, jjlev,n1,n2,n3,n4, n5, n6, n7, n8, n9,iNode1,iNode2,iEdge,iNode, Nodes(9), addLayer, N, S, Face, r, ll, nnel0,psi_flag,nel_j
-    Real:: trat,zup,zrat,aa1,aa2,aa3,aa4,aa,csi,etta,wdown,wup,weit
+    Real:: trat,zup,zrat,aa1,aa2,aa3,aa4,aa,csi,etta,wdown,wup,weit, xtaux, ytaux, ztaux
     Real:: NearZero = 1e-10 !< Small Number
     Real:: talx, taly, talz, tal, timeAcum, dtin
     Integer:: i34 = 4
@@ -344,11 +344,11 @@
         
         trat = dble(idt)/ndelt !Ponderador no tempo para interpolação a velocidade entre n e n+1
         !Posição da partícula no primeiro subpasso de tempo
-        !xt=x0-dtb*uuint
-        !yt=y0-dtb*vvint
-        !zt=z0-dtb*wwint 
+        xt=x0-dtb*uuint
+        yt=y0-dtb*vvint
+        zt=z0-dtb*wwint 
         
-        Call RK4order(uuint, vvint, wwint, dtb, nnel, id0, jlev, xt, yt, zt, x0, y0, z0, dt, timeAcum + dtb, Interpolate_Flag, HydroParam, MeshParam)
+        Call RK4order(uuint, vvint, wwint, dtb, nnel, id0, jlev, xtaux, ytaux, ztaux, x0, y0, z0, dt, timeAcum + dtb, Interpolate_Flag, HydroParam, MeshParam)
         
         dtin = dtb
         Call quicksearch(1,nnel,jlev,dtb,dtin,x0,y0,z0,xt,yt,zt,iflqs1,idt,id0,i34,uuint,vvint,wwint,BoundConditionFlag,nel_j,HydroParam,MeshParam)   
@@ -789,7 +789,7 @@
             EndIf
             pathl=hvel*trm    
             
-        ElseIf (HydroParam%eta(r) - HydroParam%hb(r) <= HydroParam%PCRI/2.d0 + NearZero) Then !CAYO
+        ElseIf (HydroParam%eta(MeshParam%Neighbor(nel_j,nnel)) - HydroParam%hb(MeshParam%Neighbor(nel_j,nnel)) <= HydroParam%PCRI/2.d0 + NearZero) Then !CAYO
             lit=1
         
             !Nudge intersect (xin,yin), and update starting pt
@@ -824,19 +824,18 @@
         Endif !abnormal cases
         
         
-        !Do NWater = 1, HydroParam%NWaterLevel
-        !    If(r == HydroParam%IndexWaterLevel(NWater,2)) Then
-        !        
-        !        zvel=0.5*((HydroParam%uNode(jlev,3,md1)+HydroParam%uNode(jlev,3,md2))/2. + (HydroParam%uNode(jlev+1,3,md1)+HydroParam%uNode(jlev+1,3,md2))/2.)            
-        !        nfl=1
-        !        xt=(1-1.0d-4)*xin+1.0d-4*MeshParam%xb(nel)
-        !        yt=(1-1.0d-4)*yin+1.0d-4*MeshParam%yb(nel)
-        !        zt=zin-zvel*trm
-        !        nnel=nel
-        !        exit loop4
-        !    EndIf
-        !EndDo
-        !
+        Do NWater = 1, HydroParam%NWaterLevel
+            If(MeshParam%Neighbor(nel_j,nnel) == HydroParam%IndexWaterLevel(NWater,2)) Then      
+                zvel=0.5*((HydroParam%uNode(jlev,3,md1)+HydroParam%uNode(jlev,3,md2))/2. + (HydroParam%uNode(jlev+1,3,md1)+HydroParam%uNode(jlev+1,3,md2))/2.)            
+                nfl=1
+                xt=(1-1.0d-4)*xin+1.0d-4*MeshParam%xb(nel)
+                yt=(1-1.0d-4)*yin+1.0d-4*MeshParam%yb(nel)
+                zt=zin-zvel*trm
+                nnel=nel
+                exit loop4
+            EndIf
+        EndDo
+        
         
         !Else in normal cases, we need get the neighbour element which shares the iEdge(nel_j):
         If(lit.eq.0) Then

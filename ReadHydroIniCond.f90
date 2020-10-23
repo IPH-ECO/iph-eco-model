@@ -218,6 +218,184 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
             HydroParam%eta(iElem) = HydroParam%sb(iElem)+HydroParam%Pcri/2.d0 !*** Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
         EndIf
         
+        
+        Do iEdge = 1,4
+            Face = MeshParam%Edge(iEdge,iElem)
+            l = MeshParam%Left(Face)
+            r = MeshParam%Right(Face)
+
+            if(face == 571) then
+                continue
+            endif
+            If(MeshParam%plus(Face) == 0) Then
+            !    
+            !    If(iEdge == 1) Then
+            !        MeshParam%NeibGrad02(Face) = l
+            !        If(r /=0) Then 
+            !            MeshParam%NeibGrad01(Face) = r
+            !        Else
+            !            MeshParam%NeibGrad01(Face) = l
+            !        Endif
+            !        
+            !        If(MeshParam%Neighbor(3,l) /= 0) Then
+            !            MeshParam%NeibGrad03(Face) = MeshParam%Neighbor(3,l)
+            !            If(MeshParam%Neighbor(3,MeshParam%Neighbor(3,l)) /= 0) Then
+            !                MeshParam%NeibGrad04(Face) = MeshParam%Neighbor(3,MeshParam%Neighbor(3,l))
+            !            Else
+            !                MeshParam%NeibGrad04(Face) = MeshParam%NeibGrad03(Face)
+            !            EndIf         
+            !        Else
+            !            MeshParam%NeibGrad03(Face) = l
+            !            MeshParam%NeibGrad04(Face) = l
+            !        EndIf
+            !        
+            !    ElseIf(iEdge == 2) Then  
+            !        MeshParam%NeibGrad01(Face) = l
+            !        If(r /=0) Then 
+            !            MeshParam%NeibGrad02(Face) = r
+            !            If(MeshParam%Neighbor(iEdge,MeshParam%NeibGrad02(Face))/= 0) Then
+            !                MeshParam%NeibGrad03(Face) = MeshParam%Neighbor(iEdge,MeshParam%NeibGrad02(Face))
+            !                If(MeshParam%Neighbor(iEdge,MeshParam%NeibGrad03(Face))/= 0) Then
+            !                    MeshParam%NeibGrad04(Face) = MeshParam%Neighbor(iEdge,MeshParam%NeibGrad03(Face))
+            !                Else
+            !                    MeshParam%NeibGrad04(Face) = MeshParam%NeibGrad03(Face)
+            !                EndIf
+            !            Else
+            !                MeshParam%NeibGrad03(Face) = MeshParam%NeibGrad02(Face)
+            !                MeshParam%NeibGrad04(Face) = MeshParam%NeibGrad02(Face)
+            !            EndIf  
+            !        Else
+            !            MeshParam%NeibGrad02(Face) = l
+            !            MeshParam%NeibGrad03(Face) = MeshParam%NeibGrad02(Face)
+            !            MeshParam%NeibGrad04(Face) = MeshParam%NeibGrad02(Face)
+            !        Endif
+            !        
+            !    ElseIf(iEdge == 3) Then
+            !        MeshParam%NeibGrad01(Face) = l
+            !        If(r /=0) Then 
+            !            MeshParam%NeibGrad02(Face) = MeshParam%Neighbor(iEdge,l)
+            !            If( MeshParam%Neighbor(iEdge,MeshParam%NeibGrad02(Face)) /= 0) Then
+            !                MeshParam%NeibGrad03(Face) = MeshParam%Neighbor(iEdge,MeshParam%NeibGrad02(Face))
+            !                If(MeshParam%Neighbor(iEdge,MeshParam%NeibGrad03(Face)) /= 0) Then
+            !                    MeshParam%NeibGrad04(Face) = MeshParam%Neighbor(iEdge,MeshParam%NeibGrad03(Face))
+            !                Else
+            !                    MeshParam%NeibGrad04(Face) = MeshParam%NeibGrad03(Face)
+            !                EndIf
+            !            Else
+            !                MeshParam%NeibGrad03(Face) = MeshParam%NeibGrad02(Face)
+            !                MeshParam%NeibGrad04(Face) = MeshParam%NeibGrad02(Face)
+            !            EndIf 
+            !        Else
+            !            MeshParam%NeibGrad02(Face) = l
+            !            MeshParam%NeibGrad03(Face) = MeshParam%NeibGrad02(Face)
+            !            MeshParam%NeibGrad04(Face) = MeshParam%NeibGrad02(Face)
+            !        Endif    
+            !    Else
+            !        MeshParam%NeibGrad02(Face) = l
+            !        If(MeshParam%Neighbor(4,l) /= 0) Then
+            !            MeshParam%NeibGrad01(Face) = MeshParam%Neighbor(4,l)
+            !        Else
+            !            MeshParam%NeibGrad01(Face) = l
+            !        EndIf
+            !        
+            !        If(MeshParam%Neighbor(2,l) /= 0) Then
+            !            MeshParam%NeibGrad03(Face) = MeshParam%Neighbor(2,l)
+            !            If(MeshParam%Neighbor(2,MeshParam%NeibGrad03(Face)) /= 0) Then
+            !                MeshParam%NeibGrad04(Face) = MeshParam%Neighbor(2,MeshParam%NeibGrad03(Face))
+            !            Else
+            !                MeshParam%NeibGrad04(Face) =  MeshParam%NeibGrad03(Face)
+            !            EndIf
+            !        Else
+            !            MeshParam%NeibGrad03(Face) = l
+            !            MeshParam%NeibGrad04(Face) = l
+            !        EndIf
+            !    EndIf      
+            !    MeshParam%plus(Face) = 1
+            !EndIf
+                
+                If(iEdge == 1) Then
+                    MeshParam%NeibGrad03(Face) = l
+                    If(MeshParam%Neighbor(iEdge,l) /=0) Then 
+                        MeshParam%NeibGrad02(Face) = MeshParam%Neighbor(iEdge,l)
+                        If(MeshParam%Neighbor(1,MeshParam%NeibGrad02(Face)) /= 0) Then
+                            MeshParam%NeibGrad01(Face) = MeshParam%Neighbor(1,MeshParam%NeibGrad02(Face))
+                        Else
+                            MeshParam%NeibGrad01(Face) = MeshParam%NeibGrad02(Face)
+                        EndIf
+                    Else
+                        MeshParam%NeibGrad01(Face) = l
+                        MeshParam%NeibGrad02(Face) = l
+                    Endif
+ 
+                    If(MeshParam%Neighbor(3,l) /= 0) Then
+                        MeshParam%NeibGrad04(Face) = MeshParam%Neighbor(3,l)       
+                    Else
+                        MeshParam%NeibGrad04(Face) = l
+                    EndIf
+                    
+                ElseIf(iEdge == 2) Then  
+                    MeshParam%NeibGrad02(Face) = l
+                    If(MeshParam%Neighbor(iEdge,l)/=0) Then 
+                        MeshParam%NeibGrad03(Face) = MeshParam%Neighbor(iEdge,l)
+                        If(MeshParam%Neighbor(iEdge,MeshParam%NeibGrad03(Face))/= 0) Then
+                            MeshParam%NeibGrad04(Face) = MeshParam%Neighbor(iEdge,MeshParam%NeibGrad03(Face))
+                        Else
+                            MeshParam%NeibGrad04(Face) = MeshParam%NeibGrad03(Face)
+                        EndIf  
+                    Else
+                        MeshParam%NeibGrad03(Face) = l
+                        MeshParam%NeibGrad04(Face) = l
+                    Endif
+                    
+                    If(MeshParam%Neighbor(4,l) /= 0) Then
+                        MeshParam%NeibGrad01(Face) = MeshParam%Neighbor(4,l)       
+                    Else
+                        MeshParam%NeibGrad01(Face) = l
+                    EndIf
+                    
+                ElseIf(iEdge == 3) Then
+                    MeshParam%NeibGrad02(Face) = l
+                    If(MeshParam%Neighbor(iEdge,l) /=0) Then 
+                        MeshParam%NeibGrad03(Face) = MeshParam%Neighbor(iEdge,l)
+                        If( MeshParam%Neighbor(iEdge,MeshParam%NeibGrad03(Face)) /= 0) Then
+                            MeshParam%NeibGrad04(Face) = MeshParam%Neighbor(iEdge,MeshParam%NeibGrad03(Face))
+                        Else
+                            MeshParam%NeibGrad04(Face) = MeshParam%NeibGrad03(Face)
+                        EndIf 
+                    Else
+                        MeshParam%NeibGrad03(Face) = l
+                        MeshParam%NeibGrad04(Face) = l
+                    Endif    
+                    
+                    If(MeshParam%Neighbor(1,l) /= 0) Then
+                        MeshParam%NeibGrad01(Face) = MeshParam%Neighbor(1,l)       
+                    Else
+                        MeshParam%NeibGrad01(Face) = l
+                    EndIf
+                Else
+                    MeshParam%NeibGrad03(Face) = l
+                    If(MeshParam%Neighbor(2,l) /= 0) Then
+                        MeshParam%NeibGrad04(Face) = MeshParam%Neighbor(2,l)
+                    Else
+                        MeshParam%NeibGrad04(Face) = l
+                    EndIf
+                    
+                    If(MeshParam%Neighbor(4,l) /= 0) Then
+                        MeshParam%NeibGrad02(Face) = MeshParam%Neighbor(4,l)
+                        If(MeshParam%Neighbor(4,MeshParam%NeibGrad02(Face)) /= 0) Then
+                            MeshParam%NeibGrad01(Face) = MeshParam%Neighbor(4,MeshParam%NeibGrad02(Face))
+                        Else
+                            MeshParam%NeibGrad01(Face) =  MeshParam%NeibGrad02(Face)
+                        EndIf
+                    Else
+                        MeshParam%NeibGrad01(Face) = l
+                        MeshParam%NeibGrad02(Face) = l
+                    EndIf
+                EndIf      
+                MeshParam%plus(Face) = 1
+            EndIf                
+        EndDo
+        
     EndDo
     
     If (MeshParam%iBedrock == 0) Then

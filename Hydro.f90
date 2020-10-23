@@ -34,7 +34,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     Integer:: llElem, rrElem, psi_flag,  indEdge
     Real:: Courant,fi_small, DZjAcum
     Integer:: r, l, Sig, Face, Pij, DIM, ie, j, k, iNode1,iNode2, cont
-    Real:: V, DV, SumRHS, SumH, res, SumLhS,gamma,teste,ru
+    Real:: V, DV, SumRHS, SumH, res, SumLhS,gamma, teste, rj(2),psi(2)
     Real:: dzp, dzm, SumW, rAux, Aux, VerEddyViscUp,VerEddyViscDown, vel, e0,k0
     Real:: Chezy,sum1,sum0,rhoairCell
     Real:: NearZero = 1e-10
@@ -759,7 +759,10 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     !$OMP end parallel do    
    
     
-    !$OMP parallel do default(none) shared(MeshParam,HydroParam, k0) private(iLayer,Small,iEdge,l,r,NearZero,DZjacum,Face)
+    !!$OMP parallel do default(none) shared(MeshParam,HydroParam,k0,psi_flag,fi_small,Courant) private(iLayer,Small,iEdge,l,r,NearZero,DZjacum,psi,rj)
+    Courant = 0.d0
+    fi_small = 0.d0
+    psi_flag = 3
     Do iEdge = 1,MeshParam%nEdge
         
         l = MeshParam%Left(iEdge)
@@ -777,32 +780,51 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
         !        r = 0
         !    endif
         !endif
+        If(HydroParam%eta(MeshParam%NeibGrad02(iEdge)) - HydroParam%eta(MeshParam%NeibGrad03(iEdge)) > NearZero + HydroParam%PCRI/2.0d0) Then
+            rj(1) = (HydroParam%eta(MeshParam%NeibGrad01(iEdge)) - HydroParam%eta(MeshParam%NeibGrad02(iEdge)))/(HydroParam%eta(MeshParam%NeibGrad02(iEdge)) - HydroParam%eta(MeshParam%NeibGrad03(iEdge)))
+        Else
+            rj(1) = 0.d0
+        EndIf
+        Call Psi_value(psi_flag,rj(1),Courant,fi_small,psi(1))
+        
+        If(HydroParam%eta(MeshParam%NeibGrad02(iEdge)) - HydroParam%eta(MeshParam%NeibGrad03(iEdge)) > NearZero + HydroParam%PCRI/2.0d0) Then
+            rj(2) = (HydroParam%eta(MeshParam%NeibGrad02(iEdge)) - HydroParam%eta(MeshParam%NeibGrad03(iEdge)))/(HydroParam%eta(MeshParam%NeibGrad03(iEdge)) - HydroParam%eta(MeshParam%NeibGrad04(iEdge)))
+        Else
+            rj(2) = 0.d0
+        EndIf
+        Call Psi_value(psi_flag,rj(2),Courant,fi_small,psi(2))
+        !rj(1) = ru(HydroParam%eta(),HydroParam%eta(),HydroParam%eta(),xxNode(3),xxNode(2),xxNode(1),yyNode(3),yyNode(2),yyNode(1))
+        !rj(2) = (HydroParam%eta(MeshParam%NeibGrad02(iEdge)) - HydroParam%eta(MeshParam%NeibGrad03(iEdge)))/(HydroParam%eta(MeshParam%NeibGrad03(iEdge)) - HydroParam%eta(MeshParam%NeibGrad04(iEdge)))
+        
+        if(isnan(psi(1)) .or. isnan(psi(2))) then
+            continue
+        endif
         
         !! 9.1 Compute Index Smallm(j) and CapitalM(j)
         !! Smallm and CapitalM are related to mj and Mj in [1]
         If (r == 0) Then
             HydroParam%H(iEdge) = Max( HydroParam%PCRI/2.0d0, -HydroParam%sj(iEdge) + HydroParam%eta(l) )
         Else
-            HydroParam%H(iEdge) = Max( HydroParam%PCRI/2.0d0, -HydroParam%sj(iEdge) + HydroParam%eta(l), -HydroParam%sj(iEdge) + HydroParam%eta(r) )
+            HydroParam%H(iEdge) = Max( HydroParam%PCRI/2.0d0, -HydroParam%sj(iEdge) + HydroParam%eta(l) + 0.5*psi(2)*HydroParam%eta(MeshParam%NeibGrad02(iEdge)) - HydroParam%eta(MeshParam%NeibGrad03(iEdge)), -HydroParam%sj(iEdge) + HydroParam%eta(r) + 0.5*psi(1)*(HydroParam%eta(MeshParam%NeibGrad01(iEdge)) - HydroParam%eta(MeshParam%NeibGrad02(iEdge))))
         EndIf
         
         !If(r==0)Then
         !    r = l
         !EndIf
         !
-        !DZjacum = 0.0d0
-        !Do iLayer = HydroParam%Smallms(iEdge), HydroParam%CapitalM(iEdge)
-        !    If(HydroParam%um(iLayer, iEdge) > 0) Then                                                 
-        !        DZjacum = DZjacum  + (HydroParam%DZhi(iLayer,l) + HydroParam%DZsi(iLayer,l))
-        !    ElseIf(HydroParam%um(iLayer, iEdge) < 0) Then
-        !        DZjacum = DZjacum  + (HydroParam%DZhi(iLayer,r) + HydroParam%DZsi(iLayer,r))
-        !    Else
-        !        DZjacum = DZjacum  + 0.5*(HydroParam%DZhi(iLayer,l) + HydroParam%DZsi(iLayer,l) + HydroParam%DZhi(iLayer,r) + HydroParam%DZsi(iLayer,r))
-        !    EndIf            
-        !EndDo
-        !HydroParam%H(iEdge) = DZjacum
+        DZjacum = 0.0d0
+        Do iLayer = HydroParam%Smallms(iEdge), HydroParam%CapitalM(iEdge)
+            If(HydroParam%um(iLayer, iEdge) > 0) Then                                                 
+                DZjacum = DZjacum  + (HydroParam%DZhi(iLayer,l) + HydroParam%DZsi(iLayer,l))
+            ElseIf(HydroParam%um(iLayer, iEdge) < 0) Then
+                DZjacum = DZjacum  + (HydroParam%DZhi(iLayer,r) + HydroParam%DZsi(iLayer,r))
+            Else
+                DZjacum = DZjacum  + 0.5*(HydroParam%DZhi(iLayer,l) + HydroParam%DZsi(iLayer,l) + HydroParam%DZhi(iLayer,r) + HydroParam%DZsi(iLayer,r))
+            EndIf            
+        EndDo
+        HydroParam%H(iEdge) = DZjacum
 
-        if(iedge == 560) then
+        if(iedge == 538) then
             continue
         endif
         
@@ -898,7 +920,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
             EndDo
 		EndIf   
     EndDo
-    !$OMP end parallel do
+    !!$OMP end parallel do
 
 
     
