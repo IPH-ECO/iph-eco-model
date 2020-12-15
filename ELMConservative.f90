@@ -1,4 +1,4 @@
-!>\brief Routines related to the Eulerian-Lagragean Method (FU, FV and FW) of TRIM model - Casulli
+ï»¿!>\brief Routines related to the Eulerian-Lagragean Method (FU, FV and FW) of TRIM model - Casulli
 !>\details 
 ! References:
 ! [1]
@@ -88,7 +88,7 @@
                 Else
                 ! Else, the backtracking process is initialized:
 
-                    If (r==0) Then !.and.HydroParam%u(iLayer,iEdge)>0  !CAYO Verificar essa condição comentada
+                    If (r==0) Then !.and.HydroParam%u(iLayer,iEdge)>0  !CAYO Verificar essa condiï¿½ï¿½o comentada
                         HydroParam%uxyback(iLayer,1:2,iEdge) = (/ uuint, vvint /)
                     Else
                         If (iLayer < Hydroparam%ElSmallm(r)) then
@@ -543,7 +543,7 @@
             
             !Horizontal velocity magnitude:
             hvel=dsqrt(xvel**2+yvel**2)
-            If(hvel.lt.1.e-4) Then !Checar essa condição, todos os casos entram aqui CAYO
+            If(hvel.lt.1.e-4) Then !Checar essa condiï¿½ï¿½o, todos os casos entram aqui CAYO
                 nfl=1
                 xt=xin
                 yt=yin
@@ -574,7 +574,7 @@
             
             !Horizontal velocity magnitude:
             hvel=dsqrt(xvel**2+yvel**2)
-            If(hvel.lt.1.e-4) Then !Checar essa condição, todos os casos entram aqui CAYO
+            If(hvel.lt.1.e-4) Then !Checar essa condiï¿½ï¿½o, todos os casos entram aqui CAYO
                 nfl=1
                 xt=xin
                 yt=yin

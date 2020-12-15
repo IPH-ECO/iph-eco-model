@@ -146,6 +146,9 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     Allocate(HydroParam%uxysub(MeshParam%Kmax,2,MeshParam%nEdge))
     Allocate(HydroParam%ubsub(MeshParam%Kmax,3,MeshParam%nElem))
     
+    Allocate(HydroParam%uxysub(MeshParam%Kmax,2,MeshParam%nEdge))
+    Allocate(HydroParam%ubsub(MeshParam%Kmax,3,MeshParam%nElem))
+    
     Allocate(HydroParam%DZsj(MeshParam%Kmax,MeshParam%nEdge)) !CAYO   
     Allocate(HydroParam%DZsjt(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
     Allocate(HydroParam%DZhj(MeshParam%Kmax,MeshParam%nEdge)) !CAYO   

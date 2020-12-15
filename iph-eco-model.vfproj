@@ -76,6 +76,8 @@
 		<File RelativePath=".\DestroyHydro.f90"/>
 		<File RelativePath=".\ELM.f90"/>
 		<File RelativePath=".\ELMConservative.f90"/>
+		<File RelativePath=".\ELM0290.f90"/>
+		<File RelativePath=".\ELMConservative.f90"/>
 		<File RelativePath=".\ExplicitTerms.f90"/>
 		<File RelativePath=".\Hydro.f90"/>
 		<File RelativePath=".\MatOp.f90"/>
@@ -84,6 +86,7 @@
 		<File RelativePath=".\Pressure.f90"/>
 		<File RelativePath=".\SoilSaturation.f90"/>
 		<File RelativePath=".\solve_tridiag.f90"/>
+		<File RelativePath=".\Source1.f90"/>
 		<File RelativePath=".\Tension.f90"/>
 		<File RelativePath=".\Turbulence.f90"/>
 		<File RelativePath=".\utangvelocity.f90"/>

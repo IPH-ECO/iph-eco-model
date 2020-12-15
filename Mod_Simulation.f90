@@ -76,7 +76,8 @@ Module SimulationModel
             this%dt = sim%stepTime  !0.001                            ! Step time of the simulation (seg)
             this%dtday = this%dt/86400.                               ! Step time of the simulation (day)
             call c_f_pointer(sim%wqoOutputParameters, this%wqoOutputParameters, [sim%wqoOutputParametersLength])
-             
+    
+            
             allocate(this%start(int(this%FinalTime/this%dt)+1))
             allocate(this%finish(int(this%FinalTime/this%dt)+1))
                 

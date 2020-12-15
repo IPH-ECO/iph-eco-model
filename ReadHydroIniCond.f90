@@ -1,4 +1,4 @@
-!> This subroutine reads the hydrodynamic parameters. 
+ï»¿!> This subroutine reads the hydrodynamic parameters. 
 Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     
     Use domain_types
@@ -99,6 +99,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     HydroParam%ubsub = 0.d0
     HydroParam%etaInfn = 0.d0
     HydroParam%etaInf = 0.d0
+    
     
     HydroParam%rhsnonHydro = 0.d0
     HydroParam%q = 0.d0
@@ -222,7 +223,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
         EndIf
         
         If (HydroParam%eta(iElem) - HydroParam%sb(iElem) <= HydroParam%Pcri+NearZero) Then
-            HydroParam%eta(iElem) = HydroParam%sb(iElem)+HydroParam%Pcri/2.d0 !*** Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
+            HydroParam%eta(iElem) = HydroParam%sb(iElem)+HydroParam%Pcri/2.d0 !*** Verificar sinal posteriormente, se jÃ¡ entrar como cota nÃ£o precisa do sinal 
         EndIf
     EndDo
 
@@ -251,7 +252,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
             l = MeshParam%Left(Face) 
             r = MeshParam%Right(Face)
             If (r == 0) Then
-                HydroParam%hj(Face) = HydroParam%hb(l) !*** Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
+                HydroParam%hj(Face) = HydroParam%hb(l) !*** Verificar sinal posteriormente, se jï¿½ entrar como cota nï¿½o precisa do sinal 
                 HydroParam%sj(Face) = HydroParam%sb(l)
                 Do iLayer = 1,MeshParam%KMax
                     If (abs(HydroParam%hj(Face)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<=HydroParam%PCRI+NearZero) then
@@ -263,7 +264,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
 
                 EndDo        
             Else
-                HydroParam%hj(Face) = Max(HydroParam%hb(l),HydroParam%hb(r))  !  (0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) !Max(Hbat(I,J),HBat(IViz,JViz))!*** !(0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
+                HydroParam%hj(Face) = Max(HydroParam%hb(l),HydroParam%hb(r))  !  (0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) !Max(Hbat(I,J),HBat(IViz,JViz))!*** !(0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) Verificar sinal posteriormente, se jï¿½ entrar como cota nï¿½o precisa do sinal 
                 HydroParam%sj(Face) = Max(HydroParam%sb(l),HydroParam%sb(r))
                 Do iLayer = 1,MeshParam%KMax
                     If (abs(HydroParam%hj(Face)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<HydroParam%PCRI) then
@@ -896,7 +897,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
 !        EndIf
 !        
 !        If (HydroParam%eta(iElem) - HydroParam%sb(iElem) <= HydroParam%Pcri+NearZero) Then
-!            HydroParam%eta(iElem) = HydroParam%sb(iElem) + HydroParam%Pcri/2.d0 !*** Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
+!            HydroParam%eta(iElem) = HydroParam%sb(iElem) + HydroParam%Pcri/2.d0 !*** Verificar sinal posteriormente, se jï¿½ entrar como cota nï¿½o precisa do sinal 
 !        EndIf
 !
 !    EndDo
@@ -926,7 +927,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
 !            l = MeshParam%Left(Face) 
 !            r = MeshParam%Right(Face)
 !            If (r == 0) Then
-!                HydroParam%hj(Face) = HydroParam%hb(l) !*** Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
+!                HydroParam%hj(Face) = HydroParam%hb(l) !*** Verificar sinal posteriormente, se jï¿½ entrar como cota nï¿½o precisa do sinal 
 !                HydroParam%sj(Face) = HydroParam%sb(l)
 !                Do iLayer = 1,MeshParam%KMax
 !                    If (abs(HydroParam%hj(Face)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<=HydroParam%PCRI+NearZero) then
@@ -939,7 +940,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
 !                    EndIf
 !                EndDo                  
 !            Else
-!                HydroParam%hj(Face) = Max(HydroParam%hb(l),HydroParam%hb(r))  !  (0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) !Max(Hbat(I,J),HBat(IViz,JViz))!*** !(0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
+!                HydroParam%hj(Face) = Max(HydroParam%hb(l),HydroParam%hb(r))  !  (0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) !Max(Hbat(I,J),HBat(IViz,JViz))!*** !(0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) Verificar sinal posteriormente, se jï¿½ entrar como cota nï¿½o precisa do sinal 
 !                HydroParam%sj(Face) = Max(HydroParam%sb(l),HydroParam%sb(r))
 !                Do iLayer = 1,MeshParam%KMax
 !                    If (abs(HydroParam%hj(Face)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<HydroParam%PCRI) then

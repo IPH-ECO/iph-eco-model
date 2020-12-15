@@ -162,6 +162,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
       
     ! 7. Assemble Matrix
     !!$OMP parallel do default(none) shared(MeshParam,HydroParam,MeteoParam) private(iEdge,iLayer,l,r,Chezy,rhoairCell,aTh,bTh,cTh,dzp,dzm,DIM,NearZero,dt)
+    !If (MeshParam%iBedrock == 1) Then
     Do iEdge = 1,MeshParam%nEdge
         
         l = MeshParam%Left(iEdge)
@@ -427,11 +428,11 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
         ! 8.2.5 Compute the New Free-Surface Elevation
         !CGOp is used to minimize F value :: F = V(n(t+1)) + T*n(t+1) - rhs == 0
         Call CGOp(HydroParam%F,HydroParam%Deta,dt,HydroParam,MeshParam)
-        !!$OMP parallel do default(none) shared(HydroParam,MeshParam) private(iElem)
+        !$OMP parallel do default(none) shared(HydroParam,MeshParam) private(iElem)
         Do iElem = 1, MeshParam%nElem
             HydroParam%eta(iElem) = HydroParam%eta(iElem) - HydroParam%Deta(iElem)
         EndDo
-        !!$OMP end parallel do
+        !$OMP end parallel do
     EndDo
     
     ! 9. Water Level Corrective Step

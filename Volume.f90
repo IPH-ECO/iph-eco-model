@@ -1,10 +1,10 @@
-Subroutine Volume(HydroParam,MeshParam)
+ï»¿Subroutine Volume(HydroParam,MeshParam)
 
     ! Calculate the Element Volume
     ! Based on:
     ! [1] Casulli, V. A high-resolution wetting and drying algorithm for free-surfacehydrodynamics. 
     !   International Journal for Numerical Methods in Fluids, v. 60 (4), p. 391-408, 2009.
-    ! [2] Casulli, V. A conservative semi-implicit method for coupled surface–subsurface flows in regional scale
+    ! [2] Casulli, V. A conservative semi-implicit method for coupled surfaceï¿½subsurface flows in regional scale
     !   International Journal for Numerical Methods in Fluids, v. 79, p. 199-214, 2015.
     
     ! Input:

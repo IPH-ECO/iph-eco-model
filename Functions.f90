@@ -301,4 +301,67 @@ Function V(eta,h)
     
     V = Max( 0., eta - h )
     
-End Function V
+    End Function V
+    
+    
+    Function ru(u,ux1,ux2,x,x1,x2,y,y1,y2) 
+    ! Compute the Water Elevation
+    ! Based on:
+    ! [1] 
+    ! Input:
+    ! u -> u velocity, eta or concentration
+    ! ux1  -> u in position -1/2
+    ! ux2 -> u in position -3/2
+    ! x -> u position
+    ! x1 -> u-1/2 position
+    ! x2 -> u-3/2 position
+    ! Output:
+    ! r   -> Ratio of consecutive gradients
+    ! List of Modifications: 
+    !   -> 04.08.2020: Routine Implementation
+    ! Programmer: 
+        
+    Implicit None
+    Real:: ru, u, ux1, ux2, x, x1, x2, y, y1, y2, d1,d2
+    Real:: NearZero = 1e-5
+    
+    d1 = sqrt((x-x1)**2 + (y-y1)**2)
+    d2 = sqrt((x1-x2)**2 + (y1-y2)**2)
+    
+    If(abs(ux1 - ux2) <= NearZero .or. d1 <= NearZero) Then
+        ru = 0.d0
+    Else
+        ru = (u - ux1)/(ux1-ux2)*(d2/d1)
+    EndIf
+    Return
+    End Function ru   
+         
+    !Function pointInElem(nElem, n1Elem, xt, yt, MeshParam)
+    !
+    !Use MeshVars
+    !
+    !Real :: xt, yt
+    !Integer :: nElem,n1Elem
+    !Integer :: ELFlag
+    !Real :: acumulatedArea, areaError, Small
+    !Integer :: n1, n2, i34
+    !type(MeshGridParam) :: MeshParam
+    !
+    !Small = 1e-5
+    !i34 = 4
+    !acumulateArea = 0.d0
+    !
+    !Do i = 1,i34
+    !    n1 = MeshParam%Quadri(MeshParam%EdgeDef(1,i),nElem) + 1
+    !    n2 = MeshParam%Quadri(MeshParam%EdgeDef(2,i),nElem) + 1
+    !    acumulatedArea = acumulatedArea + dabs(signa(MeshParam%xNode(n1),MeshParam%xNode(n2),xt,MeshParam%yNode(n1),MeshParam%yNode(n2),yt))
+    !EndDo
+    !
+    !areaError = dabs(acumulatedArea-MeshParam%Area(nElem))/MeshParam%Area(nElem)
+    !!If is inside, the acumulated area is lower than %Area(iElement):
+    !If(areaError >= Small .and. n1Elem =/0) Then
+    !    nElem = n1Elem
+    !EndIf
+    !
+    !Return 
+    !End Function pointInElem

@@ -1,4 +1,4 @@
-!>\brief Routines related to the Eulerian-Lagragean Method (FU, FV and FW) of TRIM model - Casulli
+ï»¿!>\brief Routines related to the Eulerian-Lagragean Method (FU, FV and FW) of TRIM model - Casulli
 !>\details 
 ! References:
 ! [1]
@@ -328,7 +328,7 @@
     dtaux = dtb
     timeAcum = 0.d0
     Do While (timeAcum < dt)
-        !Posição da partícula no primeiro subpasso de tempo
+        !PosiÃ§Ã£o da partÃ­cula no primeiro subpasso de tempo
         xt=x0-dtb*uuint
         yt=y0-dtb*vvint
         zt=z0-dtb*wwint 
@@ -602,6 +602,15 @@
     ae=dabs(aa1-MeshParam%Area(nel))/MeshParam%Area(nel)
     if(ae.lt.small1) Then
         nnel=nel
+        
+        !Do NWater = 1, HydroParam%NWaterLevel
+        !    If(nel == HydroParam%IndexWaterLevel(NWater,2)) Then      
+        !        xt = x0
+        !        yt = y0
+        !        zt = z0
+        !    EndIf
+        !EndDo
+        
         go to 400
     endif
      
@@ -630,6 +639,7 @@
     ! Check if the particle position crosses some Edge from Element(nel):
     ! Starting edge nel_j
     Do i=1,i34
+        
         !Get the nodes for each edge
         n1=MeshParam%Quadri(MeshParam%EdgeDef(1,i),nel) + 1
         n2=MeshParam%Quadri(MeshParam%EdgeDef(2,i),nel) + 1
@@ -748,7 +758,7 @@
             
             !Horizontal velocity magnitude:
             hvel=dsqrt(xvel**2+yvel**2)
-            If(hvel.lt.1.e-4) Then !Checar essa condição, todos os casos entram aqui CAYO
+            If(hvel.lt.1.e-4) Then !Checar essa condiï¿½ï¿½o, todos os casos entram aqui CAYO
                 nfl=1
                 xt=xin
                 yt=yin
@@ -780,7 +790,7 @@
             
             !Horizontal velocity magnitude:
             hvel=dsqrt(xvel**2+yvel**2)
-            If(hvel.lt.1.e-4) Then
+            If(hvel.lt.1.e-4) Then !Checar essa condiï¿½ï¿½o, todos os casos entram aqui CAYO
                 nfl=1
                 xt=xin
                 yt=yin
@@ -909,7 +919,7 @@
         ! Based on: 
         ! [1] Wang,B.; Zhao,G.; Fringer,O.B. Reconstruction of vector fields for semi-Lagrangian advection on unstructured, staggered grids.
         !   Ocean Modelling, 40, p. 52-71, 2011.
-        ! [2] Zhang, Y.; Baptista, A.M. SELFE: A semi-implicit Eulerian–Lagrangian finite-element model for cross-scale ocean circulation.
+        ! [2] Zhang, Y.; Baptista, A.M. SELFE: A semi-implicit Eulerianï¿½Lagrangian finite-element model for cross-scale ocean circulation.
         !   Ocean Modelling, 21, p. 71-96, 2008.
         ! [3] Fringer, O.B.; Gerritsen, M.; Street, R.L. An unstructured-grid, finite-volume, nonhydrostatic, parallel coastal ocean simulator.
         !   Ocean Modelling, 14, p. 139-173, 2006.

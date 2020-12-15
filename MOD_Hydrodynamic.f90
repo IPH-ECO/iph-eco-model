@@ -1,4 +1,4 @@
-
+ï»¿
 !>@brief Variable declation for hydrodynamic computation
 !>@author Rafael Cavalcanti
   !>@attention List of modification
@@ -171,8 +171,8 @@
         Real:: Altit !<average altitude 
         Real:: ALB  !<Albedo
         Real:: OMEGA !<Earth angular velocity (in rad/sec)
-        Real:: g !<Acceleration due to gravity (m/s²)
-        Real:: CFL  !<Courant–Friedrich–Lewy Number
+        Real:: g !<Acceleration due to gravity (m/sï¿½)
+        Real:: CFL  !<Courantï¿½Friedrichï¿½Lewy Number
         Real:: nux, nuy, nuz
         Real:: GammaB !<Tension in the bottom layer
         Real:: GammaT !<Tension in the surface layer
@@ -189,7 +189,7 @@
 	    Real:: vref !<Vertical eddy Viscosity of Reference (VerTurbFlag == 1)
 	    Real:: vmin !<Background Vertical eddy Viscosity (VerTurbFlag == 1)
         Real:: tdmin_pp !<Background Vertical eddy diffuvsivity (VerTurbFlag == 1)
-	    Real:: rho0 !<Water density of reference (kg/m³)
+	    Real:: rho0 !<Water density of reference (kg/mï¿½)
         Real:: WtempRef !<Water temperature of reference (oC)
         Real:: AirtempRef !<Air temperature of reference (oC)
         Real:: Pcri !<threshold Depth for dry/wet algorithm
@@ -200,7 +200,7 @@
         Real:: RugChezyConst !<Roughness coeficient of Chezy (Constant)
         Real:: RugManConst !<Roughness coeficient of Manning (Constant)
         Real:: RugWCConst !<Roughness coeficient of White-Colebrook (Constant)
-        !Real, Allocatable:: rhoair(:) !<Air density (kg/m³)
+        !Real, Allocatable:: rhoair(:) !<Air density (kg/mï¿½)
         !Fetch
         Real, Allocatable:: fetch_m(:,:) !<Fetch distance (m)
     
@@ -356,10 +356,10 @@
         this%n_turbmodel1 = 1.d0
         this%NTRASP = 10.d0
     
-        !Gravity of the Earth (m/s²)
+        !Gravity of the Earth (m/sï¿½)
         this%g = 9.810665d0 !9.780327*(1. + 0.0053024*(sin(this%Lat*this%Pi/180))**2. - 0.0000058*sin(2*this%Lat*this%Pi/180)**2. ) - 3.086e-6*this%Altit
     
-        !Reference water density (kg/m³)
+        !Reference water density (kg/mï¿½)
         this%rho0 = 1000.d0
     
         !Albedo
