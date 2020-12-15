@@ -29,7 +29,7 @@ Subroutine Pressure(HydroParam,MeshParam,dt)
             !
             
             Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)
-                If ( r == 0 .or. HydroParam%H(iEdge) <= HydroParam%PCRI+NearZero) Then
+                If ( r == 0 .or. HydroParam%H(iEdge) + HydroParam%sj(iEdge)-HydroParam%hj(iEdge) <= HydroParam%PCRI+NearZero) Then
                     HydroParam%PBarc(iLayer,iEdge) = 0.d0
                 Else
                     HydroParam%PBarc(iLayer,iEdge) = 0.d0

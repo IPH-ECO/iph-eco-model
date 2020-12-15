@@ -37,6 +37,7 @@
 Module MeshVars
     
     use domain_types
+    use Sorting
 
     implicit none
     type MeshGridParam
@@ -54,6 +55,11 @@ Module MeshVars
         Integer:: EdgeDef(2,4)
         Integer, Allocatable:: Left(:)    !< ID of the left neighbour element for each edge
         Integer, Allocatable:: Right(:)   !<ID of the right neighbour element for each edge
+        Integer, Allocatable:: NeibGrad01(:)
+        Integer, Allocatable:: NeibGrad02(:)
+        Integer, Allocatable:: NeibGrad03(:)
+        Integer, Allocatable:: NeibGrad04(:)
+        Integer, Allocatable:: plus(:)
         Integer, Allocatable:: nVertexElem(:)
         Integer, Allocatable:: VertexElem(:,:)
         Integer:: nEdge, nNode, nElem, nPoint
@@ -76,7 +82,7 @@ Module MeshVars
         Integer, Allocatable :: LeftAux(:), RightAux(:) 
         Real, Allocatable:: AbsDelta(:),  EdgeBaryAux(:,:) 
         Integer:: nMaxVertexElem,nMaxEgdesatNode
-    
+        
         !2. Grid Data
         Integer:: iWindRed
         Integer:: iWetland
@@ -126,21 +132,24 @@ Module MeshVars
         call c_f_pointer(sim%label, simulationLabel, [sim%labelLength])
         call c_f_pointer(sim%layers, layers, [sim%layersLength])
 
-        this%nElem = StructuredMeshFeatures%numberOfElements 
+        this%nElem = StructuredMeshFeatures%numberOfElements
+        !this%nElem = StructuredMeshFeatures%numberOfElements - 36 !bench01
         
         this%dx = StructuredMeshFeatures%resolution
         !Lock horizontal resolution test
-        !this%dx = 0.02d0
-        !!
+        this%dx = 20.0d0 !bench 02
+
         this%dy = this%dx
-        
-    
+        !this%dy = 6.48d0 !bench 01
+        !this%dx = 0.020d0 !bench 01
+        !
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
         Allocate(this%Quadri(4,this%nElem))
         
         Do iElem = 1, this%nElem
             this%xb(iElem) = xCoordinates(iElem)
+            !this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO b01
             this%yb(iElem) = yCoordinates(iElem)
             this%Quadri(3,iElem) = verticeIds(4*(iElem-1)+1)
             this%Quadri(4,iElem) = verticeIds(4*(iElem-1)+2)
@@ -148,19 +157,18 @@ Module MeshVars
             this%Quadri(2,iElem) = verticeIds(4*(iElem-1)+4)
         EndDo
     
-    
-        !transferir para Module Mesh
-        this%NCAMMAX = sim%layersLength  !Cayo.+1 Original: this%NCAMMAX = sim%layersLength                    ! Number of Vertical Layers
-        this%zL = sim%minimumVerticalLimit-0.001  !Cayo. Original: sim%minimumVerticalLimit-0.001 -16.001 
+        this%NCAMMAX = sim%layersLength           ! Number of Vertical Layers
+        this%zL = sim%minimumVerticalLimit-0.001
+        this%zL = 0
         this%zR = sim%maximumVerticalLimit
-    
+        Call SortDecreasing(layers,sim%layersLength)
+        
         If (this%NCAMMAX > 0) Then
             ALLOCATE (this%LIMCAM(this%NCAMMAX))
             ALLOCATE (this%LIMCAMAUX(this%NCAMMAX+1))
-            Do i = 1,this%NCAMMAX !Cayo.-1 Original: sDo i = 1,this%NCAMMAX
+            Do i = 1,this%NCAMMAX
                 this%LIMCAM(i) = layers(i)                   ! Layer levels (m)
             EndDo
-            !this%LIMCAM(this%NCAMMAX) = -12 !Cayo (linha adicionada)
         Else
             ALLOCATE (this%LIMCAM(1))
             ALLOCATE (this%LIMCAMAUX(1))
@@ -168,9 +176,8 @@ Module MeshVars
             this%LIMCAMAUX = this%zL
         EndIf            
         
-        
         ! Number of Vertical Layers
-        If (this%NCAMMAX ==0) then !Two-dimensional
+        If (this%NCAMMAX == 0) then !Two-dimensional
             this%KMax = 1
             this%LIMCAMAUX(this%KMax)=this%zL
         ElseIf (this%NCAMMAX >= 1) then !Three-dimensional
@@ -340,6 +347,14 @@ Module MeshVars
     
         Allocate(this%Left(this%nEdge))
         Allocate(this%Right(this%nEdge))
+        
+        Allocate(this%NeibGrad01(this%nEdge))
+        Allocate(this%NeibGrad02(this%nEdge))
+        Allocate(this%NeibGrad03(this%nEdge))
+        Allocate(this%NeibGrad04(this%nEdge))
+        Allocate(this%plus(this%nEdge))
+        this%plus = 0
+        
         Allocate(this%EdgeLength(this%nEdge))
         Allocate(this%CirDistance(this%nEdge))
         Allocate(this%AbsDelta(this%nEdge))

@@ -22,7 +22,22 @@ Subroutine DestroyHydro(HydroParam)
     Deallocate(HydroParam%ElSmallm)
     Deallocate(HydroParam%ElCapitalM)
     
+    Deallocate(HydroParam%psij)
+    Deallocate(HydroParam%rj)
+    
+    Deallocate(HydroParam%ubt)
+    Deallocate(HydroParam%uxyt)
+    Deallocate(HydroParam%uNodet)  
+    Deallocate(HydroParam%ugt)
+    Deallocate(HydroParam%vgt)
+    Deallocate(HydroParam%wgt)
+    Deallocate(HydroParam%ubVt)
+    Deallocate(HydroParam%uxyLt)
+    Deallocate(HydroParam%wfct)
+    
+    
     Deallocate(HydroParam%etaInf)
+    Deallocate(HydroParam%etaInfn)
     Deallocate(HydroParam%etaplus)
     Deallocate(HydroParam%peta)
     Deallocate(HydroParam%petan)
@@ -34,6 +49,7 @@ Subroutine DestroyHydro(HydroParam)
     Deallocate(HydroParam%u)
     Deallocate(HydroParam%ut)
     Deallocate(HydroParam%uxyback)
+    Deallocate(HydroParam%uArrow)
     Deallocate(HydroParam%uNode)
     Deallocate(HydroParam%uxy)
     Deallocate(HydroParam%Wu)
@@ -107,8 +123,16 @@ Subroutine DestroyHydro(HydroParam)
     
     Deallocate(HydroParam%us)!CAYO
     Deallocate(HydroParam%ust)!CAYO
+    Deallocate(HydroParam%ustang)!CAYO
     Deallocate(HydroParam%um)!CAYO
     Deallocate(HydroParam%umt)!CAYO
+    Deallocate(HydroParam%umtang)!CAYO
+    Deallocate(HydroParam%wm)
+    Deallocate(HydroParam%wmt)
+    Deallocate(HydroParam%uxysub)
+    Deallocate(HydroParam%ubsub)
+    
+    Deallocate(HydroParam%utangNodes)
     
     Return
 End Subroutine DestroyHydro

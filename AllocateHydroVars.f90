@@ -31,9 +31,14 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     Allocate(HydroParam%Fvu(MeshParam%Kmax,MeshParam%nEdge))
     Allocate(HydroParam%Fuv(MeshParam%Kmax,MeshParam%nEdge))
     Allocate(HydroParam%u(MeshParam%Kmax,MeshParam%nEdge))
+    
+    Allocate(HydroParam%psij(MeshParam%Kmax,MeshParam%nEdge))
+    Allocate(HydroParam%rj(MeshParam%Kmax,MeshParam%nEdge))
+    
     Allocate(HydroParam%utang(MeshParam%Kmax,MeshParam%nEdge))
     Allocate(HydroParam%Wu(MeshParam%Kmax,MeshParam%nEdge))
     Allocate(HydroParam%uxyback(MeshParam%Kmax,2,MeshParam%nEdge))
+    Allocate(HydroParam%uArrow(MeshParam%Kmax,3,MeshParam%nEdge))    
     Allocate(HydroParam%ubBack(MeshParam%Kmax,3,MeshParam%nElem))
     Allocate(HydroParam%uxy(MeshParam%Kmax,2,MeshParam%nEdge))
     Allocate(HydroParam%uxyL(MeshParam%Kmax+1,2,MeshParam%nElem))
@@ -49,9 +54,20 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     Allocate(HydroParam%psi_edge(MeshParam%Kmax,MeshParam%nEdge))
     Allocate(HydroParam%psi_cell(MeshParam%Kmax,MeshParam%nElem))
     
+    Allocate (HydroParam%ugt(MeshParam%nEdge,MeshParam%kMax+1))
+    Allocate (HydroParam%vgt(MeshParam%nEdge,MeshParam%kMax+1))
+    Allocate (HydroParam%wgt(MeshParam%nEdge,MeshParam%kMax+1)) 
+    Allocate(HydroParam%ubt(MeshParam%Kmax,3,MeshParam%nElem))
+    Allocate(HydroParam%ubVt(MeshParam%Kmax,3,MeshParam%nNode))
+    Allocate(HydroParam%uxyt(MeshParam%Kmax,2,MeshParam%nEdge))
+    Allocate(HydroParam%uxyLt(MeshParam%Kmax+1,2,MeshParam%nElem))
+    Allocate(HydroParam%uNodet(MeshParam%Kmax+1,3,MeshParam%nNode))
+    Allocate(HydroParam%wfct(MeshParam%Kmax,MeshParam%nEdge))
+    
     
     ! 2.2. Others Variables
     Allocate(HydroParam%etaInf(MeshParam%nElem))
+    Allocate(HydroParam%etaInfn(MeshParam%nElem))
     Allocate(HydroParam%etaplus(MeshParam%nElem))
     Allocate(HydroParam%peta(MeshParam%nNode))
     Allocate(HydroParam%petan(MeshParam%nNode))
@@ -116,25 +132,33 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     !Allocate(HydroParam%Fq(MeshParam%Kmax,MeshParam%nElem))
     
     Allocate(HydroParam%Vol(MeshParam%nElem)) !CAYO
-    Allocate(HydroParam%Hs(MeshParam%nEdge)) !CAYO
     Allocate(MeshParam%ei(MeshParam%Kmax,MeshParam%nElem))!CAYO
     Allocate(MeshParam%Kj(MeshParam%Kmax,MeshParam%nEdge))!CAYO
     Allocate(HydroParam%us(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
     Allocate(HydroParam%ust(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
+    Allocate(HydroParam%ustang(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
     Allocate(HydroParam%um(MeshParam%Kmax,MeshParam%nEdge))!CAYO
     Allocate(HydroParam%umt(MeshParam%Kmax,MeshParam%nEdge))!CAYO
+    Allocate(HydroParam%umtang(MeshParam%Kmax,MeshParam%nEdge))!CAYO
+    Allocate(HydroParam%wm(MeshParam%Kmax+1,MeshParam%nElem))
+    Allocate(HydroParam%wmt(MeshParam%Kmax+1,MeshParam%nElem))
+    
+    Allocate(HydroParam%uxysub(MeshParam%Kmax,2,MeshParam%nEdge))
+    Allocate(HydroParam%ubsub(MeshParam%Kmax,3,MeshParam%nElem))
     
     Allocate(HydroParam%DZsj(MeshParam%Kmax,MeshParam%nEdge)) !CAYO   
     Allocate(HydroParam%DZsjt(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
     Allocate(HydroParam%DZhj(MeshParam%Kmax,MeshParam%nEdge)) !CAYO   
     Allocate(HydroParam%DZhjt(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
     
-    Allocate(HydroParam%DZsi(MeshParam%Kmax,MeshParam%nEdge)) !CAYO   
-    Allocate(HydroParam%DZsit(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
-    Allocate(HydroParam%DZhi(MeshParam%Kmax,MeshParam%nEdge)) !CAYO   
-    Allocate(HydroParam%DZhit(MeshParam%Kmax,MeshParam%nEdge)) !CAYO 
+    Allocate(HydroParam%DZsi(MeshParam%Kmax,MeshParam%nElem)) !CAYO   
+    Allocate(HydroParam%DZsit(MeshParam%Kmax,MeshParam%nElem)) !CAYO
+    Allocate(HydroParam%DZhi(MeshParam%Kmax,MeshParam%nElem)) !CAYO   
+    Allocate(HydroParam%DZhit(MeshParam%Kmax,MeshParam%nElem)) !CAYO 
     
     Allocate(HydroParam%DZK(MeshParam%nEdge)) !Sediment Layer !CAYO 
+    
+    Allocate(HydroParam%utangNodes(2,MeshParam%nEdge))
     
     ! 3. Hydrodynamic output variables (VTK)
     Allocate(MeshParam%xPoint(MeshParam%nPoint*(MeshParam%Kmax+1)))

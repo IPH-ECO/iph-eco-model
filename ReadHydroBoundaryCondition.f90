@@ -25,7 +25,9 @@ Subroutine ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,IniTime,Fina
     call c_f_pointer(hydroConfiguration%boundaryConditions, boundaryConditions, [hydroConfiguration%numberOfBoundaryConditions])
     
     
-    
+    !Allocate(HydroParam%IndexInflow(HydroParam%NInflow,2))
+    Allocate(HydroParam%IndexInflow(MeshParam%nEdge,2))
+    HydroParam%IndexInflow = 0
     
     
     HydroParam%IndexWaterLevel = 0.d0
@@ -103,7 +105,6 @@ Subroutine ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,IniTime,Fina
     Allocate (HydroParam%InFlowValue(HydroParam%NInflow,NObjInflow))
     Allocate (HydroParam%InFlowTime(HydroParam%NInflow,NObjInflow))
     Allocate (HydroParam%InFlownTime(HydroParam%NInflow))
-    Allocate(HydroParam%IndexInflow(HydroParam%NInflow,2))
     Allocate (HydroParam%InFlowSmallm(HydroParam%NInflow))
     Allocate (HydroParam%InFlowCapitalM(HydroParam%NInflow))
     Allocate (HydroParam%NRange(HydroParam%NInflow)) 
@@ -111,7 +112,6 @@ Subroutine ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,IniTime,Fina
     HydroParam%IndexWaterLevel = 0
     HydroParam%IndexWaterLevelEdge = 0
     
-    HydroParam%IndexInflow = 0
     HydroParam%IndexInflowEdge = 0
     HydroParam%NInflow = 0
     HydroParam%NWaterLevel = 0

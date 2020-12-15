@@ -17,7 +17,7 @@
     type(MeteorologicalParam) :: MeteoParam
 
     Character(200):: FileName,Basename
-    Integer:: i,c,icell,iElem,iLayer
+    Integer:: i,c,icell,iElem,iLayer,face
     Real:: V,eair
 
 
@@ -71,17 +71,18 @@
             !    EndDo
             !    
             !    !Gravando u
-            !    icell = 1
-            !    Basename = 'U'
-            !    Write(FileName,'(i10)') icell
-            !    Open(96,FILE=trim(simParam%OutputPath)//'/'//trim(Basename)//trim(FileName)//'.txt',STATUS='UNKNOWN',ACTION='WRITE') !< File to save the positions
-            !    Do iLayer=1,12 !HydroParam%ElSmallm(icell),HydroParam%ElCapitalM(icell)
-            !        If (iLayer==HydroParam%ElCapitalM(icell)) Then
-            !            Write(96,'(I10,A10,100F30.20)') simParam%it,'Sup',HydroParam%u(iLayer,875), HydroParam%u(iLayer,6),  HydroParam%ub(iLayer,1,348:360)!HydroParam%u(iLayer,874),HydroParam%u(iLayer,875),HydroParam%u(iLayer,856),HydroParam%u(iLayer,876),HydroParam%Fu(iLayer,874),HydroParam%Fu(iLayer,875),HydroParam%Fu(iLayer,856),HydroParam%Fu(iLayer,876) !HydroParam%ub(iLayer,1,1),HydroParam%ub(iLayer,1,2),HydroParam%ub(iLayer,1,3),HydroParam%ub(iLayer,1,4),HydroParam%ub(iLayer,1,5),HydroParam%ub(iLayer,1,6),HydroParam%ub(iLayer,1,7),HydroParam%ub(iLayer,1,8),HydroParam%ub(iLayer,1,9),HydroParam%ub(iLayer,1,10),HydroParam%ub(iLayer,1,11),HydroParam%ub(iLayer,1,12),HydroParam%ub(iLayer,1,13),HydroParam%ub(iLayer,1,14),HydroParam%ub(iLayer,1,15),HydroParam%ub(iLayer,1,16),HydroParam%ub(iLayer,1,17),HydroParam%ub(iLayer,1,18),HydroParam%ub(iLayer,1,19),HydroParam%ub(iLayer,1,20)
-            !        Else
-            !            Write(96,'(2I10,100F30.20)') simParam%it,iLayer,HydroParam%u(iLayer,875), HydroParam%u(iLayer,6),  HydroParam%ub(iLayer,1,348:360)!HydroParam%u(iLayer,874),HydroParam%u(iLayer,875),HydroParam%u(iLayer,856),HydroParam%u(iLayer,876),HydroParam%Fu(iLayer,874),HydroParam%Fu(iLayer,875),HydroParam%Fu(iLayer,856),HydroParam%Fu(iLayer,876) !HydroParam%ub(iLayer,1,1),HydroParam%ub(iLayer,1,2),HydroParam%ub(iLayer,1,3),HydroParam%ub(iLayer,1,4),HydroParam%ub(iLayer,1,5),HydroParam%ub(iLayer,1,6),HydroParam%ub(iLayer,1,7),HydroParam%ub(iLayer,1,8),HydroParam%ub(iLayer,1,9),HydroParam%ub(iLayer,1,10),HydroParam%ub(iLayer,1,11),HydroParam%ub(iLayer,1,12),HydroParam%ub(iLayer,1,13),HydroParam%ub(iLayer,1,14),HydroParam%ub(iLayer,1,15),HydroParam%ub(iLayer,1,16),HydroParam%ub(iLayer,1,17),HydroParam%ub(iLayer,1,18),HydroParam%ub(iLayer,1,19),HydroParam%ub(iLayer,1,20)
-            !        EndIf
-            !    EndDo
+                icell = 41
+                face = 123
+                Basename = 'U'
+                Write(FileName,'(i10)') icell
+                Open(96,FILE=trim(simParam%OutputPath)//'/'//trim(Basename)//trim(FileName)//'.txt',STATUS='UNKNOWN',ACTION='WRITE') !< File to save the positions
+                Do iLayer=HydroParam%ElSmallm(icell),HydroParam%ElCapitalM(icell) !HydroParam%ElSmallm(icell),HydroParam%ElCapitalM(icell)
+                    If (iLayer==HydroParam%ElCapitalM(icell)) Then
+                        Write(96,'(I10,A10,100F30.20)') simParam%it,'Sup',HydroParam%u(iLayer,face), HydroParam%H(face), HydroParam%u(iLayer,122), HydroParam%H(122),  HydroParam%ub(iLayer,2,icell), HydroParam%eta(icell)!HydroParam%u(iLayer,874),HydroParam%u(iLayer,875),HydroParam%u(iLayer,856),HydroParam%u(iLayer,876),HydroParam%Fu(iLayer,874),HydroParam%Fu(iLayer,875),HydroParam%Fu(iLayer,856),HydroParam%Fu(iLayer,876) !HydroParam%ub(iLayer,1,1),HydroParam%ub(iLayer,1,2),HydroParam%ub(iLayer,1,3),HydroParam%ub(iLayer,1,4),HydroParam%ub(iLayer,1,5),HydroParam%ub(iLayer,1,6),HydroParam%ub(iLayer,1,7),HydroParam%ub(iLayer,1,8),HydroParam%ub(iLayer,1,9),HydroParam%ub(iLayer,1,10),HydroParam%ub(iLayer,1,11),HydroParam%ub(iLayer,1,12),HydroParam%ub(iLayer,1,13),HydroParam%ub(iLayer,1,14),HydroParam%ub(iLayer,1,15),HydroParam%ub(iLayer,1,16),HydroParam%ub(iLayer,1,17),HydroParam%ub(iLayer,1,18),HydroParam%ub(iLayer,1,19),HydroParam%ub(iLayer,1,20)
+                    Else
+                        Write(96,'(2I10,100F30.20)') simParam%it,iLayer,HydroParam%u(iLayer,face), HydroParam%H(face), HydroParam%u(iLayer,122), HydroParam%H(122), HydroParam%ub(iLayer,2,icell), HydroParam%eta(icell)!HydroParam%u(iLayer,874),HydroParam%u(iLayer,875),HydroParam%u(iLayer,856),HydroParam%u(iLayer,876),HydroParam%Fu(iLayer,874),HydroParam%Fu(iLayer,875),HydroParam%Fu(iLayer,856),HydroParam%Fu(iLayer,876) !HydroParam%ub(iLayer,1,1),HydroParam%ub(iLayer,1,2),HydroParam%ub(iLayer,1,3),HydroParam%ub(iLayer,1,4),HydroParam%ub(iLayer,1,5),HydroParam%ub(iLayer,1,6),HydroParam%ub(iLayer,1,7),HydroParam%ub(iLayer,1,8),HydroParam%ub(iLayer,1,9),HydroParam%ub(iLayer,1,10),HydroParam%ub(iLayer,1,11),HydroParam%ub(iLayer,1,12),HydroParam%ub(iLayer,1,13),HydroParam%ub(iLayer,1,14),HydroParam%ub(iLayer,1,15),HydroParam%ub(iLayer,1,16),HydroParam%ub(iLayer,1,17),HydroParam%ub(iLayer,1,18),HydroParam%ub(iLayer,1,19),HydroParam%ub(iLayer,1,20)
+                    EndIf
+                EndDo
             !    
             !    !Gravando V
             !    icell = 1

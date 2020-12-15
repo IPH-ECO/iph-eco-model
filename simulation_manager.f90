@@ -152,7 +152,33 @@
     
     !7. Reading hydrodynamic boundary conditions
     Call ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,simParam%IniTime,simParam%FinalTime,MeshParam)
-   
+    
+    !7.1 Get Pressure Boundary Condition intial values to initialize etaInf in time n-1:
+    Do i = 1,HydroParam%NWaterLevel
+        HydroParam%WaterLevel(i) = HydroParam%WaterLevelValue(i,1)    
+        HydroParam%WaterLevel(i) = 0.214 + 0.06*cos(2*HydroParam%pi*(0)/(355.0d0)) !CAYO
+    EndDo  
+    Do iElem = 1,MeshParam%nElem  
+        Do iEdge = 1,4
+            Face = MeshParam%Edge(iEdge,iElem)
+            l = MeshParam%Left(Face) 
+            r = MeshParam%Right(Face)
+            If (r == 0) Then
+                !If the Face has a pressure boundary condition, the etaInf in time n-1 is set:
+                If (HydroParam%IndexWaterLevelEdge(Face)>0) Then
+                    If ((HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))-HydroParam%hj(Face))<HydroParam%PCRI/2.d0+NearZero) Then 
+                        HydroParam%etaInfn(iElem) = HydroParam%eta(iElem)
+                        HydroParam%etaInf(iElem) = HydroParam%eta(iElem)
+		            Else
+			            HydroParam%etaInfn(iElem) = HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))
+			            HydroParam%etaInf(iElem) = HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))
+                    EndIf  
+                EndIf                
+            EndIf
+        EndDo
+    EndDo
+    
+    
     If (simParam%iSimWQ == 1)  Call ReadWQBoundaryCondition(MeshParam,HydroParam,LimnoParam,hydroConfiguration,wqConfiguration,simParam%IniTime,simParam%FinalTime)
     
     !8. Reading meteorological data    
