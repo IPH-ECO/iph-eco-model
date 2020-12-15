@@ -70,7 +70,7 @@ Module MeshVars
         Integer, Allocatable:: indPoint(:,:),Connect(:),cell_type(:)
         Real, Allocatable:: LIMCAM(:) !< Layer levels (m)
         Real, Allocatable:: LIMCAMAUX(:) 
-        Integer:: NCAMMAX !< Number of Vertical Layers
+        Integer:: NCAMMAX !< Number of Vertical Layers   
         Real:: zL !< y-cell resolution (m)
         Real:: zR !< y-cell resolution (m)
         Integer:: KMax !< Maximum Number of Vertical Layers
@@ -95,9 +95,15 @@ Module MeshVars
         Real, Allocatable:: d50(:)
         Real, Allocatable:: OMfraction(:)
         Real, Allocatable:: eta0(:)
-        Real, Allocatable:: Ki(:)   !CAYO
+        Real, Allocatable:: Ki(:,:)   !CAYO
         Real, Allocatable:: Kj(:,:) !CAYO
-        Real, Allocatable:: ei(:,:) !CAYO
+        Real, Allocatable:: Ksat(:,:) !CAYO
+        Real, Allocatable:: Si(:,:) !CAYO
+        Real, Allocatable:: alpha(:,:) !CAYO
+        Real, Allocatable:: nSoil(:,:) !CAYO
+        Real, Allocatable:: ei(:,:) !CAYO  
+        Integer:: iSaturation
+    
         
         Integer, Allocatable:: trv(:),NEIBN(:),NEIBL(:),NEIBS(:),NEIBO(:)   
         
@@ -123,9 +129,10 @@ Module MeshVars
         integer(c_long_long), pointer :: verticeIds(:)
         Integer:: i,j,jEdge,jNode1,jNode2
         Integer:: nMaxVertexElem,nMaxEgdesatNode
-        Real:: n3d(3), tempvec(3), Check(2), v(4,3), zn(3), Norm_n3d, CheckMesh, Det
+        Real:: n3d(3), tempvec(3), Check(2), v(4,3), zn(3), Norm_n3d, CheckMesh, Det, layersub(12)!bench 02:
         Integer:: l, r
-    
+        
+        
         call c_f_pointer(StructuredMeshFeatures%xCoordinates, xCoordinates, [StructuredMeshFeatures%numberOfElements])
         call c_f_pointer(StructuredMeshFeatures%yCoordinates, yCoordinates, [StructuredMeshFeatures%numberOfElements])
         call c_f_pointer(StructuredMeshFeatures%verticeIds, verticeIds, [StructuredMeshFeatures%verticeIdsLength])
@@ -133,16 +140,16 @@ Module MeshVars
         call c_f_pointer(sim%layers, layers, [sim%layersLength])
 
         this%nElem = StructuredMeshFeatures%numberOfElements
-        !this%nElem = StructuredMeshFeatures%numberOfElements - 36 !bench01
+        
         
         this%dx = StructuredMeshFeatures%resolution
-        !Lock horizontal resolution test
-        this%dx = 20.0d0 !bench 02
-
         this%dy = this%dx
+        !Lock horizontal resolution test
+        !this%dx = 20.0d0 !bench 02
         !this%dy = 6.48d0 !bench 01
         !this%dx = 0.020d0 !bench 01
-        !
+        !this%nElem = StructuredMeshFeatures%numberOfElements - 36 !bench01
+
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
         Allocate(this%Quadri(4,this%nElem))
@@ -157,17 +164,25 @@ Module MeshVars
             this%Quadri(2,iElem) = verticeIds(4*(iElem-1)+4)
         EndDo
     
-        this%NCAMMAX = sim%layersLength           ! Number of Vertical Layers
+        this%NCAMMAX = sim%layersLength       ! Number of Vertical Layers
         this%zL = sim%minimumVerticalLimit-0.001
-        this%zL = 0
         this%zR = sim%maximumVerticalLimit
         Call SortDecreasing(layers,sim%layersLength)
+        
+        !this%NCAMMAX = 71 !bench02 1 surface + 11 subsurface
+        !this%zL = -0.001 !bench02
+        !layersub(1) = sim%maximumVerticalLimit-1
+        !Do i = 2,this%NCAMMAXsub-1
+        !    layersub(i) = sim%maximumVerticalLimit - i !the top ten layers have 1m thickness
+        !EndDo
+        !layersub(this%NCAMMAXsub) = this%zL         
         
         If (this%NCAMMAX > 0) Then
             ALLOCATE (this%LIMCAM(this%NCAMMAX))
             ALLOCATE (this%LIMCAMAUX(this%NCAMMAX+1))
             Do i = 1,this%NCAMMAX
                 this%LIMCAM(i) = layers(i)                   ! Layer levels (m)
+                !this%LIMCAM(i) = layersub(i) !bench02
             EndDo
         Else
             ALLOCATE (this%LIMCAM(1))
@@ -208,7 +223,59 @@ Module MeshVars
         Else
             Stop 'Incorrect number of Layers'
         Endif    
+    
+
         
+        !! Number of Vertical Subsurface Layers
+        !this%NCAMMAXsub = 11 !bench 02
+        !layersub(1) = sim%maximumVerticalLimit-1
+        !Do i = 1,this%NCAMMAXsub-1
+        !    layersub(i) = 1 !the top ten layers have 1m thickness
+        !EndDo
+        !layersub(this%NCAMMAXsub) = this%zL
+        !
+        !
+        !If (this%NCAMMAXsub == 0) Then
+        !    !Subsurface two-dimensinal or non-existent
+        !    ALLOCATE (this%LIMCAMsub(1))
+        !    ALLOCATE (this%LIMCAMAUXsub(1))
+        !    this%LIMCAMsub = this%LIMCAM
+        !    this%LIMCAMAUXsub = this%LIMCAMAUX
+        !    this%KMaxsub = this%KMax
+        !Else     
+        !    !Subsurface Three-dimensional
+        !    ALLOCATE (this%LIMCAMsub(this%NCAMMAXsub))
+        !    ALLOCATE (this%LIMCAMAUXsub(this%NCAMMAXsub+1))
+        !    Do i = 1,this%NCAMMAXsub
+        !        this%LIMCAMsub(i) = layersub(i)                   ! Layer levels (m)
+        !    EndDo
+        !  
+        !    this%KMaxsub = 1
+        !    Do iLayer = 1,this%NCAMMAXsub
+        !        If (iLayer==1) then
+        !            If (this%LIMCAMsub(iLayer)>this%zL.and.this%LIMCAMsub(iLayer)<this%zR) then
+        !                this%KMaxsub = this%KMaxsub + 1
+        !                this%LIMCAMAUXsub(this%KMaxsub-1) = this%LIMCAMsub(iLayer)
+        !            EndIf
+        !        Elseif (iLayer==this%NCAMMAXsub) then
+        !            If (this%LIMCAMsub(iLayer)>this%zL.and.this%LIMCAMsub(iLayer)<this%LIMCAMsub(iLayer-1)) then
+        !                this%KMaxsub = this%KMaxsub + 1
+        !                this%LIMCAMAUXsub(this%KMaxsub-1) = this%LIMCAMsub(iLayer)
+        !                !LIMCAMAUX(KMax-1) = zL
+        !            Else
+        !                !KMax = KMax + 1
+        !                !LIMCAMAUX(KMax-1) = LIMCAM(iLayer)
+        !            EndIf
+        !        Else
+        !            If (this%LIMCAMsub(iLayer)>this%zL.and.this%LIMCAMsub(iLayer)<this%LIMCAMsub(iLayer-1)) then
+        !                this%KMaxsub = this%KMaxsub + 1
+        !                this%LIMCAMAUXsub(this%KMaxsub-1) = this%LIMCAMsub(iLayer)
+        !            EndIf
+        !        EndIf
+        !    EndDo
+        !    this%LIMCAMAUXsub(this%KMaxsub) = this%zL
+        !Endif    
+     
         this%nNode = MAXVAL(this%Quadri) + 1
         this%nPoint = this%nNode
         Allocate (this%Neighbor(4,this%nElem))

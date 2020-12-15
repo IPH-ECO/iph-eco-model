@@ -25,16 +25,19 @@ Subroutine Volume(HydroParam,MeshParam)
     type(HydrodynamicParam) :: HydroParam
     type(MeshGridParam) :: MeshParam
     
+    
     Do iElem = 1, MeshParam%nElem
         HydroParam%Vol(iElem) = 0.d0
+        Call SoilSaturation(HydroParam%eta(iElem) + HydroParam%etaplus(iElem),iElem,HydroParam,MeshParam)
         If (V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%hb(iElem)) > 0) Then
             !HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) + HydroParam%etaplus(iElem))
             HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) + HydroParam%etaplus(iElem) - HydroParam%hb(iElem))
             If (HydroParam%DZsi(HydroParam%Smallms(iElem),iElem) > 0) Then
-                HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem),HydroParam%DZsi(:,iElem))
+                HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
             EndIf
         ElseIf (V(HydroParam%eta(iElem) + HydroParam%etaplus(iElem),HydroParam%sb(iElem)) > 0) Then
-            HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%sb(iElem)))*MeshParam%ei(HydroParam%Smallms(iElem),iElem)
+            HydroParam%Vol(iElem) = MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
+            !HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%sb(iElem)))*MeshParam%ei(HydroParam%Smallms(iElem),iElem)
         EndIf
     EndDo
     
