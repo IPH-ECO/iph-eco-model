@@ -129,7 +129,7 @@ Module MeshVars
         integer(c_long_long), pointer :: verticeIds(:)
         Integer:: i,j,jEdge,jNode1,jNode2
         Integer:: nMaxVertexElem,nMaxEgdesatNode
-        Real:: n3d(3), tempvec(3), Check(2), v(4,3), zn(3), Norm_n3d, CheckMesh, Det, layersub(12)!bench 02:
+        Real:: n3d(3), tempvec(3), Check(2), v(4,3), zn(3), Norm_n3d, CheckMesh, Det, layersub(81)!bench 02:
         Integer:: l, r
         
         
@@ -169,20 +169,20 @@ Module MeshVars
         this%zR = sim%maximumVerticalLimit
         Call SortDecreasing(layers,sim%layersLength)
         
-        !this%NCAMMAX = 71 !bench02 1 surface + 11 subsurface
-        !this%zL = -0.001 !bench02
-        !layersub(1) = sim%maximumVerticalLimit-1
-        !Do i = 2,this%NCAMMAXsub-1
-        !    layersub(i) = sim%maximumVerticalLimit - i !the top ten layers have 1m thickness
-        !EndDo
-        !layersub(this%NCAMMAXsub) = this%zL         
+        this%NCAMMAX = 81 !bench02 1 surface + 11 subsurface
+        this%zL = -0.001 !bench02
+        layersub(1) = sim%maximumVerticalLimit-1
+        Do i = 2,this%NCAMMAX-1
+            layersub(i) = sim%maximumVerticalLimit - i !the top ten layers have 1m thickness
+        EndDo
+        layersub(this%NCAMMAX) = this%zL         
         
         If (this%NCAMMAX > 0) Then
             ALLOCATE (this%LIMCAM(this%NCAMMAX))
             ALLOCATE (this%LIMCAMAUX(this%NCAMMAX+1))
             Do i = 1,this%NCAMMAX
                 this%LIMCAM(i) = layers(i)                   ! Layer levels (m)
-                !this%LIMCAM(i) = layersub(i) !bench02
+                this%LIMCAM(i) = layersub(i) !bench02
             EndDo
         Else
             ALLOCATE (this%LIMCAM(1))

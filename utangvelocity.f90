@@ -97,6 +97,9 @@ Subroutine utangvelocity(HydroParam,MeshParam,MeteoParam,dt)
             DZsjAcum = 0.d0
             l = MeshParam%Left(iEdge) 
             r = MeshParam%Right(iEdge)
+            If(r==0) Then
+                r=l
+            EndIf
 			If(HydroParam%DZsj(HydroParam%Smallms(iEdge),iEdge) > 0) Then  ! if edge lower layer have sediment thickness
                 Do iLayer = HydroParam%Smallms(iEdge),HydroParam%CapitalM(iEdge)
                     If(HydroParam%DZsj(iLayer,iEdge) > 0) Then 

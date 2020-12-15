@@ -133,6 +133,11 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     
     Allocate(HydroParam%Vol(MeshParam%nElem)) !CAYO
     Allocate(MeshParam%ei(MeshParam%Kmax,MeshParam%nElem))!CAYO
+    Allocate(MeshParam%Ki(MeshParam%Kmax,MeshParam%nElem))!CAYO
+    Allocate(MeshParam%Ksat(MeshParam%Kmax,MeshParam%nElem))!CAYO   
+    Allocate(MeshParam%Si(MeshParam%Kmax,MeshParam%nElem))!CAYO    
+    Allocate(MeshParam%nSoil(MeshParam%Kmax,MeshParam%nElem))!CAYO
+    Allocate(MeshParam%alpha(MeshParam%Kmax,MeshParam%nElem))!CAYO    
     Allocate(MeshParam%Kj(MeshParam%Kmax,MeshParam%nEdge))!CAYO
     Allocate(HydroParam%us(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
     Allocate(HydroParam%ust(MeshParam%Kmax,MeshParam%nEdge)) !CAYO
@@ -142,9 +147,6 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     Allocate(HydroParam%umtang(MeshParam%Kmax,MeshParam%nEdge))!CAYO
     Allocate(HydroParam%wm(MeshParam%Kmax+1,MeshParam%nElem))
     Allocate(HydroParam%wmt(MeshParam%Kmax+1,MeshParam%nElem))
-    
-    Allocate(HydroParam%uxysub(MeshParam%Kmax,2,MeshParam%nEdge))
-    Allocate(HydroParam%ubsub(MeshParam%Kmax,3,MeshParam%nElem))
     
     Allocate(HydroParam%uxysub(MeshParam%Kmax,2,MeshParam%nEdge))
     Allocate(HydroParam%ubsub(MeshParam%Kmax,3,MeshParam%nElem))
