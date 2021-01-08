@@ -81,9 +81,9 @@
 		<File RelativePath=".\Hydro.f90"/>
 		<File RelativePath=".\MatOp.f90"/>
 		<File RelativePath=".\MatOpNH.f90"/>
+		<File RelativePath=".\MoistureContent.f90"/>
 		<File RelativePath=".\NonHydroPressure.f90"/>
 		<File RelativePath=".\Pressure.f90"/>
-		<File RelativePath=".\SoilSaturation.f90"/>
 		<File RelativePath=".\solve_tridiag.f90"/>
 		<File RelativePath=".\Source1.f90"/>
 		<File RelativePath=".\Tension.f90"/>

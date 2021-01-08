@@ -30,7 +30,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     !Use AdvConservativeScheme
     
     Implicit None
-    Integer:: iElem, iEdge, lEdge, iNode, iNewton, iLayer, INFO, iLayer_bar, Small
+    Integer:: iElem, iEdge, lEdge, iNode, iNewton, iLayer, INFO, iLayer_bar, Small, FlagLayer, maxF,minF,maxElem,minElem
     Integer:: llElem, rrElem, psi_flag,  indEdge
     Real:: Courant,fi_small, DZjAcum
     Integer:: r, l, Sig, Face, Pij, DIM, ie, j, k, iNode1,iNode2, cont
@@ -56,12 +56,13 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     !    EndIf
     !EndDo
     
-    MeshParam%ei = 0.1 !e0 0.3 b01
-    MeshParam%Ksat = 0.00005 !k0 0.01 b01
-    !e0 = 0.3 !e0 0.3 b01
+    !MeshParam%ei = 0.1 !e0 0.3 b01
+    MeshParam%Ksat = 0.00005!k0 0.01 b01 0.00005
+    e0 = 0.1 !e0 0.3 b01
     !k0 = 0.01 !k0 0.01 b01
     
     HydroParam%iConv = 0
+    !HydroParam%iConv = 5
     !HydroParam%iNonHydro=0
     
     ! 0. Compute turbulence
@@ -72,7 +73,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
         HydroParam%Fw = HydroParam%w
         HydroParam%Fu = HydroParam%u
         Call FuFv(HydroParam,MeshParam,dt)
-        Do iEdge = 1,MeshParam%nEdge
+        !Do iEdge = 1,MeshParam%nEdge
             
             !Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge) 
             !    HydroParam%Fu(iLayer,iEdge) = (1.-HydroParam%epson(iLayer,iEdge))*HydroParam%Fu(iLayer,iEdge) 
@@ -94,7 +95,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
             !        endif
             !    EndDo    
             !Endif 
-        EndDo
+        !EndDo
         
     ElseIf (HydroParam%iConv == 1) Then
         
@@ -115,36 +116,36 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
         HydroParam%Fw = HydroParam%w
         HydroParam%Fu = HydroParam%u
         Call FuFvConservative(HydroParam,MeshParam,dt)
-        Do iEdge = 1,MeshParam%nEdge
-            
-            !Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge) 
-            !    HydroParam%Fu(iLayer,iEdge) = (1.-HydroParam%epson(iLayer,iEdge))*HydroParam%Fu(iLayer,iEdge) 
-            !EndDo
-            
-            if (HydroParam%IndexWaterLevelEdge(iEdge)>0) then
-                l = MeshParam%Left(iEdge)
-                Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)
-                    cont=0
-                    vel=0
-                    Do lEdge=1,4 
-                        If (HydroParam%Fu(iLayer,MeshParam%Edge(lEdge,l))>0.and.HydroParam%IndexWaterLevelEdge(MeshParam%Edge(lEdge,l))==0) Then
-                            cont=cont+1
-                            vel = vel + HydroParam%Fu(iLayer,MeshParam%Edge(lEdge,l))
-                        EndIf
-                    EndDo
-                    If (cont>0) then    
-                        HydroParam%Fu(iLayer,iEdge) = vel/cont
-                    Endif
-                EndDo    
-            endif 
-        EndDo        
+        !Do iEdge = 1,MeshParam%nEdge
+        !    
+        !    !Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge) 
+        !    !    HydroParam%Fu(iLayer,iEdge) = (1.-HydroParam%epson(iLayer,iEdge))*HydroParam%Fu(iLayer,iEdge) 
+        !    !EndDo
+        !    
+        !    if (HydroParam%IndexWaterLevelEdge(iEdge)>0) then
+        !        l = MeshParam%Left(iEdge)
+        !        Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)
+        !            cont=0
+        !            vel=0
+        !            Do lEdge=1,4 
+        !                If (HydroParam%Fu(iLayer,MeshParam%Edge(lEdge,l))>0.and.HydroParam%IndexWaterLevelEdge(MeshParam%Edge(lEdge,l))==0) Then
+        !                    cont=cont+1
+        !                    vel = vel + HydroParam%Fu(iLayer,MeshParam%Edge(lEdge,l))
+        !                EndIf
+        !            EndDo
+        !            If (cont>0) then    
+        !                HydroParam%Fu(iLayer,iEdge) = vel/cont
+        !            Endif
+        !        EndDo    
+        !    endif 
+        !EndDo        
         
     EndIf
     
     ! 2. Getting hydrodynamic boundary condition values at current step time
     Call GetHydroBoundaryConditions(HydroParam,MeshParam,dt,time,SimTime)
     
-    if(simtime == 715) then
+    if(simtime == dt*72) then
         continue
     endif
 
@@ -157,8 +158,8 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     ! 5. Get wind velocity components
     Call WindVelocity(HydroParam,MeshParam,MeteoParam)
     
-    ! 6. Vertical Water Balance (Precipitation and Evaporation)
-    Call VerticalWB(HydroParam,MeshParam,MeteoParam,dt,SimTime)
+    !! 6. Vertical Water Balance (Precipitation and Evaporation)
+    !Call VerticalWB(HydroParam,MeshParam,MeteoParam,dt,SimTime)
       
     ! 7. Assemble Matrix
     !!$OMP parallel do default(none) shared(MeshParam,HydroParam,MeteoParam) private(iEdge,iLayer,l,r,Chezy,rhoairCell,aTh,bTh,cTh,dzp,dzm,DIM,NearZero,dt)
@@ -255,7 +256,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
                 HydroParam%GammaB = 0. 
             EndIf
             Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)
-                If ( iLayer == HydroParam%Smallms(iEdge) ) Then
+                If ( iLayer == HydroParam%Smallm(iEdge) ) Then
                     dzp         = 0.5*( HydroParam%DZhj(iLayer,iEdge) + HydroParam%DZhj(iLayer+1,iEdge) )       ! Dz at Upper Interface
                     aTh(iLayer) = 0. !-dt*VerEddyVisc(iLayer+1,iEdge)/dzp !-dt*nuz/dzp   !                                        ! Lower Diagonal 
                     bTh(iLayer) = MeshParam%EdgeLength(iEdge)*(HydroParam%DZhj(iLayer,iEdge) + dt*HydroParam%VerEddyVisc(iLayer+1,iEdge)*( 1/dzp ) + HydroParam%GammaB*dt) + NearZero!DZj(iLayer,iEdge) + dt*nuz*( 1/dzp ) + GammaB*dt      ! Diagonal
@@ -264,7 +265,8 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
                 Elseif ( iLayer == HydroParam%CapitalM(iEdge) ) Then
                     dzm         = 0.5*( HydroParam%DZhj(iLayer,iEdge) + HydroParam%DZhj(iLayer-1,iEdge) )       ! Dz at Lower Interface
                     aTh(iLayer) = -MeshParam%EdgeLength(iEdge)*dt*HydroParam%VerEddyVisc(iLayer,iEdge)/dzm !0.                                                    ! Lower Diagonal 
-                    bTh(iLayer) = Max(HydroParam%Pcri,MeshParam%EdgeLength(iEdge)*(HydroParam%DZhj(iLayer,iEdge) + dt*HydroParam%VerEddyVisc(iLayer,iEdge)*( 1/dzm )) + HydroParam%GammaT*dt + NearZero) !DZj(iLayer,iEdge) + dt*nuz*( 1/dzm ) + GammaT*dt      ! Diagonal
+                    !bTh(iLayer) = Max(HydroParam%Pcri,MeshParam%EdgeLength(iEdge)*(HydroParam%DZhj(iLayer,iEdge) + dt*HydroParam%VerEddyVisc(iLayer,iEdge)*( 1/dzm )) + HydroParam%GammaT*dt + NearZero) !DZj(iLayer,iEdge) + dt*nuz*( 1/dzm ) + GammaT*dt      ! Diagonal
+                    bTh(iLayer) = Max(NearZero,MeshParam%EdgeLength(iEdge)*(HydroParam%DZhj(iLayer,iEdge) + dt*HydroParam%VerEddyVisc(iLayer,iEdge)*( 1/dzm )) + HydroParam%GammaT*dt + NearZero) !DZj(iLayer,iEdge) + dt*nuz*( 1/dzm ) + GammaT*dt      ! Diagonal
                     cTh(iLayer) = 0. !-dt*VerEddyVisc(iLayer,iEdge)/dzm !-dt*nuz/dzm                                           ! Upper Diagonal
 
                 Else
@@ -283,151 +285,101 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
             Call solve_tridiag(cTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),bTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),aTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),HydroParam%Gu(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),HydroParam%iAG(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),DIM)
 
             HydroParam%DZiADZ(iEdge) = Dot_Product(HydroParam%DZhj(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),HydroParam%iADZ(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iedge),iEdge) )
-            HydroParam%DZiAG (iEdge) = Dot_Product(HydroParam%DZhj(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),HydroParam%iAG (HydroParam%Smallm(iEdge):HydroParam%CapitalM(iedge),iEdge) )
+            HydroParam%DZiAG (iEdge) = Dot_Product(HydroParam%DZhj(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),HydroParam%iAG(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iedge),iEdge) )
         EndIf
     EndDo
     !!$OMP end parallel do
     
-    !7.6 Assemble Matrix DZK
-	HydroParam%DZK(:)   = 0.d0
-    If (MeshParam%iBedrock == 1) Then
-        Do iEdge = 1,MeshParam%nEdge       
-            If (HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge).and.HydroParam%Smallms(iEdge) == HydroParam%CapitalM(iEdge)) Then
-                HydroParam%DZK(iEdge)   = HydroParam%DZsj(HydroParam%Smallms(iEdge),iEdge)*MeshParam%Kj(HydroParam%Smallms(iEdge),iEdge) !Sediment Layer
-            Else
-                HydroParam%DZK(iEdge)   = Dot_Product(HydroParam%DZsj(HydroParam%Smallms(iEdge):HydroParam%CapitalMs(iEdge),iEdge),MeshParam%Kj(HydroParam%Smallms(iEdge):HydroParam%CapitalMs(iEdge),iEdge) )
-            EndIf
-        EndDo
-    EndIf   
+ !   !7.6 Assemble Matrix DZK
+	!HydroParam%DZK(:)   = 0.d0
+ !   If (MeshParam%iBedrock == 1) Then
+ !       Do iEdge = 1,MeshParam%nEdge       
+ !           If (HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge).and.HydroParam%Smallms(iEdge) == HydroParam%CapitalM(iEdge)) Then
+ !               HydroParam%DZK(iEdge)   = HydroParam%DZsj(HydroParam%Smallms(iEdge),iEdge)*MeshParam%Kj(HydroParam%Smallms(iEdge),iEdge) !Sediment Layer
+ !           Else
+ !               HydroParam%DZK(iEdge)   = Dot_Product(HydroParam%DZsj(HydroParam%Smallms(iEdge):HydroParam%CapitalMs(iEdge),iEdge),MeshParam%Kj(HydroParam%Smallms(iEdge):HydroParam%CapitalMs(iEdge),iEdge) )
+ !           EndIf
+ !       EndDo
+ !   EndIf   
     
-    Call Volume(HydroParam,MeshParam)
-    
+    !Call Volume(HydroParam,MeshParam)
+    !Do iElem = 1,MeshParam%nElem
+    !    Call MoistureContent(HydroParam%eta(iElem),HydroParam%etaplus(iElem),iElem,HydroParam,MeshParam)
+    !EndDo
     ! 8. Compute the New Free-Surface Elevation
     ! 8.1 Assemble the Right Hand Side (RHS)
     !$OMP parallel do default(none) shared(MeshParam,HydroParam,NearZero,dt) private(iElem,iEdge,SumRHS,SumLhS,gamma,Face,Pij)
     Do iElem = 1, MeshParam%nElem
-        
         SumRHS = 0d0
         SumLhS = 0.d0
         gamma = 0.d0
-        !!HydroParam%etaInf(iElem) = 0.d0
-        !If (MeshParam%xb(iElem) == 810.0d0) Then  !Bench02
-        !    HydroParam%etaplus(iElem) = 0.d0
-        !EndIf 
-        
         Do iEdge = 1,4
- 
             Face = MeshParam%Edge(iEdge,iElem)
-            !SumRHS = SumRHS + Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%EdgeLength(Face)*((1.d0-HydroParam%Theta)*(Dot_product( HydroParam%DZhj(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face),HydroParam%u(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face)) + Dot_product(HydroParam%DZsj(HydroParam%Smallms(Face):HydroParam%CapitalM(Face),Face),HydroParam%us(HydroParam%Smallms(Face):HydroParam%CapitalM(Face),Face))) + HydroParam%Theta*HydroParam%DZiAG(Face))      
-            !Casulli, 2015:
-            SumRHS = SumRHS + Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%EdgeLength(Face)*((1.d0-HydroParam%Theta)*(Dot_product( HydroParam%DZhj(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face),HydroParam%u(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face)) + Dot_product(HydroParam%DZsj(HydroParam%Smallms(Face):HydroParam%CapitalMs(Face),Face),HydroParam%us(HydroParam%Smallms(Face):HydroParam%CapitalMs(Face),Face))) + HydroParam%Theta*HydroParam%DZiAG(Face))      
-            !SumRHS = SumRHS + Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%EdgeLength(Face)*((1.d0-HydroParam%Theta)*(Dot_product( HydroParam%DZhj(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face),HydroParam%u(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face)) + Dot_product(HydroParam%DZsj(HydroParam%Smallms(Face):HydroParam%CapitalM(Face),Face),HydroParam%us(HydroParam%Smallms(Face):HydroParam%CapitalM(Face),Face))) + HydroParam%Theta*(HydroParam%DZiAG(Face))
-            !Casulli, 2016:
-            !SumRHS = SumRHS + Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%EdgeLength(Face)*HydroParam%DZiAG(Face)        
-            
+            SumRHS = SumRHS + Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%EdgeLength(Face)*((1.d0-HydroParam%Theta)*(Dot_product( HydroParam%DZhj(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face),HydroParam%u(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face)) + Dot_product(HydroParam%DZsj(HydroParam%Smallms(Face):HydroParam%CapitalMs(Face),Face),HydroParam%us(HydroParam%Smallms(Face):HydroParam%CapitalMs(Face),Face))) + HydroParam%Theta*HydroParam%DZiAG(Face))
+            !SumRHS = SumRHS + Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%EdgeLength(Face)*((1.d0-HydroParam%Theta)*(Dot_product( HydroParam%DZhj(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face),HydroParam%u(HydroParam%Smallm(Face):HydroParam%CapitalM(Face),Face)) + Dot_product(HydroParam%DZsj(HydroParam%Smallms(Face):HydroParam%CapitalMs(Face),Face),HydroParam%us(HydroParam%Smallms(Face):HydroParam%CapitalMs(Face),Face))) + HydroParam%Theta*(HydroParam%DZiAG(Face) + Dot_product(HydroParam%DZsj(HydroParam%Smallms(Face):HydroParam%CapitalMs(Face),Face),HydroParam%Gusub(HydroParam%Smallms(Face):HydroParam%CapitalMs(Face),Face))))
             ! 8.1.1 If there is a Pressure Boundary Condition
             Pij = MeshParam%Neighbor(iEdge,iElem) 
-            
             If (Pij == 0.and.HydroParam%IndexWaterLevelEdge(Face)>0) Then   
                 HydroParam%etaInfn(iElem) =  HydroParam%etaInf(iElem)
 				If ((HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))-HydroParam%hj(Face))<HydroParam%PCRI/2.d0+NearZero) Then
                     HydroParam%etaInf(iElem) = HydroParam%hj(Face) + HydroParam%PCRI/2.d0 !Rever
                 Else
 				    HydroParam%etaInf(iElem) = HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))
-                    !HydroParam%etaInf(iElem) = HydroParam%hb(iElem) + 20.d0
-                    !HydroParam%etaInf(iElem) = 3.00*sin(((0.025*(1-1))*(0.67d0/0.4d0))+(2.0d0*HydroParam%pi*(Simtime)/43200.0d0-HydroParam%pi/2))
                 EndIf
-                
-                !Casulli, 2015:
                 SumLHS = SumLHS + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( HydroParam%etaInf(iElem) )*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))
-                
-                !Casulli, 2016:
-                !SumLHS = SumLHS + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( HydroParam%etaInf(iElem) )*(HydroParam%g*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))
-                
-                !SumLHS = SumLHS + (HydroParam%etaInf(iElem)/MeshParam%CirDistance(Face) )*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))
-                !SumLHS = SumLHS + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( HydroParam%etaInf(iElem) )*HydroParam%H(Face)**2 )/( HydroParam%H(Face) + dt*gamma )  ! 
-				
+                !SumLHS = SumLHS + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( HydroParam%etaInf(iElem) )*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%Theta*HydroParam%DZK(Face))
             EndIf
-            
         EndDo
-        !HydroParam%rhs(iElem) =  MeshParam%Area(iElem)*V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%hb(iElem)) - dt*SumRHS + ( HydroParam%g*(HydroParam%Theta*dt)**2. )*SumLHS  
-        !Casulli, 2015:
         HydroParam%rhs(iElem) = HydroParam%Vol(iElem) - dt*SumRHS + (HydroParam%Theta*dt)*SumLHS
-
     EndDo
     !$OMP end parallel do
 
    
     ! 8.2 Newton Loop for Non-Linear Wet- and Dry-ing Algorithm [2]
     HydroParam%etan = HydroParam%eta   
-      
+    HydroParam%eta = HydroParam%eta + HydroParam%etaplus
+    !HydroParam%etak = HydroParam%eta + HydroParam%etaplus   
     Do iNewton = 1,200
         ! 8.2.1 Assemble Matrices F (System Matrix - Newton Method) and P (Derivative Matrix)
         HydroParam%P = 0.
         HydroParam%F = 0.
         Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)
         !Call Volume(HydroParam,MeshParam)
-        
+        !$OMP parallel do default(none) shared(HydroParam,MeshParam) private(iElem)      
         Do iElem = 1, MeshParam%nElem
             !8.2.2 Volume with Eta at tn+1:
-            !Note that this point the volume is calculate without %etaplus term (source/sink), its considered in previous 
-            !time-step's %Vol(just before item 8)
-            Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam)
-            HydroParam%Vol(iElem) = 0.d0
-            If (V(HydroParam%eta(iElem),HydroParam%hb(iElem)) > 0) Then
-                HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) - HydroParam%hb(iElem))
-                If (HydroParam%DZsi(HydroParam%Smallms(iElem),iElem) > 0) Then
-                    HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
-                EndIf
-            ElseIf (V(HydroParam%eta(iElem),HydroParam%sb(iElem)) > 0) Then
-                HydroParam%Vol(iElem) = MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
-                !HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(V(HydroParam%eta(iElem),HydroParam%sb(iElem)))*MeshParam%ei(HydroParam%Smallms(iElem),iElem)*MeshParam%Si(HydroParam%Smallms(iElem),iElem)
-            EndIf
-            
+            Call MoistureContent(HydroParam%eta(iElem),0.d0,iElem,HydroParam,MeshParam)            
+
             !8.2.3 Compute Newton Method's Residue for each iElem:
             !In this point, MatOp Output = (T-Matrix)Eta
             !We want F = 0 condition satisfied: V(nt+1) + T*n(t+1) = rhs :: F  = V(n(t+1)) + T*n(t+1) - rhs -> 0
             HydroParam%F(iElem) = HydroParam%Vol(iElem) + HydroParam%Aeta(iElem) - HydroParam%rhs(iElem)
             
             !8.2.4 Fill P values in dry cell for CGOp computation:
-            !dF/dn = A*dn/dn + T, we want dF/dn = 0.
             !HydroP = A*dn/dn, if cell is dry dn/dn = 0, else dn/dn = 1
-            HydroParam%P(iElem) = MeshParam%Area(iElem)*dV(HydroParam%eta(iElem),HydroParam%sb(iElem))
-            If (V(HydroParam%eta(iElem),HydroParam%sb(iElem)) < HydroParam%PCRI+NearZero) Then
-                ! The Cell is Dry. The Solution is V(eta^(n+1)) = V(eta^(n))
-                HydroParam%P(iElem) = MeshParam%Area(iElem)       ! We can't allow the row to have zeros in all elements - If P = 1, the water level remains the same
+            If(HydroParam%eta(iElem) > HydroParam%hb(iElem)) Then
+                HydroParam%P(iElem) = MeshParam%Area(iElem) ! Vol = eta.Area -> Vol = (eta - hb)*Area + (hb-sb)*Area*e = Area*(eta-hb +hb*e -sb*e)
+                !HydroParam%P(iElem) = (HydroParam%Vol(iElem)/(HydroParam%eta(iElem) + HydroParam%hb(iElem)*(MeshParam%epson(HydroParam%ElCapitalMs(iElem)) - 1) - HydroParam%sb(iElem)*MeshParam%epson(HydroParam%ElCapitalMs(iElem))
+            Else
+                HydroParam%P(iElem) = (HydroParam%Vol(iElem)/HydroParam%eta(iElem)) ! Vol = eta*e*S*Area -> Vol/eta = e*S*Area
             EndIf
-            
-        EndDo        
-
-        !Do iElem = 1,MeshParam%nElem
-        !    !In this point, MatOp Output = (T-Matrix)Eta
-        !    !We want F = 0 condition satisfied: V(nt+1) + T*n(t+1) = rhs :: F  = V(n(t+1)) + T*n(t+1) - rhs -> 0
-        !    HydroParam%F(iElem) = HydroParam%Vol(iElem) + HydroParam%Aeta(iElem) - HydroParam%rhs(iElem)
-        !EndDo
-        !
-        !!!$OMP parallel do default(none) shared(MeshParam,HydroParam) private(iElem,sumH)
-        !Do iElem = 1, MeshParam%nElem
-        !    !dF/dn = A*dn/dn + T, we want dF/dn = 0.
-        !    !HydroP = A*dn/dn, if cell is dry dn/dn = 0, else dn/dn = 1:
-        !    HydroParam%P(iElem) = MeshParam%Area(iElem)*dV(HydroParam%eta(iElem),HydroParam%sb(iElem))
-        !    sumH = Sum( HydroParam%H(MeshParam%Edge(:,iElem)) )
-        !    If (V(HydroParam%eta(iElem),HydroParam%sb(iElem)) < HydroParam%PCRI+NearZero) Then
-        !        ! The Cell is Dry. The Solution is V(eta^(n+1)) = V(eta^(n))
-        !        HydroParam%P(iElem) = MeshParam%Area(iElem)       ! We can't allow the row to have zeros in all elements - If P = 1, the water level remains the same
-        !    EndIf
-        !EndDo
-        !!!$OMP end parallel do
-            
+        EndDo   
+        !$OMP end parallel do
         res = sqrt(sum(HydroParam%F**2))      ! Residual of the Method
         !Print*, 'iNewton = ',iNewton , 'res = ',res
-        If ( res < 1e-8 ) Then
+        If ( res < 1e-6 ) Then
             continue
             exit
         EndIf
-        ! 8.2.5 Compute the New Free-Surface Elevation
-        !CGOp is used to minimize F value :: F = V(n(t+1)) + T*n(t+1) - rhs == 0
+        
+        ! V(n(t+1)) + T*n(t+1) = b
+        
+        ! (P+T).eta = rhs
+        
+        !! 8.2.5 Compute the New Free-Surface Elevation
+        !!CGOp is used to minimize F value :: F = V(n(t+1)) + T*n(t+1) - rhs == 0
         Call CGOp(HydroParam%F,HydroParam%Deta,dt,HydroParam,MeshParam)
+
         !$OMP parallel do default(none) shared(HydroParam,MeshParam) private(iElem)
         Do iElem = 1, MeshParam%nElem
             HydroParam%eta(iElem) = HydroParam%eta(iElem) - HydroParam%Deta(iElem)
@@ -436,13 +388,13 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     EndDo
     
     ! 9. Water Level Corrective Step
-    !!$OMP parallel do default(none) shared(MeshParam,HydroParam) private(iElem)
+    !$OMP parallel do default(none) shared(MeshParam,HydroParam,NearZero) private(iElem)
     Do iElem = 1,MeshParam%nElem
         If ( HydroParam%eta(iElem) - HydroParam%sb(iElem) <= HydroParam%PCRI/2.0d0 + NearZero ) Then
             HydroParam%eta(iElem) = HydroParam%sb(iElem) + HydroParam%PCRI/2.0d0
         EndIf
     EndDo
-    !!$OMP end parallel do
+    !$OMP end parallel do
     
     ! 9.1 Compute nodal elevations for tang. vel.
     HydroParam%petan=HydroParam%peta !store for transport eqs. 
@@ -477,9 +429,13 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
     ! w(CapitalM,:) = 0. -> No flux through the Surface
     ! The velocity is defined in the barycenter of the Top Face of each Cell
     ! *Obs: The outward direction is from Bottom to Top.
+    
+    ! xx. Vertical Water Balance (Precipitation and Evaporation)
+    Call VerticalWB(HydroParam,MeshParam,MeteoParam,dt,SimTime+dt)
+    
     HydroParam%DZit = HydroParam%DZi
     HydroParam%DZhit = HydroParam%DZhi
-    !$OMP parallel do default(none) shared(MeshParam,HydroParam,e0) private(iLayer,iElem,iEdge,Face,SumW,NearZero)
+    !!$OMP parallel do default(none) shared(MeshParam,HydroParam,e0) private(iLayer,iElem,iEdge,Face,SumW,NearZero)
     Do iElem = 1, MeshParam%nElem
        
         ! 12.1 Define the range between Bottom and Top Layers. (Tricky part - Not explained in [1])
@@ -489,8 +445,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
         ! *Obs: The velocity in faces with Smallm < Max(Smallm(:)) == 0. The same goes to faces with CapitalM > Min(CapitalM(:))
         ! 4.1.1 Find "mi" and "Mi", the Bottom and Top Layers range for the Element, not for the faces
         ! Set mi
-        
-        
+              
         ! Lower Index - Superficial Flow Layer       
         Do iLayer = 1,MeshParam%KMax
             If (iLayer == MeshParam%KMax) Then
@@ -569,31 +524,33 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
         !    Else
         !        HydroParam%Zb(iLayer,iElem) = 0.5*( HydroParam%Ze(iLayer,iElem) + HydroParam%Ze(iLayer+1,iElem) )
         !    EndIf
-        !EndDo    
-              
-        ! 4.1.2 Update the Element Vertical Spacing
+        !EndDo            
+            
         
-        Do iLayer = HydroParam%ElSmallms(iElem)+1, HydroParam%ElCapitalM(iElem)
-            HydroParam%Ze(iLayer,iElem) = MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)      ! Equidistant Core Grid
-        EndDo
-        HydroParam%Ze(HydroParam%ElSmallms(iElem),iElem)     = HydroParam%sb(iElem)                    ! Bottom
+        !CAYO
+        ! 4.1.2 Update the Element Vertical Spacing
+        !If ( HydroParam%eta(iElem) - HydroParam%hb(iElem) <= HydroParam%PCRI+NearZero ) Then
         If ( HydroParam%eta(iElem) - HydroParam%hb(iElem) <= HydroParam%PCRI+NearZero ) Then
+            !HydroParam%Ze(HydroParam%ElCapitalM(iElem)+1,iElem) = HydroParam%hb(iElem) + HydroParam%PCRI !- hb(iElem)       ! Free-Surface (verificar com Rafael)
             HydroParam%Ze(HydroParam%ElCapitalM(iElem)+1,iElem) = HydroParam%hb(iElem) + HydroParam%PCRI !- hb(iElem)       ! Free-Surface (verificar com Rafael)
         Else
             HydroParam%Ze(HydroParam%ElCapitalM(iElem)+1,iElem) = HydroParam%eta(iElem) !- hb(iElem)       ! Free-Surface (verificar com Rafael)    
             !HydroParam%Ze(HydroParam%ElCapitalM(iElem)+1,iElem) = Max(HydroParam%eta(iElem), HydroParam%Ze(HydroParam%ElCapitalM(iElem),iElem)     
         EndIf
+        HydroParam%Ze(:,iElem) = HydroParam%Ze(HydroParam%ElCapitalM(iElem)+1,iElem)
+        
+        Do iLayer = HydroParam%ElSmallms(iElem)+1, HydroParam%ElCapitalM(iElem)
+            HydroParam%Ze(iLayer,iElem) = MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)      ! Equidistant Core Grid
+        EndDo
+        HydroParam%Ze(HydroParam%ElSmallms(iElem),iElem)     = HydroParam%sb(iElem)                    ! Bottom
+        
         Do iLayer = 1, HydroParam%ElSmallms(iElem) - 1
             HydroParam%Ze(iLayer,iElem) = HydroParam%sb(iElem)
         EndDo
         
         Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalM(iElem)
-            If (iLayer == HydroParam%ElSmallm(iElem)) Then
-                HydroParam%Zb(iLayer,iElem) = (0.5d0)*( HydroParam%Ze(iLayer,iElem) + HydroParam%Ze(iLayer+1,iElem) ) !(0.5d0)*( 0. + Ze(iLayer+1,iElem) )   (verificar com Rafael)             
-            Else
-                HydroParam%Zb(iLayer,iElem) = (0.5d0)*( HydroParam%Ze(iLayer,iElem) + HydroParam%Ze(iLayer+1,iElem) )
-            EndIf
-        EndDo       
+            HydroParam%Zb(iLayer,iElem) = (0.5d0)*( HydroParam%Ze(iLayer,iElem) + HydroParam%Ze(iLayer+1,iElem) )
+        EndDo   
         
         ! 4.1.2.1 Compute the Vertical Mesh Spacing
         Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalM(iElem)
@@ -606,7 +563,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
 		If (MeshParam%iBedrock == 1) Then
             Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalM(iElem)
             
-                If (iLayer >= HydroParam%ElSmallm(iElem) .or.  HydroParam%ElSmallms(iElem) ==  HydroParam%ElSmallm(iElem)) Then
+                If (iLayer >= HydroParam%ElSmallm(iElem).or.HydroParam%ElSmallms(iElem) ==  HydroParam%ElSmallm(iElem)) Then
                     continue
                 Else
                     MeshParam%ei(iLayer,iElem) = e0
@@ -619,12 +576,19 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
                     HydroParam%DZhi(iLayer,iElem) = HydroParam%DZi(iLayer,iElem)
                     HydroParam%DZsi(iLayer,iElem) = 0.d0
                 Else
-                    If (HydroParam%Ze(iLayer+1,iElem) >= HydroParam%hb(iElem) ) Then
+                    If (HydroParam%Ze(iLayer+1,iElem) > HydroParam%hb(iElem) ) Then
                         HydroParam%DZhi(iLayer,iElem) = HydroParam%Ze(iLayer+1,iElem) - HydroParam%hb(iElem)
                         HydroParam%DZsi(iLayer,iElem) = HydroParam%hb(iElem) - HydroParam%Ze(iLayer,iElem)
                     Else
                         HydroParam%DZhi(iLayer,iElem) = 0.d0
                         HydroParam%DZsi(iLayer,iElem) = HydroParam%Ze(iLayer+1,iElem) - HydroParam%Ze(iLayer,iElem)
+                        !If(HydroParam%ElSmallms(iElem) == HydroParam%ElCapitalM(iElem)) Then
+                        !    If(HydroParam%eta(iElem) < HydroParam%hb(iElem) ) Then
+                        !        HydroParam%DZsi(iLayer,iElem) = HydroParam%eta(iElem)
+                        !    ElseIf (HydroParam%eta(iElem) <= HydroParam%sb(iElem)) Then
+                        !        HydroParam%DZsi(iLayer,iElem) = 0.d0
+                        !    EndIf
+                        !EndIf 
                     EndIf
                 EndIf                                    
                 
@@ -633,14 +597,13 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
                 EndIf                  
             EndDo
         EndIf
-        Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam)
+        Call MoistureContent(HydroParam%eta(iElem),HydroParam%etaplus(iElem),iElem,HydroParam,MeshParam)
     EndDo
-    !$OMP end parallel do    
+    !!$OMP end parallel do    
    
     
-    !!$OMP parallel do default(none) shared(MeshParam,HydroParam,k0,psi_flag,fi_small,Courant) private(iLayer,Small,iEdge,l,r,NearZero,DZjacum,psi,rj)
+    !!$OMP parallel do default(none) shared(MeshParam,HydroParam,k0) private(iLayer,Small,iEdge,l,r,NearZero)
     Do iEdge = 1,MeshParam%nEdge
-        
 
         ! 1.1 Compute Water Depth
         l = MeshParam%Left(iEdge)
@@ -649,12 +612,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
         If (r==0) Then
             r = l
         EndIf
-        !
-        !If (r == 0) Then
-        !    HydroParam%H(iEdge) = Max( HydroParam%PCRI, -HydroParam%sj(iEdge) + HydroParam%eta(l) )
-        !Else
-        !    HydroParam%H(iEdge) = Max( HydroParam%PCRI,-HydroParam%sj(iEdge) + HydroParam%eta(l), -HydroParam%sj(iEdge) + HydroParam%eta(r) )!CAYO
-        !EndIf
+        
         HydroParam%H(iEdge) = Max( HydroParam%PCRI,-HydroParam%sj(iEdge) + HydroParam%eta(l), -HydroParam%sj(iEdge) + HydroParam%eta(r) )!CAYO
         
         ! Lower Index - Superficial Flow Layer
@@ -730,71 +688,80 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
                 HydroParam%CapitalMs(iEdge) = HydroParam%Smallms(iEdge)
             EndIf
         EndIf  
-
+        !CAYO
         !9.2 Compute Elevation in the Edges
         Do iLayer = HydroParam%Smallms(iEdge) + 1, HydroParam%CapitalM(iEdge)
             HydroParam%Z(iLayer,iEdge) = MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1) !zL + (iLayer - 1)*dz                  ! Equidistant Core Grid
         EndDo
         HydroParam%Z(HydroParam%Smallms(iEdge),iEdge)     = HydroParam%sj(iEdge)                 ! Bottom
         If (r == 0) Then
-            If ( HydroParam%eta(l) - HydroParam%sj(iEdge) <= HydroParam%PCRI+NearZero) Then
-                HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = HydroParam%sj(iEdge) + HydroParam%PCRI
+            If ( HydroParam%eta(l) - HydroParam%hj(iEdge) <= HydroParam%PCRI+NearZero) Then
+                HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = HydroParam%hj(iEdge) + HydroParam%PCRI
             Else
                 HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = HydroParam%eta(l)
             EndIf
-             !H(iEdge) + hj(iEdge)       ! Free-Surface (verificar com Rafael)
         Else
-            If ( HydroParam%H(iEdge) - HydroParam%hj(iEdge) <= HydroParam%PCRI+NearZero ) Then
+            If ( HydroParam%H(iEdge) - HydroParam%hj(iEdge) <= HydroParam%PCRI+NearZero ) Then !( HydroParam%H(iEdge) <= HydroParam%PCRI/2 + NearZero ) Then
                 !HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = Max(HydroParam%eta(l),HydroParam%eta(r))
-                HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = Max(HydroParam%eta(l),HydroParam%eta(r))                
+                HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = Max(HydroParam%hb(l),HydroParam%hb(r))                
             Else
                 !HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = (0.5d0)*(HydroParam%eta(l)+HydroParam%eta(r)) !Max(HydroParam%eta(l),HydroParam%eta(r)) !H(iEdge) + hj(iEdge)       ! Free-Surface (verificar com Rafael)
                 HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = Max(HydroParam%eta(l),HydroParam%eta(r))             
             EndIf
         EndIf        
-        
+                
         ! 9.3 Compute the Vertical Mesh Spacing
         Do iLayer = HydroParam%Smallms(iEdge), HydroParam%CapitalM(iEdge)
             HydroParam%DZj(iLayer,iEdge) = HydroParam%Z(iLayer+1,iEdge) - HydroParam%Z(iLayer,iEdge)
             HydroParam%DZj(iLayer,iEdge) = Max(HydroParam%Pcri,HydroParam%DZj(iLayer,iEdge))
         EndDo        
         
-        !1.5 Compute Kj and DZhj/DZsj
+        !9.4 Compute Subsurface Parameters:
 		HydroParam%DZhj(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge) = HydroParam%DZj(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge)
         HydroParam%DZsj(:,iEdge) = 0.d0
+        MeshParam%Kj(:,iEdge) = 0.d0
+        HydroParam%DZK(iEdge) = 0.d0
         If (MeshParam%iBedrock == 1) Then
             Do iLayer = HydroParam%Smallms(iEdge), HydroParam%CapitalM(iEdge) ! 
-                !If (iLayer >= HydroParam%Smallm(iEdge) .or. HydroParam%Smallms(iEdge) == HydroParam%Smallm(iEdge) ) Then
-                !    continue
-                !Else
-                !    MeshParam%Kj(iLayer,iEdge) = 0.01
-                !EndIf 
+                !xx. Layers thickness:
                 If (iLayer < HydroParam%Smallm(iEdge)) Then
                     HydroParam%DZhj(iLayer,iEdge) = 0.
                     HydroParam%DZsj(iLayer,iEdge) = HydroParam%DZj(iLayer,iEdge)
                 ElseIf (iLayer > HydroParam%Smallm(iEdge)) Then
                     HydroParam%DZhj(iLayer,iEdge) = HydroParam%DZj(iLayer,iEdge)
                     HydroParam%DZsj(iLayer,iEdge) = 0.
+                    continue
                 Else
-                    If ( HydroParam%Z(iLayer+1,iEdge) >= HydroParam%hj(iEdge) ) Then
+                    If ( HydroParam%Z(iLayer+1,iEdge) > HydroParam%hj(iEdge) ) Then
                         HydroParam%DZhj(iLayer,iEdge) = HydroParam%Z(iLayer+1,iEdge) - HydroParam%hj(iEdge)
                         HydroParam%DZsj(iLayer,iEdge) = HydroParam%hj(iEdge) - HydroParam%Z(iLayer,iEdge)
                     Else
                         HydroParam%DZhj(iLayer,iEdge) = 0.
                         HydroParam%DZsj(iLayer,iEdge) = Max(HydroParam%Pcri,HydroParam%Z(iLayer+1,iEdge) - HydroParam%Z(iLayer,iEdge))
+                        If(HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge) .and. MeshParam%iSaturation == 0) Then
+                            If(HydroParam%H(iEdge) < HydroParam%hj(iEdge) ) Then
+                                HydroParam%DZsj(iLayer,iEdge) = HydroParam%H(iEdge)
+                            ElseIf(HydroParam%H(iEdge) <= HydroParam%sj(iEdge))Then
+                                HydroParam%DZsj(iLayer,iEdge) = 0.d0
+                             EndIf   
+                        EndIf                      
                     EndIf
                 EndIf    
                 
+                !xx. Hydraulic Conductivity:
                 If (HydroParam%DZsj(iLayer,iEdge) > 0) Then 
                     !If Neighbour lower layer is above Elem layer, the lower Element layer is 
-                    If (iLayer <HydroParam%ElSmallms(r)) Then
+                    If (iLayer < HydroParam%ElSmallms(r) .and. MeshParam%Ki(iLayer,l) > 0) Then
                         MeshParam%Kj(iLayer,iEdge) = MeshParam%Ki(iLayer,l)
-                    ElseIf (iLayer < HydroParam%ElSmallms(l)) Then     
+                    ElseIf (iLayer < HydroParam%ElSmallms(l) .and. MeshParam%Ki(iLayer,r) > 0) Then     
                         MeshParam%Kj(iLayer,iEdge) = MeshParam%Ki(iLayer,r)                
                     Else
-                        MeshParam%Kj(iLayer,iEdge) = 0.5*(MeshParam%Ki(iLayer,l)+MeshParam%Ki(iLayer,r))
+                        MeshParam%Kj(iLayer,iEdge) = Max(MeshParam%Ki(iLayer,l),MeshParam%Ki(iLayer,r))
                     EndIf
                 EndIf
+                
+                !xx. Subsurface Wet Area:
+                HydroParam%DZK(iEdge) = HydroParam%DZK(iEdge) + HydroParam%DZsj(iLayer,iEdge)*MeshParam%Kj(iLayer,iEdge) !Sediment Layer
             EndDo
 		EndIf
     EndDo
@@ -812,13 +779,9 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
             SumW = 0.
             Do iEdge = 1,4
                 Face = MeshParam%Edge(iEdge,iElem)
-                SumW = SumW + (Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%Edgelength(Face)*HydroParam%DZjt(iLayer,Face)*HydroParam%u(iLayer,Face))
+                SumW = SumW + (Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%Edgelength(Face)*HydroParam%DZhjt(iLayer,Face)*HydroParam%u(iLayer,Face))
             EndDo
-            HydroParam%w(iLayer+1,iElem) = HydroParam%w(iLayer,iElem) - SumW/MeshParam%Area(iElem)         ! w(k+1/2,iElem) [1]
-                    !
-            !If(HydroParam%DZsj(iLayer,Face) == HydroParam%DZj(iLayer,Face)) Then
-            !    HydroParam%u(iLayer,Face) = HydroParam%us(iLayer,Face)
-            !EndIf             
+            HydroParam%w(iLayer+1,iElem) = HydroParam%w(iLayer,iElem) - SumW/MeshParam%Area(iElem)         ! w(k+1/2,iElem) [1]        
         EndDo
     EndDo
 
@@ -832,7 +795,8 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
                 SumW = 0.
                 Do iEdge = 1,4
                     Face = MeshParam%Edge(iEdge,iElem)
-                    SumW = SumW + (Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%Edgelength(Face)*HydroParam%DZjt(iLayer,Face)*HydroParam%um(iLayer,Face))      
+                    HydroParam%um(iLayer,Face) = (HydroParam%u(iLayer,Face)*HydroParam%DZhjt(iLayer,Face) + HydroParam%us(iLayer,Face)*HydroParam%DZsjt(iLayer,Face))/(HydroParam%DZsjt(iLayer,Face) + HydroParam%DZhjt(iLayer,Face))                    
+                    SumW = SumW + (Sig(iElem,MeshParam%Right(Face),MeshParam%Left(Face))*MeshParam%Edgelength(Face)*(HydroParam%DZsjt(iLayer,Face) + HydroParam%DZhjt(iLayer,Face))*HydroParam%um(iLayer,Face))      
                 EndDo
                 HydroParam%wm(iLayer+1,iElem) = HydroParam%wm(iLayer,iElem) - SumW/MeshParam%Area(iElem)         ! w(k+1/2,iElem) [1]
             EndDo

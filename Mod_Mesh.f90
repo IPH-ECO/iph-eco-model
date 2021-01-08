@@ -145,7 +145,7 @@ Module MeshVars
         this%dx = StructuredMeshFeatures%resolution
         this%dy = this%dx
         !Lock horizontal resolution test
-        !this%dx = 20.0d0 !bench 02
+        this%dx = 20.0d0 !bench 02
         !this%dy = 6.48d0 !bench 01
         !this%dx = 0.020d0 !bench 01
         !this%nElem = StructuredMeshFeatures%numberOfElements - 36 !bench01
@@ -156,8 +156,8 @@ Module MeshVars
         
         Do iElem = 1, this%nElem
             this%xb(iElem) = xCoordinates(iElem)
+            this%yb(iElem) = yCoordinates(iElem)            
             !this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO b01
-            this%yb(iElem) = yCoordinates(iElem)
             this%Quadri(3,iElem) = verticeIds(4*(iElem-1)+1)
             this%Quadri(4,iElem) = verticeIds(4*(iElem-1)+2)
             this%Quadri(1,iElem) = verticeIds(4*(iElem-1)+3)
@@ -169,7 +169,7 @@ Module MeshVars
         this%zR = sim%maximumVerticalLimit
         Call SortDecreasing(layers,sim%layersLength)
         
-        this%NCAMMAX = 81 !bench02 1 surface + 11 subsurface
+        this%NCAMMAX = 62 !bench02 1 surface + 11 subsurface
         this%zL = -0.001 !bench02
         layersub(1) = sim%maximumVerticalLimit-1
         Do i = 2,this%NCAMMAX-1
@@ -528,5 +528,3 @@ Module MeshVars
     end subroutine
 
 End Module MeshVars
-    
-    

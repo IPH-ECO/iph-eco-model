@@ -208,12 +208,12 @@
     Implicit none
   
     Real, intent(inout) :: dtb, dt, uuint, vvint, wwint, x0, y0, z0, xt, yt, zt
-    Integer, intent(inout) ::  ndelt, nnel, jlev,iEdge0, iFace
-    Integer :: iLayer0
-    Real :: epsGrad
+    Integer, intent(inout) ::  ndelt, nnel, jlev, iEdge0, iFace
+    Integer :: iLayer0, nel_j
+    Real :: epsGrad, hhint, dtin
     Real, parameter :: small1=1e-6
     Real :: uuNode(14), vvNode(14), xxNode(9), yyNode(9), zzNode(5), dzNode(9), hhNode(9)
-    Real :: uuNodeBTR(3,9), vvNodeBTR(3,9), wwNodeBTR(3,9), xxNodeBTR(3,9), yyNodeBTR(3,9), zzNodeBTR(3,9)
+    Real :: uuNodeBTR(3,9), vvNodeBTR(3,9), wwNodeBTR(3,9), xxNodeBTR(3,9), yyNodeBTR(3,9), zzNodeBTR(3,9), hhNodeBTR(3,9)
     Real:: NearZero = 1e-10 !< Small Number
     Real:: tal, timeAcum, id0, vmag
     Integer :: jjlev, nnel0, l, r, iflqs1, idt, iEdge, iLayer, psi_flag
@@ -222,7 +222,7 @@
     Integer:: i34 = 4
     Integer:: ELM_flag = 0
     Integer:: FuFw_flag = 0
-
+    Integer :: BoundConditionFlag = 0
     jjlev = jlev    
     nnel0 = nnel
     iEdge = iEdge0
@@ -263,7 +263,7 @@
         xt = x0 - dtb*HydroParam%uArrow(iLayer,1,iEdge0)
         yt = y0 - dtb*HydroParam%uArrow(iLayer,2,iEdge0)
         zt = z0 - dtb*HydroParam%uArrow(iLayer,3,iEdge0)
-          
+
         Call quicksearch(1,nnel,jlev,dtb,x0,y0,z0,xt,yt,zt,iflqs1,idt,iFace,i34,HydroParam,MeshParam) 
         
         !3.2) nnel Element Edge which was intial or crossed by particle in sub-time step
@@ -302,24 +302,44 @@
         EndIf
             
     EndDo
-    !End Lagragian tracing
+    !End Lagrangian tracing
     
     !Interpolate velocities in Lagragian's end:             
     If (ELM_flag==0) Then !iBilinear Interpolation
         
         Call FuVelocities2(uuNodeBTR(:,:), vvNodeBTR(:,:), wwNodeBTR(:,:), xxNodeBTR(:,:), yyNodeBTR(:,:), zzNodeBTR(:,:), nnel,jlev, xt,yt,zt,x0,y0,z0, iFace, HydroParam,MeshParam)
         Call iBilinear2(uuint, vvint, wwint, uuNodeBTR(:,:), vvNodeBTR(:,:), wwNodeBTR(:,:), xxNodeBTR(:,:), yyNodeBTR(:,:), zzNodeBTR(:,:), xt, yt, zt, x0, y0, z0, iFace, nnel, FuFw_flag, MeshParam)
-        
+
     Elseif (ELM_flag==1) Then !iQuadratic Interpolation
         
         Call iQuadraticNodes(uuNodeBTR(:,:), vvNodeBTR(:,:), wwNodeBTR(:,:), xxNodeBTR(:,:), yyNodeBTR(:,:), zzNodeBTR(:,:), nnel, jlev, HydroParam, MeshParam)
-        Call iquadratic(uuint, vvint, wwint, uuNodeBTR(:,:), vvNodeBTR(:,:), wwNodeBTR(:,:), xxNodeBTR(:,:), yyNodeBTR(:,:), zzNodeBTR(:,:), xt, yt, zt)
-      
+        !Call iquadratic(uuint, vvint, wwint, uuNodeBTR(:,:), vvNodeBTR(:,:), wwNodeBTR(:,:), xxNodeBTR(:,:), yyNodeBTR(:,:), zzNodeBTR(:,:), xt, yt, zt)
+
+        hhNodeBTR(1,1) = zzNodeBTR(3,1) - sum(HydroParam%DZsi(:,nnel));   hhNodeBTR(1,4) = zzNodeBTR(3,4) - sum(HydroParam%DZsi(:,nnel));  hhNodeBTR(1,7) = zzNodeBTR(3,7) - sum(HydroParam%DZsi(:,nnel))
+        hhNodeBTR(2,1) = zzNodeBTR(3,1) - sum(HydroParam%DZsi(:,nnel));   hhNodeBTR(2,4) = zzNodeBTR(3,4) - sum(HydroParam%DZsi(:,nnel));  hhNodeBTR(2,7) = zzNodeBTR(3,7) - sum(HydroParam%DZsi(:,nnel))
+        hhNodeBTR(3,1) = zzNodeBTR(3,1) - sum(HydroParam%DZsi(:,nnel));   hhNodeBTR(3,4) = zzNodeBTR(3,4) - sum(HydroParam%DZsi(:,nnel));  hhNodeBTR(3,7) = zzNodeBTR(3,7) - sum(HydroParam%DZsi(:,nnel))
+        hhNodeBTR(1,2) = zzNodeBTR(3,2) - sum(HydroParam%DZsi(:,nnel));   hhNodeBTR(1,5) = zzNodeBTR(3,5) - sum(HydroParam%DZsi(:,nnel));  hhNodeBTR(1,8) = zzNodeBTR(3,8) - sum(HydroParam%DZsi(:,nnel))
+        hhNodeBTR(2,2) = zzNodeBTR(3,2) - sum(HydroParam%DZsi(:,nnel));   hhNodeBTR(2,5) = zzNodeBTR(3,5) - sum(HydroParam%DZsi(:,nnel));  hhNodeBTR(2,8) = zzNodeBTR(3,8) - sum(HydroParam%DZsi(:,nnel))
+        hhNodeBTR(3,2) = zzNodeBTR(3,2) - sum(HydroParam%DZsi(:,nnel));   hhNodeBTR(3,5) = zzNodeBTR(3,5) - sum(HydroParam%DZsi(:,nnel));  hhNodeBTR(3,8) = zzNodeBTR(3,8) - sum(HydroParam%DZsi(:,nnel))
+        hhNodeBTR(1,3) = zzNodeBTR(3,3) - sum(HydroParam%DZsi(:,nnel));   hhNodeBTR(1,6) = zzNodeBTR(3,6) - sum(HydroParam%DZsi(:,nnel));  hhNodeBTR(1,9) = zzNodeBTR(3,9) - sum(HydroParam%DZsi(:,nnel))
+        hhNodeBTR(2,3) = zzNodeBTR(3,3) - sum(HydroParam%DZsi(:,nnel));   hhNodeBTR(2,6) = zzNodeBTR(3,6) - sum(HydroParam%DZsi(:,nnel));  hhNodeBTR(2,9) = zzNodeBTR(3,9) - sum(HydroParam%DZsi(:,nnel))
+        hhNodeBTR(3,3) = zzNodeBTR(3,3) - sum(HydroParam%DZsi(:,nnel));   hhNodeBTR(3,6) = zzNodeBTR(3,6) - sum(HydroParam%DZsi(:,nnel));  hhNodeBTR(3,9) = zzNodeBTR(3,9) - sum(HydroParam%DZsi(:,nnel))
+            
+        uuNodeBTR = uuNodeBTR*hhNodeBTR; vvNodeBTR = vvNodeBTR*hhNodeBTR; wwNodeBTR = wwNodeBTR*hhNodeBTR
+   
+        Call iQuadraticCons(uuint, vvint, wwint, hhint, uuNodeBTR(:,:), vvNodeBTR(:,:), wwNodeBTR(:,:), hhNodeBTR(:,:), xxNodeBTR(:,:), yyNodeBTR(:,:), zzNodeBTR(:,:), xt, yt, zt)
+            
+        !hhint = max(0.d0,HydroParam%H(iEdge) - sum(HydroParam%DZsj(:,iEdge)))
+        uuint = uuint/hhint
+        vvint = vvint/hhint
+        wwint = wwint/hhint
+        hhint =  hhint                  
     EndIf
     
     
     Return
     End Subroutine btrackConservative    
+
 
      Subroutine quicksearch(iloc,nnel,jlev,dtb,x0,y0,z0,&
     &xt,yt,zt,nfl,idt,id0,i34,HydroParam,MeshParam)
@@ -517,11 +537,11 @@
         !        r = 0
         !    endif
         !endif
-        
+
         !If particle cross iEdge from iElement(nel), so the new iElement is the neighbour Element which shares iEdge(nel_j).
         !However, it can a abnormal case which either iEdge(isd) no has neighbour (horizontal exit or wall) or is dry:
-        
         If (r == 0 .or. HydroParam%H(isd)-HydroParam%hj(isd)<=HydroParam%Pcri/2.d0+NearZero) Then !CAYO
+        !If (r == 0 .or. HydroParam%H(isd)<=HydroParam%Pcri/2.d0+NearZero) Then !CAYO
             lit=1
        
             !Nudge intersect (xin,yin), and update starting pt
@@ -531,7 +551,6 @@
             ycg=yin
             
             !Set tang. velocities:
-
             xvel= 0.!uxy(jlev,1,isd)
             yvel= 0.!uxy(jlev,2,isd)
             zvel=0.5*((HydroParam%uNode(jlev,3,md1)+HydroParam%uNode(jlev,3,md2))/2. + (HydroParam%uNode(jlev+1,3,md1)+HydroParam%uNode(jlev+1,3,md2))/2.)
@@ -551,8 +570,9 @@
                 nnel=nel
                 exit loop4
             EndIf
-            pathl=hvel*trm        
-        ElseIf (HydroParam%eta(r) - HydroParam%hb(r) <= HydroParam%PCRI/2.d0 + NearZero) Then !CAYO
+            pathl=hvel*trm    
+            
+        ElseIf (HydroParam%eta(MeshParam%Neighbor(nel_j,nnel)) - HydroParam%hb(MeshParam%Neighbor(nel_j,nnel)) <= HydroParam%PCRI/2.d0 + NearZero) Then !CAYO
             lit=1
         
             !Nudge intersect (xin,yin), and update starting pt
@@ -563,9 +583,9 @@
             
             !Set tang. velocities:
             
-            xvel= 0.!uxy(jlev,1,isd)
-            yvel= 0.!uxy(jlev,2,isd)
-            zvel=0.5*((HydroParam%uNode(jlev,3,md1)+HydroParam%uNode(jlev,3,md2))/2. + (HydroParam%uNode(jlev+1,3,md1)+HydroParam%uNode(jlev+1,3,md2))/2.)
+            xvel = 0.!uxy(jlev,1,isd)
+            yvel = 0.!uxy(jlev,2,isd)
+            zvel = 0.5*((HydroParam%uNode(jlev,3,md1)+HydroParam%uNode(jlev,3,md2))/2. + (HydroParam%uNode(jlev+1,3,md1)+HydroParam%uNode(jlev+1,3,md2))/2.)
             
             !Update Pt:
             xt=xin-xvel*trm
@@ -583,8 +603,15 @@
                 exit loop4
             EndIf
             pathl=hvel*trm
-            
-        Endif !abnormal cases
+        ElseIf(dmax1(zt,HydroParam%hb(nel0)) < HydroParam%hb(MeshParam%Neighbor(nel_j,nnel)) ) Then
+            nnel = nel0 
+            xt=(1-1.0d-4)*MeshParam%EdgeBary(1,MeshParam%Edge(nel_j,nel0)) + 1.0d-4*MeshParam%xb(nel0)
+            yt=(1-1.0d-4)*MeshParam%EdgeBary(2,MeshParam%Edge(nel_j,nel0)) + 1.0d-4*MeshParam%yb(nel0)
+            !xt = MeshParam%EdgeBary(1,MeshParam%Edge(nel_j,nel0))
+            !yt = MeshParam%EdgeBary(2,MeshParam%Edge(nel_j,nel0))
+            nfl=1
+            exit loop4
+        EndIf
         
         !Else in normal cases, we need get the neighbour element which shares the iEdge(nel_j):
         If(lit.eq.0) Then
@@ -647,16 +674,17 @@
     !zt is set as the minimum value between max[zt calculed and Lower Layer Level in the Element (nnel)] and Upper Layer in Element(nnel)
     !We want find the iLayer that includes this value, not specfic point.
 
-    If (nnel /= nel0) Then
-        zt = dmax1(zt,HydroParam%Ze(HydroParam%ElSmallm(nel0),nel0)+sum(HydroParam%DZsi(:,nel0)))
-        If (zt < HydroParam%Ze(HydroParam%ElSmallm(nnel),nnel) - HydroParam%hb(nnel) ) then
-            nnel = nel0
-            xt = MeshParam%EdgeBary(1,isd)
-            yt = MeshParam%EdgeBary(2,isd)
-        EndIf
-    EndIf
+    !If (nnel /= nel0) Then
+    !    zt = dmax1(zt,HydroParam%Ze(HydroParam%ElSmallm(nel0),nel0)+sum(HydroParam%DZsi(:,nel0)))
+    !    If (zt < HydroParam%Ze(HydroParam%ElSmallm(nnel),nnel) - HydroParam%hb(nnel) ) then
+    !        nnel = nel0
+    !        xt = MeshParam%EdgeBary(1,isd)
+    !        yt = MeshParam%EdgeBary(2,isd)
+    !    EndIf
+    !EndIf
         
-    zt = dmin1(dmax1(zt,HydroParam%Ze(HydroParam%ElSmallm(nnel),nnel)+sum(HydroParam%DZsi(:,nnel))),HydroParam%Ze(HydroParam%ElCapitalM(nnel)+1,nnel))
+    !zt = dmin1(dmax1(zt,HydroParam%Ze(HydroParam%ElSmallm(nnel),nnel)+sum(HydroParam%DZsi(:,nnel))),HydroParam%Ze(HydroParam%ElCapitalM(nnel)+1,nnel))
+    zt = dmin1(dmax1(zt,HydroParam%Ze(HydroParam%ElSmallm(nnel),nnel)+sum(HydroParam%DZsi(:,nnel))),HydroParam%eta(nnel))
     Do k = HydroParam%ElSmallm(nnel), HydroParam%ElCapitalM(nnel)
         If (zt.gt.HydroParam%Ze(k,nnel).and.zt.le.HydroParam%Ze(k+1,nnel)) Then
            jlev = k
@@ -665,7 +693,6 @@
     
     Return
     End Subroutine quicksearch
-    
     
     Subroutine intersect2(x1,x2,x3,x4,y1,y2,y3,y4,iflag,xin,yin,tt1,tt2)
     
@@ -1997,23 +2024,23 @@
         rElem = MeshParam%Neighbor(4,l)
         lElem = MeshParam%Neighbor(2,l)
         
-        !bench 02:
-        if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(4,l))<= 100 + NearZero) then
-            if (MeshParam%EdgeBary(2,MeshParam%Edge(4,l)) >= 110 - NearZero) then
-                relem = 0
-            elseif(MeshParam%EdgeBary(2,MeshParam%Edge(4,l)) <= 90 + NearZero) then
-                relem = 0
-            endif
-        endif
-        
-        !bench 02:
-        if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(2,l))<= 100 + NearZero) then
-            if (MeshParam%EdgeBary(2,MeshParam%Edge(2,l)) >= 110 - NearZero) then
-                lelem = 0
-            elseif(MeshParam%EdgeBary(2,MeshParam%Edge(2,l)) <= 90 + NearZero) then
-                lelem = 0
-            endif
-        endif        
+        !!bench 02:
+        !if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(4,l))<= 100 + NearZero) then
+        !    if (MeshParam%EdgeBary(2,MeshParam%Edge(4,l)) >= 110 - NearZero) then
+        !        relem = 0
+        !    elseif(MeshParam%EdgeBary(2,MeshParam%Edge(4,l)) <= 90 + NearZero) then
+        !        relem = 0
+        !    endif
+        !endif
+        !
+        !!bench 02:
+        !if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(2,l))<= 100 + NearZero) then
+        !    if (MeshParam%EdgeBary(2,MeshParam%Edge(2,l)) >= 110 - NearZero) then
+        !        lelem = 0
+        !    elseif(MeshParam%EdgeBary(2,MeshParam%Edge(2,l)) <= 90 + NearZero) then
+        !        lelem = 0
+        !    endif
+        !endif        
         
         ! Get Nodes data from stencil:
         Call NodeValues(iEdgein, iFace, Face, iLayer, rElem, lElem, n7, r, l, uuNode(:), vvNode(:), xxNode(:), yyNode(:), dzNode(:), hhNode(:), HydroParam, MeshParam)
@@ -2179,24 +2206,24 @@
         n7 = 3
         rElem = MeshParam%Neighbor(1,l)
         lElem = MeshParam%Neighbor(3,l)
-        
-        !bench 02:
-        if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(1,l))<= 100 + NearZero) then
-            if (MeshParam%EdgeBary(2,MeshParam%Edge(1,l)) >= 110 - NearZero) then
-                relem = 0
-            elseif(MeshParam%EdgeBary(2,MeshParam%Edge(1,l)) <= 90 + NearZero) then
-                relem = 0
-            endif
-        endif
-        
-        !bench 02:
-        if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(3,l))<= 100 + NearZero) then
-            if (MeshParam%EdgeBary(2,MeshParam%Edge(3,l)) >= 110 - NearZero) then
-                lelem = 0
-            elseif(MeshParam%EdgeBary(2,MeshParam%Edge(3,l)) <= 90 + NearZero) then
-                lelem = 0
-            endif
-        endif  
+        !
+        !!bench 02:
+        !if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(1,l))<= 100 + NearZero) then
+        !    if (MeshParam%EdgeBary(2,MeshParam%Edge(1,l)) >= 110 - NearZero) then
+        !        relem = 0
+        !    elseif(MeshParam%EdgeBary(2,MeshParam%Edge(1,l)) <= 90 + NearZero) then
+        !        relem = 0
+        !    endif
+        !endif
+        !
+        !!bench 02:
+        !if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(3,l))<= 100 + NearZero) then
+        !    if (MeshParam%EdgeBary(2,MeshParam%Edge(3,l)) >= 110 - NearZero) then
+        !        lelem = 0
+        !    elseif(MeshParam%EdgeBary(2,MeshParam%Edge(3,l)) <= 90 + NearZero) then
+        !        lelem = 0
+        !    endif
+        !endif  
         
         Call NodeValues(iEdgein, iFace, Face, iLayer, rElem, lElem, n7, r, l, uuNode(:), vvNode(:), xxNode(:), yyNode(:), dzNode(:), hhNode(:), HydroParam, MeshParam)
                         
@@ -2362,25 +2389,25 @@
         n7 = 4
         rElem = MeshParam%Neighbor(2,l)
         lElem = MeshParam%Neighbor(4,l)
-        
-        !bench 02:
-        if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(2,l))<= 100 + NearZero) then
-            if (MeshParam%EdgeBary(2,MeshParam%Edge(2,l)) >= 110 - NearZero) then
-                relem = 0
-            elseif(MeshParam%EdgeBary(2,MeshParam%Edge(2,l)) <= 90 + NearZero) then
-                relem = 0
-            endif
-        endif
-        
-        !bench 02:
-        if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(4,l))<= 100 + NearZero) then
-            if (MeshParam%EdgeBary(2,MeshParam%Edge(4,l)) >= 110 - NearZero) then
-                lelem = 0
-            elseif(MeshParam%EdgeBary(2,MeshParam%Edge(4,l)) <= 90 + NearZero) then
-                lelem = 0
-            endif
-        endif          
-    
+        !
+        !!bench 02:
+        !if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(2,l))<= 100 + NearZero) then
+        !    if (MeshParam%EdgeBary(2,MeshParam%Edge(2,l)) >= 110 - NearZero) then
+        !        relem = 0
+        !    elseif(MeshParam%EdgeBary(2,MeshParam%Edge(2,l)) <= 90 + NearZero) then
+        !        relem = 0
+        !    endif
+        !endif
+        !
+        !!bench 02:
+        !if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(4,l))<= 100 + NearZero) then
+        !    if (MeshParam%EdgeBary(2,MeshParam%Edge(4,l)) >= 110 - NearZero) then
+        !        lelem = 0
+        !    elseif(MeshParam%EdgeBary(2,MeshParam%Edge(4,l)) <= 90 + NearZero) then
+        !        lelem = 0
+        !    endif
+        !endif          
+        !
         Call NodeValues(iEdgein, iFace, Face, iLayer, rElem, lElem, n7, r, l, uuNode(:), vvNode(:), xxNode(:), yyNode(:), dzNode(:), hhNode(:), HydroParam, MeshParam)                
     
         !x - direction:
@@ -2551,23 +2578,23 @@
         rElem = MeshParam%Neighbor(3,l)
         lElem = MeshParam%Neighbor(1,l)
 
-        !bench 02:
-        if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(3,l))<= 100 + NearZero) then
-            if (MeshParam%EdgeBary(2,MeshParam%Edge(3,l)) >= 110 - NearZero) then
-                relem = 0
-            elseif(MeshParam%EdgeBary(2,MeshParam%Edge(3,l)) <= 90 + NearZero) then
-                relem = 0
-            endif
-        endif
-        
-        !bench 02:
-        if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(1,l))<= 100 + NearZero) then
-            if (MeshParam%EdgeBary(2,MeshParam%Edge(1,l)) >= 110 - NearZero) then
-                lelem = 0
-            elseif(MeshParam%EdgeBary(2,MeshParam%Edge(1,l)) <= 90 + NearZero) then
-                lelem = 0
-            endif
-        endif  
+        !!bench 02:
+        !if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(3,l))<= 100 + NearZero) then
+        !    if (MeshParam%EdgeBary(2,MeshParam%Edge(3,l)) >= 110 - NearZero) then
+        !        relem = 0
+        !    elseif(MeshParam%EdgeBary(2,MeshParam%Edge(3,l)) <= 90 + NearZero) then
+        !        relem = 0
+        !    endif
+        !endif
+        !
+        !!bench 02:
+        !if ( 100-NearZero <= MeshParam%EdgeBary(1,MeshParam%Edge(1,l))<= 100 + NearZero) then
+        !    if (MeshParam%EdgeBary(2,MeshParam%Edge(1,l)) >= 110 - NearZero) then
+        !        lelem = 0
+        !    elseif(MeshParam%EdgeBary(2,MeshParam%Edge(1,l)) <= 90 + NearZero) then
+        !        lelem = 0
+        !    endif
+        !endif  
         
         Call NodeValues(iEdgein, iFace, Face, iLayer, rElem, lElem, n7, r, l, uuNode(:), vvNode(:), xxNode(:), yyNode(:), dzNode(:), hhNode(:), HydroParam, MeshParam)
                         
@@ -2729,8 +2756,114 @@
     
     End Subroutine AdvectionVelocities        
     
+  Subroutine iQuadraticCons(uuBtrack, vvBtrack, wwBtrack, hhBtrack, uuN, vvN, wwN, hhN, xxN, yyN, zzN, xp, yp, zp )
+    !( uuNode(3,9), vvNode(3,9), wwNode(3,9), xxNode(3,9), yyNode(3,9), zzNode(3,9) )
+
+    Implicit None
+
+    Real, intent(in) :: uuN(3,9), vvN(3,9), wwN(3,9), hhN(3,9), xxN(3,9), yyN(3,9), zzN(3,9), xp, yp, zp
+    Real, intent(out) :: uuBtrack, vvBtrack, wwBtrack, hhBtrack
+    Real:: LZ(3,9), LY(3,3), LX(3), Zuu(9), Zvv(9), Zww(9), Zhh(9), Yuu(3), Yvv(3), Yww(3), Yhh(3), Xuu, Xvv, Xww, Xhh, P1, P2, resto, Uresto, Vresto, Wresto, soma
+    Integer:: m, iNode, iTimes, cont
+
+    !1. Interpolatting in Z direction 9 times, one for each node. (e.g. Hodges, 2000)
+    !1.1. - find the  Lagrange coefficient formula 
+    !for vertical interpolations
+
     
+    Do iNode=1,9
+        Do m=1,3
+            if (m==1) then
+                P1 = ((zp-zzN(2,iNode))/(zzN(1,iNode)-zzN(2,iNode)))
+                P2 = ((zp-zzN(3,iNode))/(zzN(1,iNode)-zzN(3,iNode)))
+            elseif (m==2) then
+                P1 = ((zp-zzN(1,iNode))/(zzN(2,iNode)-zzN(1,iNode)))
+                P2 = ((zp-zzN(3,iNode))/(zzN(2,iNode)-zzN(3,iNode)))
+            else
+                P1 = ((zp-zzN(1,iNode))/(zzN(m,iNode)-zzN(1,iNode)))
+                P2 = ((zp-zzN(2,iNode))/(zzN(m,iNode)-zzN(2,iNode)))
+            Endif
+            LZ(m,iNode)=P1*P2
+        EndDo
+        soma = LZ(1,iNode)+LZ(2,iNode)+LZ(3,iNode)
+        if (isnan(P1).or.isnan(P2)) then
+            continue
+        endif
+        
+    EndDo
+    !1.2. - Interpolating velocties (u, v, w) to the btrack particle cota 
+    Do iNode=1,9        
+        Zuu(iNode) = LZ(1,iNode)*uuN(1,iNode)+LZ(2,iNode)*uuN(2,iNode)+LZ(3,iNode)*uuN(3,iNode)
+        Zvv(iNode) = LZ(1,iNode)*vvN(1,iNode)+LZ(2,iNode)*vvN(2,iNode)+LZ(3,iNode)*vvN(3,iNode)
+        Zww(iNode) = LZ(1,iNode)*wwN(1,iNode)+LZ(2,iNode)*wwN(2,iNode)+LZ(3,iNode)*wwN(3,iNode)
+        Zhh(iNode) = LZ(1,iNode)*hhN(1,iNode)+LZ(2,iNode)*hhN(2,iNode)+LZ(3,iNode)*hhN(3,iNode)
+    EndDo
+    !2. Interpolate in Y direction 3 times
+    !2.1. - find the  Lagrange coefficient formula
+    cont=0
+    Do iNode=1,7,3
+        cont=cont+1
+        Do m=1,3
+            if (m==1) then
+                P1 = ((yp-yyN(1,iNode+1))/(yyN(1,iNode)-yyN(1,iNode+1)))
+                P2 = ((yp-yyN(1,iNode+2))/(yyN(1,iNode)-yyN(1,iNode+2)))
+            elseif (m==2) then
+                P1 = ((yp-yyN(1,iNode))/(yyN(1,iNode+1)-yyN(1,iNode)))
+                P2 = ((yp-yyN(1,iNode+2))/(yyN(1,iNode+1)-yyN(1,iNode+2)))
+            else
+                P1 = ((yp-yyN(1,iNode))/(yyN(1,iNode+2)-yyN(1,iNode)))
+                P2 = ((yp-yyN(1,iNode+1))/(yyN(1,iNode+2)-yyN(1,iNode+1)))
+            Endif
+            LY(m,cont)=P1*P2
+        EndDo
+        soma = LY(1,cont)+LY(2,cont)+LY(3,cont)
+        if (isnan(P1).or.isnan(P2)) then
+            continue
+        endif
+    EndDo
+    !2.2. - Interpolating velocties (u, v, w) to the btrack particle yt
+    cont=0
+    Do iNode=1,7,3
+        cont=cont+1
+        Yuu(cont) = LY(1,cont)*Zuu(iNode)+LY(2,cont)*Zuu(iNode+1)+LY(3,cont)*Zuu(iNode+2)
+        Yvv(cont) = LY(1,cont)*Zvv(iNode)+LY(2,cont)*Zvv(iNode+1)+LY(3,cont)*Zvv(iNode+2)
+        Yww(cont) = LY(1,cont)*Zww(iNode)+LY(2,cont)*Zww(iNode+1)+LY(3,cont)*Zww(iNode+2)
+        Yhh(cont) = LY(1,cont)*Zhh(iNode)+LY(2,cont)*Zhh(iNode+1)+LY(3,cont)*Zhh(iNode+2)
+    EndDo
+    !3. Interpolate in X direction one times
+    !3.1. - find the  Lagrange coefficient formula
+    Do m=1,3
+        if (m==1) then
+            P1 = ((xp-xxN(1,4))/(xxN(1,1)-xxN(1,4)))
+            P2 = ((xp-xxN(1,7))/(xxN(1,1)-xxN(1,7)))
+        elseif (m==2) then
+            P1 = ((xp-xxN(1,1))/(xxN(1,4)-xxN(1,1)))
+            P2 = ((xp-xxN(1,7))/(xxN(1,4)-xxN(1,7)))
+        else
+            P1 = ((xp-xxN(1,1))/(xxN(1,7)-xxN(1,1)))
+            P2 = ((xp-xxN(1,4))/(xxN(1,7)-xxN(1,4)))
+        Endif
+        LX(m) = P1*P2
+    EndDo 
+    soma = LX(1)+LX(2)+LX(3)
+    if (isnan(P1).or.isnan(P2)) then
+            continue
+    endif
+    !3.2. - Interpolating velocties (u, v, w) to the btrack particle xt
+    Xuu = Lx(1)*Yuu(1)+Lx(2)*Yuu(2)+Lx(3)*Yuu(3)
+    Xvv = Lx(1)*Yvv(1)+Lx(2)*Yvv(2)+Lx(3)*Yvv(3)
+    Xww = Lx(1)*Yww(1)+Lx(2)*Yww(2)+Lx(3)*Yww(3)
+    Xhh = Lx(1)*Yhh(1)+Lx(2)*Yhh(2)+Lx(3)*Yhh(3)
     
+    !4. Setting the Btrack velocities
+    uuBtrack = Xuu
+    vvBtrack = Xvv
+    wwBtrack = Xww
+    hhBtrack = Xhh
+    
+    return
+   End Subroutine iQuadraticCons
+   
     
     !Subroutine AdvectionVelocities(iLayer0, iLayer, iFace, iEdge0, l, r, uuNode, vvNode, xxNode, yyNode, zzNode, dzNode, hhNode, uuint, vvint, dt, psi_flag, epsGrad, HydroParam, MeshParam)
     !

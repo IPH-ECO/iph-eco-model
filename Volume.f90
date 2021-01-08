@@ -21,41 +21,27 @@
     Use Hydrodynamic
     Implicit None
     Integer:: iElem, iLayer
-    Real:: V
+    Real:: V,vol
     type(HydrodynamicParam) :: HydroParam
     type(MeshGridParam) :: MeshParam
     
-    
+    !$OMP parallel do default(none) shared(HydroParam,MeshParam) private(iElem)
     Do iElem = 1, MeshParam%nElem
-        HydroParam%Vol(iElem) = 0.d0
-        Call SoilSaturation(HydroParam%eta(iElem) + HydroParam%etaplus(iElem),iElem,HydroParam,MeshParam)
-        If (V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%hb(iElem)) > 0) Then
-            !HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) + HydroParam%etaplus(iElem))
-            HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) + HydroParam%etaplus(iElem) - HydroParam%hb(iElem))
-            If (HydroParam%DZsi(HydroParam%Smallms(iElem),iElem) > 0) Then
-                HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
-            EndIf
-        ElseIf (V(HydroParam%eta(iElem) + HydroParam%etaplus(iElem),HydroParam%sb(iElem)) > 0) Then
-            HydroParam%Vol(iElem) = MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
-            !HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%sb(iElem)))*MeshParam%ei(HydroParam%Smallms(iElem),iElem)
-        EndIf
+        !Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam) 
+        HydroParam%Vol(iElem) = MeshParam%Area(iElem)*HydroParam%etaplus(iElem)
+        HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*(Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem)) + sum(HydroParam%DZhi(:,iElem)) )
+        !HydroParam%Vol(iElem) =  0.d0
+        !If (V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%hb(iElem)) > 0) Then
+        !    !HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) + HydroParam%etaplus(iElem))
+        !    HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) + HydroParam%etaplus(iElem) - HydroParam%hb(iElem))
+        !    If (HydroParam%DZsi(HydroParam%Smallms(iElem),iElem) > 0) Then
+        !        HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
+        !    EndIf
+        !ElseIf (V(HydroParam%eta(iElem) + HydroParam%etaplus(iElem),HydroParam%sb(iElem)) > 0) Then
+        !    HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))+HydroParam%etaplus(iElem))
+        !    !HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%sb(iElem)))*MeshParam%ei(HydroParam%Smallms(iElem),iElem)
+        !EndIf
     EndDo
-    
-    !Do iElem = 1, MeshParam%nElem
-    !    HydroParam%Vol(iElem) = 0
-    !    If (V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%hb(iElem)) > 0) Then
-    !        HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) + HydroParam%etaplus(iElem) - HydroParam%hb(iElem))
-    !        If (MeshParam%iBedrock == 1) Then
-    !            Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalMs(iElem)
-    !                If (HydroParam%DZsi(iLayer,iElem) > 0) Then
-    !                    HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*MeshParam%ei(iLayer,iElem)*HydroParam%DZsi(iLayer,iElem)
-    !                EndIf
-    !            EndDo
-    !        EndIf
-    !    ElseIf (V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%sb(iElem)) > 0) Then
-    !        HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(V(HydroParam%eta(iElem)+HydroParam%etaplus(iElem),HydroParam%sb(iElem)))*MeshParam%ei(HydroParam%Smallms(iElem),iElem)
-    !    EndIf
-    !EndDo
-    
+    !$OMP end parallel do
     Return
 End Subroutine Volume

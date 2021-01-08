@@ -87,6 +87,14 @@ Subroutine VTKOutput(simParam,HydroParam,MeshParam,LimnoParam)
             MeshParam%zPoint(MeshParam%Quadri(2,iElem)+iLayer*MeshParam%nPoint+1) = HydroParam%Ze(MeshParam%Kmax-iLayer+1,iElem) !LIMCAMAUX(iLayer)
             MeshParam%zPoint(MeshParam%Quadri(3,iElem)+iLayer*MeshParam%nPoint+1) = HydroParam%Ze(MeshParam%Kmax-iLayer+1,iElem) !LIMCAMAUX(iLayer)
             MeshParam%zPoint(MeshParam%Quadri(4,iElem)+iLayer*MeshParam%nPoint+1) = HydroParam%Ze(MeshParam%Kmax-iLayer+1,iElem) !LIMCAMAUX(iLayer)
+            
+            If (iLayer == MeshParam%KMax .and. HydroParam%Ze(MeshParam%Kmax-iLayer+2,iElem) > HydroParam%eta(iElem)) Then
+                MeshParam%zPoint(MeshParam%Quadri(1,iElem)+(iLayer-1)*MeshParam%nPoint+1) = HydroParam%eta(iElem) !LIMCAMAUX(iLayer)
+                MeshParam%zPoint(MeshParam%Quadri(2,iElem)+(iLayer-1)*MeshParam%nPoint+1) = HydroParam%eta(iElem) !LIMCAMAUX(iLayer)
+                MeshParam%zPoint(MeshParam%Quadri(3,iElem)+(iLayer-1)*MeshParam%nPoint+1) = HydroParam%eta(iElem) !LIMCAMAUX(iLayer)
+                MeshParam%zPoint(MeshParam%Quadri(4,iElem)+(iLayer-1)*MeshParam%nPoint+1) = HydroParam%eta(iElem) !LIMCAMAUX(iLayer)               
+            EndIf
+            
         EndDo
     EndDo
     
@@ -153,7 +161,8 @@ Subroutine VTKOutput(simParam,HydroParam,MeshParam,LimnoParam)
     If (simParam%OutputHydro(3)==1) Then
         Do iElem = 1,MeshParam%nElem
             Do iLayer = 1,MeshParam%KMax
-                HydroParam%SScalar(iElem + (iLayer-1)*MeshParam%nElem) = V(HydroParam%eta(iElem),HydroParam%hb(iElem)) 
+                !HydroParam%SScalar(iElem + (iLayer-1)*MeshParam%nElem) = V(HydroParam%eta(iElem),HydroParam%hb(iElem)) 
+                HydroParam%SScalar(iElem + (iLayer-1)*MeshParam%nElem) = V(HydroParam%eta(iElem),HydroParam%sb(iElem)) 
             EndDo
         EndDo
         E_IO = VTK_VAR(MeshParam%nElem*MeshParam%KMax,'Depth',HydroParam%SScalar)

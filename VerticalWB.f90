@@ -19,10 +19,17 @@ Subroutine VerticalWB(HydroParam,MeshParam,MeteoParam,dt,SimTime)
     type(HydrodynamicParam) :: HydroParam
     type(MeteorologicalParam) :: MeteoParam
 
+    !etaplus0 = 0.d0
+    !If(SimTime <= 5400 ) Then !Bench 02 Superficial
+    !    etaplus0 = 10.8d0/1000/3600*dt
+    !EndIf
+    !
     etaplus0 = 0.d0
-    If(SimTime <= 3024000 ) Then !Bench 02 5400
+    If(SimTime <= 3024000 ) Then !Bench 02 Subsurface
         etaplus0 = 10.8d0/1000/3600*dt
     EndIf
+    
+    
     !!$OMP parallel do default(none) shared(MeshParam,HydroParam,MeteoParam) private(iElem,Er,e_sat,B_Evap,e_evap,Ea,DELTA,NearZero,dt)
     Do iElem=1,MeshParam%nElem
         HydroParam%etaplus(iElem) = etaplus0

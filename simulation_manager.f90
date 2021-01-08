@@ -155,8 +155,7 @@
     
     !7.1 Get Pressure Boundary Condition intial values to initialize etaInf in time n-1:
     Do i = 1,HydroParam%NWaterLevel
-        HydroParam%WaterLevel(i) = HydroParam%WaterLevelValue(i,1)    
-        HydroParam%WaterLevel(i) = 0.214 + 0.06*cos(2*HydroParam%pi*(0)/(355.0d0)) !CAYO
+        HydroParam%WaterLevel(i) = HydroParam%WaterLevelValue(i,1)
     EndDo  
     Do iElem = 1,MeshParam%nElem  
         Do iEdge = 1,4

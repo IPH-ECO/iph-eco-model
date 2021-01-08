@@ -109,6 +109,7 @@ Subroutine DestroyHydro(HydroParam)
     Deallocate(HydroParam%ElSmallms)
     Deallocate(HydroParam%ElCapitalMs)    
     
+    Deallocate(HydroParam%etak)
     
     Deallocate(HydroParam%DZsj) !CAYO
     Deallocate(HydroParam%DZsjt)!CAYO
@@ -120,7 +121,9 @@ Subroutine DestroyHydro(HydroParam)
     Deallocate(HydroParam%DZhit)!CAYO
     Deallocate(HydroParam%Vol)!CAYO
     Deallocate(HydroParam%DZK) !Sediment Layer
+    Deallocate(HydroParam%Gusub) !Sediment Layer
     
+
     Deallocate(HydroParam%us)!CAYO
     Deallocate(HydroParam%ust)!CAYO
     Deallocate(HydroParam%ustang)!CAYO

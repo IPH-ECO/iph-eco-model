@@ -12,31 +12,19 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
     type(MeshGridParam) :: MeshParam
     type(HydrodynamicParam) :: HydroParam
     type(MeteorologicalParam) :: MeteoParam
-    Integer:: iEdge,iLayer, DIM, l, r, i
+    Integer:: iEdge,iLayer, DIM, l, r, i, n
     Real:: aTh(MeshParam%KMax), bTh(MeshParam%KMax), cTh(MeshParam%KMax), fTh(MeshParam%KMax)
     Real:: dt,dzk,dzm,DZsjAcum,GammaB,GammaT,rhoair,chezy,rhoaircell
     Real :: bp(MeshParam%KMax),vp(MeshParam%KMax),a_aux(MeshParam%KMax),b_aux(MeshParam%KMax),c_aux(MeshParam%KMax),v_aux(MeshParam%KMax),x_aux(MeshParam%KMax),d_aux(MeshParam%KMax),x(MeshParam%KMax)
     Real :: w, H
     Real:: NearZero = 1e-10
 
-    ! 11.1 Surface Velocity    
+    ! 11.1 Surface Velocity 
+    !!$OMP parallel do default(none) shared(MeshParam,HydroParam,MeteoParam) private(iEdge,iLayer,l,r,H,Chezy,rhoairCell,aTh,bTh,cTh,fTh,dzk,dzm,a_aux,b_aux,c_aux,d_aux,v_aux,x,w,x_aux,DIM,NearZero,dt)    
     Do iEdge = 1, MeshParam%nEdge
         l = MeshParam%Left(iEdge) 
         r = MeshParam%Right(iEdge)
-               
-        !!bench 02:
-        !if ( 100-NearZero <= MeshParam%EdgeBary(1,iEdge)<= 100 + NearZero) then
-        !    if (MeshParam%EdgeBary(2,iEdge) >= 110 - NearZero) then
-        !        HydroParam%u(:,iEdge)  = 0.
-        !        HydroParam%Fu(:,iEdge) = 0.
-        !        r = 0
-        !    elseif(MeshParam%EdgeBary(2,iEdge) <= 90 + NearZero) then
-        !        HydroParam%u(:,iEdge)  = 0.
-        !        HydroParam%Fu(:,iEdge) = 0.   
-        !        r = 0
-        !    endif
-        !endif        
-
+        
         ! 11.1.1 Get roughness 
         H = HydroParam%H(iEdge)+HydroParam%sj(iEdge)-HydroParam%hj(iEdge) !Surface Water Height
         If (r == 0) Then
@@ -73,10 +61,7 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
                     ! 2D Case:
                     If (HydroParam%Smallm(iEdge) == HydroParam%CapitalM(iEdge)) Then
                         !Casulli,2015:
-                        HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  = (HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge)/(HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge) + HydroParam%GammaB*dt + NearZero))*(HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (1.-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etaInfn(l) - HydroParam%etan(l))) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%etaInf(l) - HydroParam%eta(l)))
-                        !Casulli,2016:
-                        !HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  = (HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge)/(HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge) + HydroParam%GammaB*dt + NearZero))*(HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%etaInf(l) - HydroParam%eta(l)))
-                        !HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  = (HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (1.-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etaInfn(l) - HydroParam%etan(l))) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%etaInf(l) - HydroParam%eta(l)))
+                        HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  = (HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge)/(HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge) + HydroParam%GammaB*dt + NearZero))*(HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (1.-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etaInfn(l) - HydroParam%etan(l))) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%etaInf(l) - HydroParam%eta(l)))                    
                     Else
                         !3D Case:
                         Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)
@@ -89,8 +74,8 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
                                 fTh(iLayer) = HydroParam%DZhjt(iLayer,iEdge)*MeshParam%EdgeLength(iEdge)*(HydroParam%Fu(iLayer,iEdge) - (1.-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etaInfn(l) - HydroParam%etan(l))) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%etaInf(l) - HydroParam%eta(l)))
                             Elseif (iLayer == HydroParam%CapitalM(iEdge)) Then
                                 dzk         = 0.5*(HydroParam%DZhjt(iLayer,iEdge) + HydroParam%DZhjt(iLayer-1,iEdge)) 
-                                aTh(iLayer) = -MeshParam%EdgeLength(iEdge)*dt/HydroParam%DZhjt(iLayer,iEdge)*(HydroParam%VerEddyVisc(iLayer,iEdge)/dzk)
-                                bTh(iLayer) = MeshParam%EdgeLength(iEdge)*(HydroParam%DZhjt(iLayer,iEdge) + dt*(HydroParam%VerEddyVisc(iLayer,iEdge)/dzk))
+                                aTh(iLayer) = -MeshParam%EdgeLength(iEdge)*dt*(HydroParam%VerEddyVisc(iLayer,iEdge)/dzk)
+                                bTh(iLayer) =  Max(NearZero, MeshParam%EdgeLength(iEdge)*(HydroParam%DZhjt(iLayer,iEdge) + dt*(HydroParam%VerEddyVisc(iLayer,iEdge)/dzk)))
                                 cTh(iLayer) = 0.
                                 fTh(iLayer) = HydroParam%DZhjt(iLayer,iEdge)*MeshParam%EdgeLength(iEdge)*(HydroParam%Fu(iLayer,iEdge) - (1.-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etaInfn(l) - HydroParam%etan(l))) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%etaInf(l) - HydroParam%eta(l)))
                             Else
@@ -102,36 +87,37 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
                                 fTh(iLayer) = HydroParam%DZhjt(iLayer,iEdge)*MeshParam%EdgeLength(iEdge)*(HydroParam%Fu(iLayer,iEdge) - (1.-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etaInfn(l) - HydroParam%etan(l))) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%etaInf(l) - HydroParam%eta(l)))
                             EndIf
                         EndDo
-                        !n = size(HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),1)
-                        !Call solve_tridiag(cTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),bTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),aTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),fTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),DIM)
+                        n = size(HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),1)
+                        Call solve_tridiag(cTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),bTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),aTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),fTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),n)
                     
-                        !Tridiagonal Matrix solver
-                        !Flipping matrix
-                        do i = HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),-1
-                         a_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallm(iEdge)) = cTh(i)
-                         b_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallm(iEdge)) = bTh(i)
-                         c_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallm(iEdge)) = aTh(i)
-                         v_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallm(iEdge)) = fTh(i)
-                        enddo
- 
-                        d_aux = 0   
-                        x = d_aux
-                        w = b_aux(HydroParam%Smallm(iEdge))
-                        x(HydroParam%Smallm(iEdge)) = v_aux(HydroParam%Smallm(iEdge))/w
-                        do i=HydroParam%Smallm(iEdge)+1,HydroParam%CapitalM(iEdge)
-                            d_aux(i-1) = c_aux(i-1)/w;
-                            w = b_aux(i) - a_aux(i)*d_aux(i-1);
-                            x(i) = ( v_aux(i) - a_aux(i)*x(i-1) )/w;
-                        enddo
-                        do i=HydroParam%CapitalM(iEdge)-1, HydroParam%Smallm(iEdge), -1
-                           x(i) = x(i) - d_aux(i)*x(i+1);
-                        enddo
-
-                        !Flipping matrix
-                        do i = HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),-1
-                         x_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallm(iEdge)) = x(i)
-                        enddo
-                        HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge) = x_aux(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge))
+                        !!Tridiagonal Matrix solver
+                        !!Flipping matrix
+                        !do i = HydroParam%CapitalM(iEdge),HydroParam%Smallms(iEdge),-1
+                        ! a_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallms(iEdge)) = cTh(i)
+                        ! b_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallms(iEdge)) = bTh(i)
+                        ! c_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallms(iEdge)) = aTh(i)
+                        ! v_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallms(iEdge)) = fTh(i)
+                        !enddo
+                        !
+                        !d_aux = 0   
+                        !x = d_aux
+                        !w = b_aux(HydroParam%Smallm(iEdge))
+                        !x(HydroParam%Smallm(iEdge)) = v_aux(HydroParam%Smallm(iEdge))/w
+                        !do i=HydroParam%Smallm(iEdge)+1,HydroParam%CapitalM(iEdge)
+                        !    d_aux(i-1) = c_aux(i-1)/w;
+                        !    w = b_aux(i) - a_aux(i)*d_aux(i-1);
+                        !    x(i) = ( v_aux(i) - a_aux(i)*x(i-1) )/w;
+                        !enddo
+                        !do i=HydroParam%CapitalM(iEdge)-1, HydroParam%Smallm(iEdge), -1
+                        !   x(i) = x(i) - d_aux(i)*x(i+1);
+                        !enddo
+                        !
+                        !!Flipping matrix
+                        !do i = HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),-1
+                        ! x_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallm(iEdge)) = x(i)
+                        !enddo
+                        !HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge) = x_aux(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge))
+                        !
                     EndIf
                 EndIf
             EndIf
@@ -139,14 +125,13 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
             !Cell without bound conditions:
             ! If a face is dry, set the velocity to zero
             If ( Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%etan(l), -HydroParam%hj(iEdge) + HydroParam%etan(r) ) <= HydroParam%PCRI/2+NearZero.or.Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI/2+NearZero) Then
+            !If (Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI/2+NearZero) Then
                 HydroParam%u(:,iEdge)  = 0.d0
             Else
                 !2D Case:
                 If (HydroParam%Smallm(iEdge) == HydroParam%CapitalM(iEdge)) Then
                     !Casulli,2015:
-                    HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  = (HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge)/(HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge) + HydroParam%GammaB*dt + NearZero))*(HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (1.d0-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etan(r) - HydroParam%etan(l))) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%eta(r) - HydroParam%eta(l)))
-                    !Casulli,2016:
-                    !HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  = (HydroParam%DZhjt(iLayer,iEdge)/(HydroParam%DZhjt(iLayer,iEdge) + HydroParam%GammaB*dt + NearZero))*(HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%eta(r) - HydroParam%eta(l)))
+                    HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  = (HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge)/(HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge) + HydroParam%GammaB*dt + NearZero))*(HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (1.d0-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etan(r) - HydroParam%etan(l))) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%eta(r) - HydroParam%eta(l)))                    
                     !3D Case:
                 Else             
                     !DZjt must be DZjht for subsurface case
@@ -160,7 +145,7 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
                         Elseif (iLayer == HydroParam%CapitalM(iEdge)) Then
                             dzk         = 0.5d0*(HydroParam%DZhjt(iLayer,iEdge) + HydroParam%DZhjt(iLayer-1,iEdge)) 
                             aTh(iLayer) = -MeshParam%EdgeLength(iEdge)*dt*(HydroParam%VerEddyVisc(iLayer,iEdge)/dzk)
-                            bTh(iLayer) = MeshParam%EdgeLength(iEdge)*(HydroParam%DZhjt(iLayer,iEdge) + dt*(HydroParam%VerEddyVisc(iLayer,iEdge)/dzk))
+                            bTh(iLayer) = Max(NearZero,MeshParam%EdgeLength(iEdge)*(HydroParam%DZhjt(iLayer,iEdge) + dt*(HydroParam%VerEddyVisc(iLayer,iEdge)/dzk)))
                             cTh(iLayer) = 0.d0
                             fTh(iLayer) = HydroParam%DZhjt(iLayer,iEdge)*MeshParam%EdgeLength(iEdge)*(HydroParam%Fu(iLayer,iEdge) - (1.-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etan(r) - HydroParam%etan(l)) + ( HydroParam%q(iLayer,r)-HydroParam%q(iLayer,l) )) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%eta(r) - HydroParam%eta(l)))
                         Else
@@ -172,37 +157,37 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
                             fTh(iLayer) = HydroParam%DZhjt(iLayer,iEdge)*MeshParam%EdgeLength(iEdge)*(HydroParam%Fu(iLayer,iEdge) - (1.d0-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etan(r) - HydroParam%etan(l)) + ( HydroParam%q(iLayer,r)-HydroParam%q(iLayer,l) )) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%eta(r) - HydroParam%eta(l)))
                         EndIf
                     EndDo
-                    !n = size(HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),1)
-                    !Call solve_tridiag(cTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),bTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),aTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),fTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),DIM)
+                    n = size(HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),1)
+                    Call solve_tridiag(cTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),bTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),aTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),fTh(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge)),HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge),n)
                     
-                    !Tridiagonal Matrix solver
-                    !Flipping matrix
-                    do i = HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),-1
-                     a_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallm(iEdge)) = cTh(i)
-                     b_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallm(iEdge)) = bTh(i)
-                     c_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallm(iEdge)) = aTh(i)
-                     v_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallm(iEdge)) = fTh(i)
-                    enddo
- 
-                    d_aux = 0.d0   
-                    x = d_aux
-                    w = b_aux(HydroParam%Smallm(iEdge))
-                    x(HydroParam%Smallm(iEdge)) = v_aux(HydroParam%Smallm(iEdge))/w
-                    do i=HydroParam%Smallm(iEdge)+1.d0,HydroParam%CapitalM(iEdge)
-                        d_aux(i-1.d0) = c_aux(i-1.d0)/w;
-                        w = b_aux(i) - a_aux(i)*d_aux(i-1.d0);
-                        x(i) = ( v_aux(i) - a_aux(i)*x(i-1.d0) )/w;
-                    enddo
-                    do i=HydroParam%CapitalM(iEdge)-1.d0, HydroParam%Smallm(iEdge), -1.d0
-                       x(i) = x(i) - d_aux(i)*x(i+1.d0);
-                    enddo
-
-                    !Flipping matrix
-                    do i = HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),-1.d0
-                     x_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallm(iEdge)) = x(i)
-                    enddo
-                    HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge) = x_aux(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge))
-                    
+                    !!Tridiagonal Matrix solver
+                    !!Flipping matrix
+                    !do i = HydroParam%CapitalM(iEdge),HydroParam%Smallms(iEdge),-1
+                    ! a_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallms(iEdge)) = cTh(i)
+                    ! b_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallms(iEdge)) = bTh(i)
+                    ! c_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallms(iEdge)) = aTh(i)
+                    ! v_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallms(iEdge)) = fTh(i)
+                    !enddo
+                    !
+                    !d_aux = 0.d0   
+                    !x = d_aux
+                    !w = b_aux(HydroParam%Smallm(iEdge))
+                    !x(HydroParam%Smallm(iEdge)) = v_aux(HydroParam%Smallm(iEdge))/w
+                    !do i=HydroParam%Smallm(iEdge)+1.d0,HydroParam%CapitalM(iEdge)
+                    !    d_aux(i-1.d0) = c_aux(i-1.d0)/w;
+                    !    w = b_aux(i) - a_aux(i)*d_aux(i-1.d0);
+                    !    x(i) = ( v_aux(i) - a_aux(i)*x(i-1.d0) )/w;
+                    !enddo
+                    !do i=HydroParam%CapitalM(iEdge)-1.d0, HydroParam%Smallm(iEdge), -1.d0
+                    !   x(i) = x(i) - d_aux(i)*x(i+1.d0);
+                    !enddo
+                    !
+                    !!Flipping matrix
+                    !do i = HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),-1.d0
+                    ! x_aux(HydroParam%CapitalM(iEdge)-i+HydroParam%Smallm(iEdge)) = x(i)
+                    !enddo
+                    !HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge) = x_aux(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge))
+                    !
                 EndIf
             EndIf
         EndIf  
@@ -218,23 +203,30 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
         HydroParam%Hu(iEdge) = Sum(HydroParam%u(HydroParam%Smallm(iEdge):HydroParam%CapitalM(iEdge),iEdge))/(HydroParam%CapitalM(iEdge)-HydroParam%Smallm(iEdge)+1.d0)
         HydroParam%um(:,iEdge) =  HydroParam%u(:,iEdge)
     EndDo
+    !!$OMP end parallel do
     
     !11.2 Subsuperficial Velocities
     HydroParam%us(:,:) = 0.d0
     If (MeshParam%iBedrock == 1) Then
+    !$OMP parallel do default(none) shared(MeshParam,HydroParam) private(iLayer,r,l,iEdge,NearZero)
         Do iEdge = 1, MeshParam%nEdge
-            DZsjAcum = 0.d0
+            !DZsjAcum = 0.d0
             l = MeshParam%Left(iEdge) 
             r = MeshParam%Right(iEdge)
-			If(HydroParam%DZsj(HydroParam%Smallms(iEdge),iEdge) > 0) Then ! If Edge lower layer have sediment thickness
+			If(HydroParam%DZsjt(HydroParam%Smallms(iEdge),iEdge) > 0) Then ! If Edge lower layer have sediment thickness
                 If (r == 0) Then
                     If (HydroParam%IndexWaterLevelEdge(iEdge)>0.and.-HydroParam%sj(iEdge) + HydroParam%eta(l)>HydroParam%PCRI/2.d0+NearZero) Then
                         If ((HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge).and.HydroParam%Smallms(iEdge) == HydroParam%CapitalM(iEdge) )) Then
-                                HydroParam%us(HydroParam%Smallms(iEdge),iEdge)  =   -MeshParam%Kj(HydroParam%Smallms(iEdge),iEdge)*(HydroParam%etaInf(l) - HydroParam%etan(l))/MeshParam%CirDistance(iEdge)
+                            !HydroParam%Gusub(HydroParam%Smallms(iEdge),iEdge)  = (1-HydroParam%Theta)*HydroParam%us(HydroParam%Smallms(iEdge),iEdge) 
+                            !HydroParam%us(HydroParam%Smallms(iEdge),iEdge)  =   HydroParam%Gusub(HydroParam%Smallms(iEdge),iEdge)-MeshParam%Kj(HydroParam%Smallms(iEdge),iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
+                            HydroParam%us(HydroParam%Smallms(iEdge),iEdge)  =   -MeshParam%Kj(HydroParam%Smallms(iEdge),iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
                         Else
                             Do iLayer = HydroParam%Smallms(iEdge),HydroParam%CapitalMs(iEdge)
-                                If(HydroParam%DZsj(iLayer,iEdge) > 0 ) Then  
-                                    HydroParam%us(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etaInf(l) - HydroParam%etan(l))/MeshParam%CirDistance(iEdge)                                   
+                                !If(HydroParam%DZsj(iLayer,iEdge) > 0 ) Then  
+                                If(MeshParam%Kj(iLayer,iEdge) > 0) Then  
+                                    !HydroParam%Gusub(iLayer,iEdge)  = (1-HydroParam%Theta)*HydroParam%us(iLayer,iEdge) 
+                                    !HydroParam%us(iLayer,iEdge)    =   HydroParam%Gusub(iLayer,iEdge)-MeshParam%Kj(iLayer,iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)                                   
+                                    HydroParam%us(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)                                   
                                     !HydroParam%us(iLayer,iEdge)   =  (1-HydroParam%Theta)*HydroParam%us(iLayer,iEdge) - MeshParam%Kj(iLayer,iEdge)*HydroParam%Theta*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
                                     !HydroParam%u(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
                                 EndIf
@@ -243,26 +235,29 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
                     EndIf
                 Else
                     Do iLayer = HydroParam%Smallms(iEdge),HydroParam%CapitalM(iEdge)
-                        If(HydroParam%DZsj(iLayer,iEdge) > 0) Then
-                            DZsjAcum = DZsjAcum + HydroParam%DZsj(iLayer,iEdge)
-                            If(HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge)) Then
-                                HydroParam%us(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etan(r) - HydroParam%etan(l))/MeshParam%CirDistance(iEdge)            
-                            ElseIf(HydroParam%eta(r) - DZsjAcum > HydroParam%PCRI+NearZero .or. HydroParam%eta(l) - DZsjAcum >  HydroParam%PCRI/2.d0+NearZero) Then
-                                HydroParam%us(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etan(r) - HydroParam%etan(l))/MeshParam%CirDistance(iEdge)            
-                                !HydroParam%us(iLayer,iEdge)    =  (1-HydroParam%Theta)*HydroParam%us(iLayer,iEdge) - MeshParam%Kj(iLayer,iEdge)*HydroParam%Theta*(HydroParam%etan(r) - HydroParam%etan(l))/MeshParam%CirDistance(iEdge)                         
-                                !HydroParam%u(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etan(r) - HydroParam%etan(l))/MeshParam%CirDistance(iEdge)
-                            EndIf
+                        !If(HydroParam%DZsj(iLayer,iEdge) > 0) Then
+                        If(MeshParam%Kj(iLayer,iEdge) > 0) Then 
+                            !HydroParam%Gusub(iLayer,iEdge)  = (1-HydroParam%Theta)*HydroParam%us(iLayer,iEdge) 
+                            !HydroParam%us(iLayer,iEdge)    = HydroParam%Gusub(iLayer,iEdge)-MeshParam%Kj(iLayer,iEdge)*(HydroParam%eta(r) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)                                        
+                            HydroParam%us(iLayer,iEdge)    = -MeshParam%Kj(iLayer,iEdge)*(HydroParam%eta(r) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)                                        
+                            !DZsjAcum = DZsjAcum + HydroParam%DZsj(iLayer,iEdge)
+                            !If(HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge)) Then
+                            !    HydroParam%us(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%etan(r) - HydroParam%etan(l))/MeshParam%CirDistance(iEdge)            
+                            !ElseIf(HydroParam%eta(r) - DZsjAcum > HydroParam%PCRI/2.d0+NearZero .or. HydroParam%eta(l) - DZsjAcum >  HydroParam%PCRI/2.d0+NearZero) Then
+                            !    HydroParam%us(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%eta(r) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)            
+                            !    !HydroParam%us(iLayer,iEdge)    =  (1-HydroParam%Theta)*HydroParam%us(iLayer,iEdge) - MeshParam%Kj(iLayer,iEdge)*HydroParam%Theta*(HydroParam%etan(r) - HydroParam%etan(l))/MeshParam%CirDistance(iEdge)                         
+                            !    !HydroParam%u(iLayer,iEdge)    =   -MeshParam%Kj(iLayer,iEdge)*(HydroParam%eta(r) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)
+                            !EndIf
                         EndIf
-
 				    EndDo   
                 EndIf
+	            ! 11.2 Nullify Velocities Below the Bottom (u=0) 
+                Do iLayer = 1, HydroParam%Smallms(iEdge) - 1.d0
+                    HydroParam%us(iLayer,iEdge) = 0.d0
+                EndDo                  
 			EndIf
-	        ! 11.2 Nullify Velocities Below the Bottom (u=0) 
-            Do iLayer = 1, HydroParam%Smallms(iEdge) - 1.d0
-                HydroParam%us(iLayer,iEdge) = 0.d0
-            EndDo            
         EndDo
+        !$OMP end parallel do
     EndIf
-    
     Return    
 End Subroutine uvelocity

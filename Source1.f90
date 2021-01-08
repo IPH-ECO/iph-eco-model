@@ -1159,3 +1159,608 @@
     !
     !return
     !End Subroutine iQuadraticNodes  
+    
+    !            
+    !        ! Ci(iElem), Psicrit:
+    !        Ci = 0.d0
+    !        HydroParam%Q(iElem) = 0.d0
+    !        HydroParam%P(iElem) = 0.d0
+    !        V1 = 0.d0
+    !        iLayer = 0
+    !        PscritFlag = 0            
+    !        If(MeshParam%iSaturation == 0) Then !Surface or Darcy's Model  
+    !            PsiCrit = HydroParam%sb(iElem)
+    !            If(eta >= PsiCrit + HydroParam%PCRI/2.0d0 + NearZero) Then
+    !                Ci = 1
+    !                !Vcri = Ci*PsiCrit*MeshParam%ei(MeshParam%ElCapitalMs(iElem),iElem)*MeshParam%Area(iElem)
+    !            EndIf
+    !        ElseIf(MeshParam%iSaturation == 2) Then ! Brooks and Corey's Model
+    !            PsiCrit = HydroParam%sb(iElem) - 1/MeshParam%alpha(MeshParam%ElCapitalMs(iElem),iElem) !alpha -> iElem
+    !            If(eta > PsiCrit + NearZero) Then
+    !                !In this case HydroParam%P == Ci(Psicrit)
+    !                !HydroParam%P(iElem) = ((PsiCrit)**(1 + MeshParam%nSoil(MeshParam%CapitalMs(iElem),iElem)))*MeshParam%alpha(MeshParam%ElCapitalMs(iElem),iElem)**2
+    !                !HydroParam%P(iElem) = MeshParam%nSoil(MeshParam%ElCapitalMs(iElem),iElem)/Ci
+    !                While (PscritFlag == 0) Then
+    !                    iLayer = iLayer + 1
+    !                    If (eta > HydroParam%Ze(iLayer+1,iElem)) Then
+    !                        HydroParam%P(iElem) = HydroParam%P( iElem) + HydroParam%DZsi(iLayer,iElem)*MeshParam%ei(iLayer,iElem)*MeshParam%nSoil(iLayer,iElem)/((HydroParam%Zb(iLayer,iElem) - eta)*(1 + MeshParam%nSoil(iLayer,iElem)))*MeshParam%alpha(iLayer,iElem)**2
+    !                        HydroParam%Q = -HydroParam%P(iElem)
+    !                        V1 = V1 + HydroParam%DZsi(iLayer,iElem)*HydroParam%Q
+    !                    Else
+    !                        ! Find PsiCrit Layer:
+    !                        PscritFlag = 1
+    !                        HydroParam%P(iElem) = HydroParam%P(iElem) + (HydroParam%Ze(iLayer,iElem)-PsiCrit)*MeshParam%ei(iLayer,iElem)*MeshParam%nSoil(iLayer,iElem)/((HydroParam%Ze(iLayer,iElem)-PsiCrit)*0.5*(1 + MeshParam%nSoil(iLayer,iElem)))*MeshParam%alpha(iLayer,iElem)**2                            
+    !                        V1 = V1 + (HydroParam%Ze(iLayer,iElem)-PsiCrit)*MeshParam%ei(iLayer,iElem)*MeshParam%Si(iLayer,iElem)
+    !                    EndIf
+    !            EndDo
+    !            
+    !                V1 = MeshParam%Area(iElem)*(V1 + HydroParam%P(iElem)*(eta - Psicrit)*MeshParam%ei(iLayer-1,iElem))
+    !                
+    !               HydroParam%Q = Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
+    !                
+    !                HydroParam%Q(iElem) = MeshParam%Area(iElem)*(HydroParam%Q(iElem) + HydroParam%P(iElem)) 
+    !                HydroParam%P(iElem) = HydroParam%P(iElem)*MeshParam%Area(iElem)
+    !            Else
+    !                HydroParam%P(iElem) = ((eta)**(1 + MeshParam%nSoil(MeshParam%CapitalMs(iElem),iElem)))*MeshParam%alpha(MeshParam%ElCapitalMs(iElem),iElem)**2
+    !                HydroParam%P(iElem) = MeshParam%nSoil(MeshParam%ElCapitalMs(iElem),iElem)/Ci
+    !                While (PscritFlag == 0) Then
+    !                    iLayer = iLayer + 1
+    !                    If (eta > HydroParam%Ze(iLayer+1,iElem)) Then
+    !                        V1 = V1 +  HydroParam%DZsi(iLayer,iElem)*MeshParam%ei(iLayer,iElem)*MeshParam%nSoil(iLayer,iElem)/((HydroParam%Zb(iLayer,iElem) - eta)*(1 + MeshParam%nSoil(iLayer,iElem)))*MeshParam%alpha(iLayer,iElem)**2
+    !                    Else
+    !                        ! Find eta Layer:
+    !                        PscritFlag = 1
+    !                        V1 = V1 + (HydroParam%Ze(iLayer,iElem)-PsiCrit)*MeshParam%ei(iLayer,iElem)*HydroParam%P(iElem)
+    !                    EndIf
+    !                EndDo
+    !            Endif
+    !                
+    !                PscritFlag = 0
+    !                iLayer = 0
+    !                Do iLayer = 
+    !                While( PscritFlag == 0) Then
+    !                    iLayer = iLayer + 1
+    !                    If (eta < HydroParam%Zb(iLayer,iElem)) Then
+    !                        HydroParam%P(iElem) = 
+    !                    Else
+    !                        PscritFlag = 1
+    !                    EndIf
+    !                
+    !                EndDo While
+    !            EndIf
+    !        Else !van Genuchten's Model
+    !            mParam = (1-1/MeshParam%nSoil(MeshParam%ElCapitalMs(iElem),iElem))
+    !            PsiCrit = HydroParam%sb(iElem) - (1/MeshParam%alpha(MeshParam%ElCapitalMs(iElem),iElem))*((MeshParam%nSoil(MeshParam%CapitalMs(iElem),iElem) - 1)/MeshParam%nSoil(MeshParam%CapitalMs(iElem),iElem)) !alpha -> iElem
+    !            If(eta >= PsiCrit + NearZero) Then
+    !                HydroParam%P(iElem)  = MeshParam%alpha(MeshParam%ElCapitalMs(iElem),iElem)*MeshParam%nSoil(MeshParam%ElCapitalMs(iElem),iElem)*mPAram*abs(MeshParam%alpha(MeshParam%ElCapitalMs(iElem),iElem)*Psicrit)**(MeshParam%nSoil(MeshParam%CapitalMs(iElem),iElem)-1)
+    !                HydroParam%P(iElem)  = HydroParam%P(iElem)/(MeshParam%alpha(MeshParam%ElCapitalMs(iElem),iElem)*abs(Psicrit)**(MeshParam%nSoil(MeshParam%ElCapitalMs(iElem),iElem)) + 1)**(mParam + 1)
+    !                !Vcri = HydroParam%P(iElem)*PsiCrit*MeshParam%ei(MeshParam%ElCapitalMs(iElem),iElem)*MeshParam%Area(iElem)
+    !            EndIf
+    !        EndIf
+    !        
+    !
+    !        
+    !        
+    !        
+    !    EndDo
+    !    
+    !    
+    !EndDo
+    !
+    
+    !
+    ! 
+    !!HydroParam%etak = HydroParam%eta    
+    !!Do iNewton = 1,200
+    !!    ! 8.2.1 Assemble Matrices F (System Matrix - Newton Method) and P (Derivative Matrix)
+    !!    HydroParam%Qmatrix = 0.d0 !always in k-1 (%etak)
+    !!    
+    !!    !!xx. Calculate %Aeta == T.eta:
+    !!    HydroParam%P = 0.d0   !always in k (%eta), change every iteration in CGOp
+    !!    Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)
+    !!    
+    !!    !Do iElem = 1, MeshParam%nElem
+    !!    !    !xx. V2(etak, V1(%etak)) and Q(k-1):
+    !!    !    Call SoilSaturation(HydroParam%etak(iElem),iElem,HydroParam,MeshParam)
+    !!    !    Call MatrixPQV(HydroParam%etak(iElem),HydroParam%Qmatrix(iElem),V1aux,HydroParam%Vol2(iElem),iElem,HydroParam,MeshParam)
+    !!    !EndDo
+    !!    !!xx. Calculate %Aeta == [T - Q(k-1)]eta:
+    !!    !HydroParam%P = 0.d0   !always in k (%eta), change every iteration in CGOp
+    !!    !Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)
+    !!    
+    !!    Do iElem = 1, MeshParam%nElem
+    !!        !xx. Calculate %Vol == V1(eta):
+    !!        Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam)
+    !!        Call MatrixPQV(HydroParam%eta(iElem),Qaux,HydroParam%Vol(iElem),V2aux,iElem,HydroParam,MeshParam)
+    !!        
+    !!        !xx. V2(etak, V2(%etak)) and Q(k-1):
+    !!        Call SoilSaturation(HydroParam%etak(iElem),iElem,HydroParam,MeshParam)
+    !!        Call MatrixPQV(HydroParam%etak(iElem),HydroParam%Qmatrix(iElem),V1aux,HydroParam%Vol2(iElem),iElem,HydroParam,MeshParam)
+    !!        
+    !!        !xx. Compute Outer Iteration Newton Method's Residual for each iElem:
+    !!        !%F = V1(eta) + [T - Q(k-1)]eta - rhs - V2(etak) + Q(k-1).etak = V1(eta) + [T - Q(k-1)]eta - d(k-1)
+    !!        HydroParam%d(iElem) = HydroParam%rhs(iElem) + HydroParam%Vol2(iElem) - HydroParam%Qmatrix(iElem)*HydroParam%etak(iElem)
+    !!        !HydroParam%F(iElem) = HydroParam%Vol(iElem) + HydroParam%Aeta(iElem) - HydroParam%d(iElem)         
+    !!        HydroParam%F(iElem) = HydroParam%Vol(iElem) - V2aux - HydroParam%Aeta(iElem) - HydroParam%rhs(iElem)        
+    !!        
+    !!    EndDo        
+    !!
+    !!    res = sqrt(sum(HydroParam%F**2))      ! Residual of the Method
+    !!    !Print*, 'iNewton = ',iNewton , 'res = ',res
+    !!    If ( res < 1e-8 ) Then
+    !!        continue
+    !!        exit
+    !!    EndIf
+    !!    
+    !!    !eta(k-1) = eta(k,l-1)
+    !!    HydroParam%etak = HydroParam%eta
+    !!    Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)
+    !!    HydroParam%F = HydroParam%Vol + HydroParam%Aeta - HydroParam%d - HydroParam%P*HydroParam%eta
+    !!    HydroParam%etam = HydroParam%eta
+    !!    
+    !!    Do iNewtonIn = 1,200
+    !!
+    !!        ! 8.2.5 Compute the New Free-Surface Elevation
+    !!        Call CGOp(HydroParam%F,HydroParam%Deta,dt,HydroParam,MeshParam)
+    !!        HydroParam%etam = HydroParam%eta
+    !!        HydroParam%eta = HydroParam%eta - HydroParam%Deta
+    !!
+    !!        !xx. Calculate %Aeta == [T - Q(k-1)].eta(k,l):
+    !!        HydroParam%P = 0.d0
+    !!        Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)
+    !!        
+    !!        !xx. Compute Inner Iteration Newton Method's Residual for each iElem:
+    !!        ! %F == V1(eta(k,m)) + [T - Q(k-1)].eta(k,m) - d(k-1)
+    !!        Do iElem = 1, MeshParam%nElem
+    !!            Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam)
+    !!            Call MatrixPQV(HydroParam%eta(iElem),Qaux,HydroParam%Vol(iElem),V2aux,iElem,HydroParam,MeshParam)
+    !!            HydroParam%F(iElem) = HydroParam%Vol(iElem) - HydroParam%Aeta(iElem) - HydroParam%d(iElem)
+    !!        EndDo
+    !!        
+    !!        res = sqrt(sum(HydroParam%F**2))      ! Residual of the Method
+    !!        !Print*, 'iNewton = ',iNewton , 'res = ',res
+    !!        If ( res < 1e-8 ) Then
+    !!            continue
+    !!            exit
+    !!        EndIf
+    !!        
+    !!        !xx. 
+    !!        Do iElem = 1, MeshParam%nElem
+    !!            Call SoilSaturation(HydroParam%etam(iElem),iElem,HydroParam,MeshParam)
+    !!            Call MatrixPQV(HydroParam%etam(iElem),Qaux,HydroParam%Vol(iElem),V2aux,iElem,HydroParam,MeshParam)
+    !!            HydroParam%F(iElem) =  HydroParam%P(iElem)*HydroParam%etam(iElem) - HydroParam%Vol(iElem) + HydroParam%d(iElem)
+    !!        EndDo
+    !!        Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam) 
+    !!        HydroParam%F = HydroParam%Aeta - HydroParam%F
+    !!        !
+    !!        !HydroParam%P = 0.d0
+    !!        !Do iElem = 1, MeshParam%nElem  
+    !!        !    !xx. Calculate %Vol == V1(eta):
+    !!        !    ! V1(k, l-1), P(k,l-1):
+    !!        !    Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam)
+    !!        !    Call MatrixPQV(HydroParam%eta(iElem),Qaux,HydroParam%Vol(iElem),V2aux,iElem,HydroParam,MeshParam)
+    !!        !    !! smallF =  d(k-1) - V1(k,l-1) - P(k,l-1).eta(k,l-1):
+    !!        !    !HydroParam%SmallF(iElem) =  HydroParam%d(iElem) - HydroParam%Vol(iElem) + HydroParam%P(iElem)*HydroParam%eta(iElem)
+    !!        !    !
+    !!        !    !eta(k,l) = eta(k,l-1) - Deta 
+    !!        !    HydroParam%eta(iElem) = HydroParam%eta(iElem) - HydroParam%Deta(iElem)     
+    !!        !EndDo
+    !!        ! 
+    !!        !!!xx. Calculate %Aeta == [P(k,l-1) + T - Q(k-1)].eta(k,l):
+    !!        !!Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)     
+    !!        !
+    !!        !!xx. Calculate %Aeta == [T - Q(k-1)].eta(k,l):
+    !!        !HydroParam%P = 0.d0
+    !!        !Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam) 
+    !!        !Do iElem = 1, MeshParam%nElem
+    !!        !    Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam)
+    !!        !    Call MatrixPQV(HydroParam%eta(iElem),Qaux,HydroParam%Vol(iElem),V2aux,iElem,HydroParam,MeshParam)
+    !!        !    HydroParam%F(iElem) = HydroParam%Vol(iElem)- HydroParam%Aeta(iElem) - HydroParam%d(iElem)
+    !!        !EndDo
+    !!        !!xx. Compute Inner Iteration Newton Method's Residual for each iElem:
+    !!        !! F = [P(k,l-1) + T - Q(k-1)].eta(k,l) - d(k-1) + V1(k,l-1) +P(k,l-1).eta(k,l-1)
+    !!        !HydroParam%F = HydroParam%Aeta - HydroParam%SmallF
+    !!        !
+    !!        !res = sqrt(sum(HydroParam%F**2))      ! Residual of the Method
+    !!        !!Print*, 'iNewton = ',iNewton , 'res = ',res
+    !!        !If ( res < 1e-8 ) Then
+    !!        !    continue
+    !!        !    exit
+    !!        !EndIf
+    !!    EndDo
+    !!    
+    !!EndDo
+    !
+    !
+    !! 8.2 Newton Loop for Non-Linear Wet- and Dry-ing Algorithm [2]
+    !HydroParam%etak = HydroParam%eta  
+    !Do iNewton = 1,400
+    !    ! 8.2.1 Assemble Matrices F (System Matrix - Newton Method) and P (Derivative Matrix)
+    !    HydroParam%P = 0.
+    !    HydroParam%F = 0.
+    !    Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)
+    !    !Call Volume(HydroParam,MeshParam)
+    !    
+    !    Do iElem = 1, MeshParam%nElem
+    !        !8.2.2 Volume with Eta at tn+1:
+    !        !Note that this point the volume is calculate without %etaplus term (source/sink), its considered in previous 
+    !        !time-step's %Vol(just before item 8)
+    !        Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam)
+    !        HydroParam%Vol(iElem) = 0.d0
+    !        If (V(HydroParam%eta(iElem),HydroParam%hb(iElem)) > 0) Then
+    !            HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) - HydroParam%hb(iElem))
+    !            If (HydroParam%DZsi(HydroParam%Smallms(iElem),iElem) > 0) Then
+    !                HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
+    !            EndIf
+    !        ElseIf (V(HydroParam%eta(iElem),HydroParam%sb(iElem)) > 0) Then
+    !            HydroParam%Vol(iElem) = MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
+    !            !HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(V(HydroParam%eta(iElem),HydroParam%sb(iElem)))*MeshParam%ei(HydroParam%Smallms(iElem),iElem)*MeshParam%Si(HydroParam%Smallms(iElem),iElem)
+    !        EndIf
+    !        
+    !        !8.2.3 Compute Newton Method's Residue for each iElem:
+    !        !In this point, MatOp Output = (T-Matrix)Eta
+    !        !We want F = 0 condition satisfied: V(nt+1) + T*n(t+1) = rhs :: F  = V(n(t+1)) + T*n(t+1) - rhs -> 0
+    !        HydroParam%F(iElem) = HydroParam%Vol(iElem) + HydroParam%Aeta(iElem) - HydroParam%rhs(iElem)
+    !        
+    !        !8.2.4 Fill P values in dry cell for CGOp computation:
+    !        !dF/dn = A*dn/dn + T, we want dF/dn = 0.
+    !        !HydroP = A*dn/dn, if cell is dry dn/dn = 0, else dn/dn = 1
+    !        HydroParam%P(iElem) = MeshParam%Area(iElem)*dV(HydroParam%eta(iElem),HydroParam%sb(iElem))
+    !        If(V(HydroParam%eta(iElem),HydroParam%hb(iElem)) < HydroParam%PCRI+NearZero .and. V(HydroParam%eta(iElem),HydroParam%sb(iElem)) > HydroParam%PCRI+NearZero ) Then
+    !            ilayer = 0
+    !            Flaglayer = 0
+    !            Do While (Flaglayer == 0)
+    !                ilayer = ilayer + 1
+    !                If(HydroParam%Ze(iLayer,iElem) < HydroParam%eta(iElem)) Then
+    !                    continue
+    !                Else
+    !                    Flaglayer = 1
+    !                endif
+    !            end do
+    !            !HydroParam%P(iElem) = MeshParam%Area(iElem)*MeshParam%ei(ilayer,iElem)*MeshParam%Si(ilayer,iElem)
+    !            HydroParam%P(iElem) = MeshParam%Area(iElem)*MeshParam%ei(ilayer,iElem)
+    !        Else
+    !             HydroParam%P(iElem) = MeshParam%Area(iElem)
+    !        EndIf
+    !        
+    !        If (V(HydroParam%eta(iElem),HydroParam%sb(iElem)) < HydroParam%PCRI+NearZero) Then
+    !            ! The Cell is Dry. The Solution is V(eta^(n+1)) = V(eta^(n))
+    !            HydroParam%P(iElem) = MeshParam%Area(iElem)       ! We can't allow the row to have zeros in all elements - If P = 1, the water level remains the same
+    !        EndIf
+    !        
+    !    EndDo        
+    !
+    !    res = sqrt(sum(HydroParam%F**2))      ! Residual of the Method
+    !    !Print*, 'iNewton = ',iNewton , 'res = ',res
+    !    If ( res < 1e-8 ) Then
+    !        continue
+    !        exit
+    !    EndIf
+    !    
+    !    HydroParam%etak = HydroParam%eta
+    !    !Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)
+    !    !HydroParam%F = HydroParam%Aeta + HydroParam%Vol -  HydroParam%rhs - HydroParam%P*HydroParam%eta
+    !    Do iNewtonIn = 1,200
+    !
+    !        ! 8.2.5 Compute the New Free-Surface Elevation
+    !        Call CGOp(HydroParam%F,HydroParam%Deta,dt,HydroParam,MeshParam)
+    !        HydroParam%etam = HydroParam%eta
+    !        HydroParam%eta = HydroParam%eta - HydroParam%Deta
+    !
+    !        !xx. Calculate %Aeta == [T - Q(k-1)].eta(k,l):
+    !        HydroParam%P = 0.d0
+    !        Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)
+    !        
+    !        Do iElem = 1, MeshParam%nElem 
+    !            
+    !            !8.2.4 Fill P values in dry cell for CGOp computation:
+    !            !dF/dn = A*dn/dn + T, we want dF/dn = 0.
+    !            !HydroP = A*dn/dn, if cell is dry dn/dn = 0, else dn/dn = 1
+    !            HydroParam%P(iElem) = MeshParam%Area(iElem)*dV(HydroParam%etam(iElem),HydroParam%sb(iElem))
+    !            If(V(HydroParam%etam(iElem),HydroParam%hb(iElem)) < HydroParam%PCRI+NearZero .and. V(HydroParam%etam(iElem),HydroParam%sb(iElem)) > HydroParam%PCRI+NearZero ) Then
+    !                ilayer = 0
+    !                Flaglayer = 0
+    !                Do While (Flaglayer == 0)
+    !                    ilayer = ilayer + 1
+    !                    If(HydroParam%Ze(iLayer,iElem) < HydroParam%etam(iElem)) Then
+    !                        continue
+    !                    Else
+    !                        Flaglayer = 1
+    !                    endif
+    !                end do
+    !                HydroParam%P(iElem) = MeshParam%Area(iElem)*MeshParam%ei(ilayer,iElem)*MeshParam%Si(ilayer,iElem)
+    !                !HydroParam%P(iElem) = MeshParam%Area(iElem)*MeshParam%ei(ilayer,iElem)
+    !            Else
+    !                 HydroParam%P(iElem) = MeshParam%Area(iElem)
+    !            EndIf                
+    !            HydroParam%d(iElem) = HydroParam%rhs(iElem) - HydroParam%Vol(iElem) + HydroParam%P(iElem)*HydroParam%etam(iElem)
+    !             
+    !            Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam)
+    !            HydroParam%Vol(iElem) = 0.d0
+    !            If (V(HydroParam%eta(iElem),HydroParam%hb(iElem)) > 0) Then
+    !                HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) - HydroParam%hb(iElem))
+    !                If (HydroParam%DZsi(HydroParam%Smallms(iElem),iElem) > 0) Then
+    !                    HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
+    !                EndIf
+    !            ElseIf (V(HydroParam%eta(iElem),HydroParam%sb(iElem)) > 0) Then
+    !                HydroParam%Vol(iElem) = MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
+    !                !HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(V(HydroParam%eta(iElem),HydroParam%sb(iElem)))*MeshParam%ei(HydroParam%Smallms(iElem),iElem)*MeshParam%Si(HydroParam%Smallms(iElem),iElem)
+    !            EndIf
+    !            HydroParam%F(iElem) = HydroParam%Vol(iElem) + HydroParam%Aeta(iElem) - HydroParam%rhs(iElem)
+    !            
+    !        EndDo
+    !        
+    !        res = sqrt(sum(HydroParam%F**2))      ! Residual of the Method
+    !        !Print*, 'iNewton = ',iNewton , 'res = ',res
+    !        If ( res < 1e-8 ) Then
+    !            continue
+    !            exit
+    !        EndIf
+    !        
+    !        
+    !        !Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)
+    !        !HydroParam%F = HydroParam%Aeta + HydroParam%Vol - HydroParam%d
+    !        
+    !    EndDo    
+    !    
+    !!    !eta(k-1) = eta(k,l-1)
+    !!    HydroParam%etak = HydroParam%eta
+    !!    Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)
+    !!    HydroParam%F = HydroParam%Vol + HydroParam%Aeta - HydroParam%d - HydroParam%P*HydroParam%eta
+    !!    HydroParam%etam = HydroParam%eta
+    !!    
+    !!    Do iNewtonIn = 1,200
+    !!
+    !!        ! 8.2.5 Compute the New Free-Surface Elevation
+    !!        Call CGOp(HydroParam%F,HydroParam%Deta,dt,HydroParam,MeshParam)
+    !!        HydroParam%etam = HydroParam%eta
+    !!        HydroParam%eta = HydroParam%eta - HydroParam%Deta
+    !!
+    !!        !xx. Calculate %Aeta == [T - Q(k-1)].eta(k,l):
+    !!        HydroParam%P = 0.d0
+    !!        Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)
+    !!        
+    !!        !xx. Compute Inner Iteration Newton Method's Residual for each iElem:
+    !!        ! %F == V1(eta(k,m)) + [T - Q(k-1)].eta(k,m) - d(k-1)
+    !!        Do iElem = 1, MeshParam%nElem
+    !!            Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam)
+    !!            Call MatrixPQV(HydroParam%eta(iElem),Qaux,HydroParam%Vol(iElem),V2aux,iElem,HydroParam,MeshParam)
+    !!            HydroParam%F(iElem) = HydroParam%Vol(iElem) - HydroParam%Aeta(iElem) - HydroParam%d(iElem)
+    !!        EndDo
+    !!        
+    !!        res = sqrt(sum(HydroParam%F**2))      ! Residual of the Method
+    !!        !Print*, 'iNewton = ',iNewton , 'res = ',res
+    !!        If ( res < 1e-8 ) Then
+    !!            continue
+    !!            exit
+    !!        EndIf
+    !!        
+    !!        !xx. 
+    !!        Do iElem = 1, MeshParam%nElem
+    !!            Call SoilSaturation(HydroParam%etam(iElem),iElem,HydroParam,MeshParam)
+    !!            Call MatrixPQV(HydroParam%etam(iElem),Qaux,HydroParam%Vol(iElem),V2aux,iElem,HydroParam,MeshParam)
+    !!            HydroParam%F(iElem) =  HydroParam%P(iElem)*HydroParam%etam(iElem) - HydroParam%Vol(iElem) + HydroParam%d(iElem)
+    !!        EndDo
+    !!        Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam) 
+    !!        HydroParam%F = HydroParam%Aeta - HydroParam%F
+    !!        !
+    !!        !HydroParam%P = 0.d0
+    !!        !Do iElem = 1, MeshParam%nElem  
+    !!        !    !xx. Calculate %Vol == V1(eta):
+    !!        !    ! V1(k, l-1), P(k,l-1):
+    !!        !    Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam)
+    !!        !    Call MatrixPQV(HydroParam%eta(iElem),Qaux,HydroParam%Vol(iElem),V2aux,iElem,HydroParam,MeshParam)
+    !!        !    !! smallF =  d(k-1) - V1(k,l-1) - P(k,l-1).eta(k,l-1):
+    !!        !    !HydroParam%SmallF(iElem) =  HydroParam%d(iElem) - HydroParam%Vol(iElem) + HydroParam%P(iElem)*HydroParam%eta(iElem)
+    !!        !    !
+    !!        !    !eta(k,l) = eta(k,l-1) - Deta 
+    !!        !    HydroParam%eta(iElem) = HydroParam%eta(iElem) - HydroParam%Deta(iElem)     
+    !!        !EndDo
+    !!        ! 
+    !!        !!!xx. Calculate %Aeta == [P(k,l-1) + T - Q(k-1)].eta(k,l):
+    !!        !!Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)     
+    !!        !
+    !!        !!xx. Calculate %Aeta == [T - Q(k-1)].eta(k,l):
+    !!        !HydroParam%P = 0.d0
+    !!        !Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam) 
+    !!        !Do iElem = 1, MeshParam%nElem
+    !!        !    Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam)
+    !!        !    Call MatrixPQV(HydroParam%eta(iElem),Qaux,HydroParam%Vol(iElem),V2aux,iElem,HydroParam,MeshParam)
+    !!        !    HydroParam%F(iElem) = HydroParam%Vol(iElem)- HydroParam%Aeta(iElem) - HydroParam%d(iElem)
+    !!        !EndDo
+    !!        !!xx. Compute Inner Iteration Newton Method's Residual for each iElem:
+    !!        !! F = [P(k,l-1) + T - Q(k-1)].eta(k,l) - d(k-1) + V1(k,l-1) +P(k,l-1).eta(k,l-1)
+    !!        !HydroParam%F = HydroParam%Aeta - HydroParam%SmallF
+    !!        !
+    !!        !res = sqrt(sum(HydroParam%F**2))      ! Residual of the Method
+    !!        !!Print*, 'iNewton = ',iNewton , 'res = ',res
+    !!        !If ( res < 1e-8 ) Then
+    !!        !    continue
+    !!        !    exit
+    !!        !EndIf
+    !!    EndDo
+    !
+    !EndDo
+    !
+    !
+    !
+    !
+    !!! 8.2 Newton Loop for Non-Linear Wet- and Dry-ing Algorithm [2]
+    !!HydroParam%etan = HydroParam%eta   
+    !!!HydroParam%eta = HydroParam%eta + HydroParam%etaplus   
+    !!Do iNewton = 1,400
+    !!    ! 8.2.1 Assemble Matrices F (System Matrix - Newton Method) and P (Derivative Matrix)
+    !!    HydroParam%P = 0.
+    !!    HydroParam%F = 0.
+    !!    Call MatOp(HydroParam%eta,HydroParam%Aeta,dt,HydroParam,MeshParam)
+    !!    !Call Volume(HydroParam,MeshParam)
+    !!    
+    !!    Do iElem = 1, MeshParam%nElem
+    !!        !8.2.2 Volume with Eta at tn+1:
+    !!        !Note that this point the volume is calculate without %etaplus term (source/sink), its considered in previous 
+    !!        !time-step's %Vol(just before item 8)
+    !!        Call SoilSaturation(HydroParam%eta(iElem),iElem,HydroParam,MeshParam)
+    !!        HydroParam%Vol(iElem) = 0.d0
+    !!        If (V(HydroParam%eta(iElem),HydroParam%hb(iElem)) > 0) Then
+    !!            HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(HydroParam%eta(iElem) - HydroParam%hb(iElem))
+    !!            If (HydroParam%DZsi(HydroParam%Smallms(iElem),iElem) > 0) Then
+    !!                HydroParam%Vol(iElem) = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
+    !!            EndIf
+    !!        ElseIf (V(HydroParam%eta(iElem),HydroParam%sb(iElem)) > 0) Then
+    !!            HydroParam%Vol(iElem) = MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
+    !!            !HydroParam%Vol(iElem) = MeshParam%Area(iElem)*(V(HydroParam%eta(iElem),HydroParam%sb(iElem)))*MeshParam%ei(HydroParam%Smallms(iElem),iElem)*MeshParam%Si(HydroParam%Smallms(iElem),iElem)
+    !!        EndIf
+    !!        
+    !!        !8.2.3 Compute Newton Method's Residue for each iElem:
+    !!        !In this point, MatOp Output = (T-Matrix)Eta
+    !!        !We want F = 0 condition satisfied: V(nt+1) + T*n(t+1) = rhs :: F  = V(n(t+1)) + T*n(t+1) - rhs -> 0
+    !!        HydroParam%F(iElem) = HydroParam%Vol(iElem) + HydroParam%Aeta(iElem) - HydroParam%rhs(iElem)
+    !!        
+    !!        !8.2.4 Fill P values in dry cell for CGOp computation:
+    !!        !dF/dn = A*dn/dn + T, we want dF/dn = 0.
+    !!        !HydroP = A*dn/dn, if cell is dry dn/dn = 0, else dn/dn = 1
+    !!        HydroParam%P(iElem) = MeshParam%Area(iElem)*dV(HydroParam%eta(iElem),HydroParam%sb(iElem))
+    !!        If(V(HydroParam%eta(iElem),HydroParam%hb(iElem)) < HydroParam%PCRI+NearZero .and. V(HydroParam%eta(iElem),HydroParam%sb(iElem)) > HydroParam%PCRI+NearZero ) Then
+    !!            ilayer = 0
+    !!            Flaglayer = 0
+    !!            Do While (Flaglayer == 0)
+    !!                ilayer = ilayer + 1
+    !!                If(HydroParam%Ze(iLayer,iElem) < HydroParam%eta(iElem)) Then
+    !!                    continue
+    !!                Else
+    !!                    Flaglayer = 1
+    !!                endif
+    !!            end do
+    !!            HydroParam%P(iElem) = MeshParam%Area(iElem)*MeshParam%ei(ilayer,iElem)*MeshParam%Si(ilayer,iElem)
+    !!        Else
+    !!             HydroParam%P(iElem) = MeshParam%Area(iElem)
+    !!        EndIf
+    !!        
+    !!        If (V(HydroParam%eta(iElem),HydroParam%sb(iElem)) < HydroParam%PCRI+NearZero) Then
+    !!            ! The Cell is Dry. The Solution is V(eta^(n+1)) = V(eta^(n))
+    !!            HydroParam%P(iElem) = MeshParam%Area(iElem)       ! We can't allow the row to have zeros in all elements - If P = 1, the water level remains the same
+    !!        EndIf
+    !!        
+    !!    EndDo        
+    !!
+    !!    !Do iElem = 1,MeshParam%nElem
+    !!    !    !In this point, MatOp Output = (T-Matrix)Eta
+    !!    !    !We want F = 0 condition satisfied: V(nt+1) + T*n(t+1) = rhs :: F  = V(n(t+1)) + T*n(t+1) - rhs -> 0
+    !!    !    HydroParam%F(iElem) = HydroParam%Vol(iElem) + HydroParam%Aeta(iElem) - HydroParam%rhs(iElem)
+    !!    !EndDo
+    !!    !
+    !!    !!!$OMP parallel do default(none) shared(MeshParam,HydroParam) private(iElem,sumH)
+    !!    !Do iElem = 1, MeshParam%nElem
+    !!    !    !dF/dn = A*dn/dn + T, we want dF/dn = 0.
+    !!    !    !HydroP = A*dn/dn, if cell is dry dn/dn = 0, else dn/dn = 1:
+    !!    !    HydroParam%P(iElem) = MeshParam%Area(iElem)*dV(HydroParam%eta(iElem),HydroParam%sb(iElem))
+    !!    !    sumH = Sum( HydroParam%H(MeshParam%Edge(:,iElem)) )
+    !!    !    If (V(HydroParam%eta(iElem),HydroParam%sb(iElem)) < HydroParam%PCRI+NearZero) Then
+    !!    !        ! The Cell is Dry. The Solution is V(eta^(n+1)) = V(eta^(n))
+    !!    !        HydroParam%P(iElem) = MeshParam%Area(iElem)       ! We can't allow the row to have zeros in all elements - If P = 1, the water level remains the same
+    !!    !    EndIf
+    !!    !EndDo
+    !!    !!!$OMP end parallel do
+    !!        
+    !!    res = sqrt(sum(HydroParam%F**2))      ! Residual of the Method
+    !!    !Print*, 'iNewton = ',iNewton , 'res = ',res
+    !!    If ( res < 1e-8 ) Then
+    !!        continue
+    !!        exit
+    !!    EndIf
+    !!    ! 8.2.5 Compute the New Free-Surface Elevation
+    !!    !CGOp is used to minimize F value :: F = V(n(t+1)) + T*n(t+1) - rhs == 0
+    !!    Call CGOp(HydroParam%F,HydroParam%Deta,dt,HydroParam,MeshParam)
+    !!    !$OMP parallel do default(none) shared(HydroParam,MeshParam) private(iElem)
+    !!    Do iElem = 1, MeshParam%nElem
+    !!        HydroParam%eta(iElem) = HydroParam%eta(iElem) - HydroParam%Deta(iElem)
+    !!    EndDo
+    !!    !$OMP end parallel do
+    !!EndDo
+    !!
+    !
+
+!    
+!        Subroutine MatrixPQV(eta,Q,V1,V2,iElem,HydroParam,MeshParam)
+!        
+!    Use Hydrodynamic
+!    Use MeshVars
+!        
+!    Implicit None
+!    Integer:: iElem,iLayer,PscritFlag
+!    Real:: eta,V1,V2,Q,PsiCrit,mParam
+!    Real:: NearZero = 1e-10
+!    Real:: dt
+!    type(MeshGridParam) :: MeshParam
+!    type(HydrodynamicParam) :: HydroParam
+!        
+!    V1 = 0.d0
+!    V2 = 0.d0
+!    iLayer = 0
+!    PscritFlag = 0
+!    If(MeshParam%iSaturation == 1) Then !Only Superficial Flow or Darcy's Model, in both Psicrit = hb(iElem)
+!        ! Darcy's Model the soil complete satured (eta above some soil) or not.
+!        ! If no has soil's layers (only surface flow) the %ei == 1.d0, that is implies that: P == A to dry/wet, Q == 0 to wet/dry;
+!        ! DZsi == 0.d0 -> V1 == %Vol, and V2 == 0.d0
+!        HydroParam%P(iElem) = MeshParam%Area(iElem)*MeshParam%ei(HydroParam%ElCapitalMs(iElem),iElem)
+!        V1 = MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
+!        If(eta > HydroParam%hb(iElem)) Then
+!            Q = MeshParam%Area(iElem)*(MeshParam%ei(HydroParam%ElCapitalMs(iElem),iElem) - 1)
+!            V1 = V1 + HydroParam%P(iElem)*(eta-Psicrit)
+!            V2 = V1 - MeshParam%Area(iElem)*(eta - HydroParam%hb(iElem) + Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem)))
+!        EndIf
+!    ElseIf(MeshParam%iSaturation == 2) Then ! Brooks and Corey's Model
+!        ! Brooks and Corey's Pscrit (Point of maximum of saturation curve) is hb - 1/alpha:
+!        !PsiCrit = HydroParam%hb(iElem) - 1/MeshParam%alpha(HydroParam%ElCapitalMs(iElem),iElem) !set alpha constant in iElem
+!        PsiCrit = HydroParam%hb(iElem)
+!        If(eta <= PsiCrit) Then    
+!            Do While (PscritFlag == 0)
+!                iLayer = iLayer + 1
+!                If (eta > HydroParam%Ze(iLayer+1,iElem)) Then
+!                    HydroParam%P(iElem) = HydroParam%P(iElem) + HydroParam%DZsi(iLayer,iElem)*MeshParam%ei(iLayer,iElem)*MeshParam%nSoil(iLayer,iElem)/((HydroParam%Zb(iLayer,iElem) - eta)*(1 + MeshParam%nSoil(iLayer,iElem)))*MeshParam%alpha(iLayer,iElem)**2
+!                Else
+!                    ! Find PsiCrit Layer:
+!                    PscritFlag = 1
+!                    !HydroParam%P(iElem) = HydroParam%P(iElem) + (HydroParam%Ze(iLayer,iElem)-PsiCrit)*MeshParam%ei(iLayer,iElem)*MeshParam%nSoil(iLayer,iElem)/((HydroParam%Ze(iLayer,iElem)-PsiCrit)*0.5*(1 + MeshParam%nSoil(iLayer,iElem)))*MeshParam%alpha(iLayer,iElem)**2                            
+!                    HydroParam%P(iElem) = HydroParam%P(iElem) + (eta - HydroParam%Ze(iLayer,iElem))*MeshParam%ei(iLayer,iElem)*MeshParam%nSoil(iLayer,iElem)/((HydroParam%Ze(iLayer,iElem)-eta)*0.5*(1 + MeshParam%nSoil(iLayer,iElem)))*MeshParam%alpha(iLayer,iElem)**2                            
+!                EndIf
+!            EndDo
+!            HydroParam%P(iElem) = MeshParam%Area(iElem)*HydroParam%P(iElem)
+!            !HydroParam%P(iElem) = MeshParam%Area(iElem)*MeshParam%ei(HydroParam%ElCapitalMs(iElem),iElem)
+!            V1 = MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
+!            V2 = 0.d0
+!        Else
+!            !HydroParam%P(iElem) = MeshParam%Area(iElem)*MeshParam%ei(HydroParam%ElCapitalMs(iElem),iElem)
+!            HydroParam%P(iElem) = MeshParam%Area(iElem)            
+!            Q = HydroParam%P(iElem) - MeshParam%Area(iElem)
+!            V1 = MeshParam%Area(iElem)*(Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem)) + MeshParam%ei(HydroParam%ElCapitalMs(iElem),iElem)*(eta-Psicrit))
+!            V2 = V1 - MeshParam%Area(iElem)*(eta - HydroParam%hb(iElem) + Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem)))
+!        EndIf
+!    Else !Van Genutchen's Model
+!        !check if pscrit is near hb(iElem), casulli set hb but the maximum of saturation curve in van genu model is given in [6]
+!        mParam = (1-1/MeshParam%nSoil(HydroParam%ElCapitalMs(iElem),iElem))
+!        !PsiCrit = HydroParam%hb(iElem) - (MeshParam%nSoil(HydroParam%ElCapitalMs(iElem),iElem) - 1)**(1/MeshParam%nSoil(HydroParam%ElCapitalMs(iElem),iElem))/(MeshParam%alpha(HydroParam%ElCapitalMs(iElem),iElem)*MeshParam%nSoil(HydroParam%ElCapitalMs(iElem),iElem))
+!        PsiCrit = HydroParam%hb(iElem)
+!        V1 = MeshParam%Area(iElem)*Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem))
+!        If(eta <= PsiCrit) Then
+!            Do While (PscritFlag == 0)
+!                iLayer = iLayer + 1
+!                If (eta > HydroParam%Ze(iLayer+1,iElem)) Then
+!                    HydroParam%P(iElem)  = HydroParam%P(iElem) + HydroParam%DZsi(iLayer,iElem)*MeshParam%alpha(iLayer,iElem)*MeshParam%nSoil(iLayer,iElem)*mPAram*abs(MeshParam%alpha(iLayer,iElem)*(HydroParam%Zb(iLayer,iElem) - eta))**(MeshParam%nSoil(iLayer,iElem)-1)/(MeshParam%alpha(iLayer,iElem)*abs(HydroParam%Zb(iLayer,iElem) - eta)**(MeshParam%nSoil(iLayer,iElem)) + 1)**(mParam + 1)
+!                Else
+!                    ! Find PsiCrit Layer:
+!                    PscritFlag = 1
+!                    HydroParam%P(iElem) = HydroParam%P(iElem) + (PsiCrit-HydroParam%Ze(iLayer,iElem))*MeshParam%alpha(iLayer,iElem)*MeshParam%nSoil(iLayer,iElem)*mPAram*abs(MeshParam%alpha(iLayer,iElem)*((HydroParam%Ze(iLayer,iElem)-PsiCrit)*0.5))**(MeshParam%nSoil(iLayer,iElem)-1)/(MeshParam%alpha(iLayer,iElem)*abs((HydroParam%Ze(iLayer,iElem)-PsiCrit)*0.5)**(MeshParam%nSoil(iLayer,iElem)) + 1)**(mParam + 1)
+!                EndIf
+!            EndDo
+!            HydroParam%P(iElem) = MeshParam%Area(iElem)*HydroParam%P(iElem)
+!        Else
+!            !HydroParam%P(iElem) = MeshParam%Area(iElem)*MeshParam%ei(HydroParam%ElCapitalMs(iElem),iElem)
+!            HydroParam%P(iElem) = MeshParam%Area(iElem)
+!            Q = HydroParam%P(iElem) - MeshParam%Area(iElem)
+!            V1 = V1 + MeshParam%Area(iElem)*MeshParam%ei(HydroParam%ElCapitalMs(iElem),iElem)*(eta-Psicrit)
+!            V2 = V1 - MeshParam%Area(iElem)*(eta - HydroParam%hb(iElem) + Dot_Product(MeshParam%ei(:,iElem)*MeshParam%Si(:,iElem),HydroParam%DZsi(:,iElem)))
+!        EndIf
+!    EndIf     
+!Return
+!End Subroutine MatrixPQV
