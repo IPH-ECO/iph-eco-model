@@ -125,7 +125,6 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
             !Cell without bound conditions:
             ! If a face is dry, set the velocity to zero
             If ( Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%etan(l), -HydroParam%hj(iEdge) + HydroParam%etan(r) ) <= HydroParam%PCRI/2+NearZero.or.Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI/2+NearZero) Then
-            !If (Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI/2+NearZero) Then
                 HydroParam%u(:,iEdge)  = 0.d0
             Else
                 !2D Case:

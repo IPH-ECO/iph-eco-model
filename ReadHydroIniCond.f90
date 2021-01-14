@@ -114,6 +114,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     MeshParam%nSoil = 1.89 !Casullli == 1.4 Panday == 1.89
     e0 = 0.1 !e0 0.1 b01 0.3
     !k0 = 0.01 !k0 0.01 b01
+    HydroParam%PsiCrit = 0.0d0
      
     ! Set Initial Conditions of Free-Surface Elevation
     If (MeshParam%ieta0 == 1) Then
@@ -565,7 +566,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
              !H(iEdge) + hj(iEdge)       ! Free-Surface (verificar com Rafael)
         Else
             !If ( HydroParam%H(iEdge) - HydroParam%hj(iEdge) <= HydroParam%PCRI+NearZero ) Then
-            If ( HydroParam%H(iEdge) - HydroParam%hj(iEdge) <= HydroParam%PCRI+NearZero ) Then
+            If ( Max(HydroParam%PCRI, HydroParam%eta(l), HydroParam%eta(r)) - HydroParam%hj(iEdge) <= HydroParam%PCRI+NearZero ) Then !( HydroParam%H(iEdge) <= HydroParam%PCRI/2 + NearZero ) Then
                 !HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = Max(HydroParam%eta(l),HydroParam%eta(r))
                 HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = Max(HydroParam%hb(l),HydroParam%hb(r))                
             Else
@@ -1324,4 +1325,4 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
 !    
 !    
 !End Subroutine ReadHydroIniCond
-!        
+!

@@ -357,7 +357,8 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
             
             !8.2.4 Fill P values in dry cell for CGOp computation:
             !HydroP = A*dn/dn, if cell is dry dn/dn = 0, else dn/dn = 1
-            If(HydroParam%eta(iElem) > HydroParam%hb(iElem)) Then
+            HydroParam%P(iElem) = MeshParam%Area(iElem)
+            If(HydroParam%eta(iElem) >= HydroParam%hb(iElem)-HydroParam%PsiCrit(iElem)) Then
                 HydroParam%P(iElem) = MeshParam%Area(iElem) ! Vol = eta.Area -> Vol = (eta - hb)*Area + (hb-sb)*Area*e = Area*(eta-hb +hb*e -sb*e)
                 !HydroParam%P(iElem) = (HydroParam%Vol(iElem)/(HydroParam%eta(iElem) + HydroParam%hb(iElem)*(MeshParam%epson(HydroParam%ElCapitalMs(iElem)) - 1) - HydroParam%sb(iElem)*MeshParam%epson(HydroParam%ElCapitalMs(iElem))
             Else
@@ -367,7 +368,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
         !$OMP end parallel do
         res = sqrt(sum(HydroParam%F**2))      ! Residual of the Method
         !Print*, 'iNewton = ',iNewton , 'res = ',res
-        If ( res < 1e-6 ) Then
+        If ( res < 1e-5 ) Then
             continue
             exit
         EndIf
@@ -701,7 +702,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
                 HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = HydroParam%eta(l)
             EndIf
         Else
-            If ( HydroParam%H(iEdge) - HydroParam%hj(iEdge) <= HydroParam%PCRI+NearZero ) Then !( HydroParam%H(iEdge) <= HydroParam%PCRI/2 + NearZero ) Then
+            If ( Max(HydroParam%PCRI, HydroParam%eta(l), HydroParam%eta(r)) - HydroParam%hj(iEdge) <= HydroParam%PCRI+NearZero ) Then !( HydroParam%H(iEdge) <= HydroParam%PCRI/2 + NearZero ) Then
                 !HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = Max(HydroParam%eta(l),HydroParam%eta(r))
                 HydroParam%Z(HydroParam%CapitalM(iEdge)+1,iEdge) = Max(HydroParam%hb(l),HydroParam%hb(r))                
             Else

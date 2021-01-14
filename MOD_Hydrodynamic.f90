@@ -43,6 +43,7 @@
         
        
         Real, Allocatable:: DZK(:) !Sediment Layer
+        Real, Allocatable:: PsiCrit(:) !Sediment Layer
         Real, Allocatable:: Gusub(:,:) !Sediment Layer
 
         Real, Allocatable:: psij(:,:)!CAYO

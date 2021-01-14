@@ -160,6 +160,7 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     Allocate(HydroParam%DZsit(MeshParam%Kmax,MeshParam%nElem)) !CAYO
     Allocate(HydroParam%DZhi(MeshParam%Kmax,MeshParam%nElem)) !CAYO   
     Allocate(HydroParam%DZhit(MeshParam%Kmax,MeshParam%nElem)) !CAYO 
+    Allocate(HydroParam%PsiCrit(MeshParam%nElem)) !CAYO 
     
     Allocate(HydroParam%DZK(MeshParam%nEdge)) !Sediment Layer !CAYO 
     Allocate(HydroParam%Gusub(MeshParam%Kmax,MeshParam%nEdge)) 
@@ -185,4 +186,3 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     
    
 End Subroutine AllocateHydroVars
-    
