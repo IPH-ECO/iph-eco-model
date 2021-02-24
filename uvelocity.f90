@@ -16,7 +16,7 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
     Real:: aTh(MeshParam%KMax), bTh(MeshParam%KMax), cTh(MeshParam%KMax), fTh(MeshParam%KMax)
     Real:: dt,dzk,dzm,DZsjAcum,GammaB,GammaT,rhoair,chezy,rhoaircell
     Real :: bp(MeshParam%KMax),vp(MeshParam%KMax),a_aux(MeshParam%KMax),b_aux(MeshParam%KMax),c_aux(MeshParam%KMax),v_aux(MeshParam%KMax),x_aux(MeshParam%KMax),d_aux(MeshParam%KMax),x(MeshParam%KMax)
-    Real :: w, H
+    Real :: w, H, Futn, Fvtn
     Real:: NearZero = 1e-10
 
     ! 11.1 Surface Velocity 
@@ -24,6 +24,10 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
     Do iEdge = 1, MeshParam%nEdge
         l = MeshParam%Left(iEdge) 
         r = MeshParam%Right(iEdge)
+        
+        If(r==0)Then
+            r = l
+        EndIf
         
         ! 11.1.1 Get roughness 
         H = HydroParam%H(iEdge)+HydroParam%sj(iEdge)-HydroParam%hj(iEdge) !Surface Water Height
@@ -47,17 +51,30 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
             rhoairCell = 0.5*(MeteoParam%rhoair(l) + MeteoParam%rhoair(r))
         EndIf
         
+        If(r==0)Then
+            r = l
+        EndIf
+        If (HydroParam%IndexWaterLevelEdge(iEdge)>0 .and. H >HydroParam%PCRI+NearZero) Then
+            Futn = HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etaInfn(l) - HydroParam%etan(l)))
+        Else
+            Futn = HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etan(r) - HydroParam%etan(l)))
+        EndIf
+        Fvtn = HydroParam%Fv(HydroParam%Smallm(iEdge),iEdge) - dt/MeshParam%CirDistance(iEdge)*HydroParam%g*(HydroParam%petan(MeshParam%EdgeNodes(2,iEdge)) - HydroParam%petan(MeshParam%EdgeNodes(1,iEdge)))
+        
         Call Tension(HydroParam%iWindStress,HydroParam%BottomTensionFlag,iEdge,HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),HydroParam%g,HydroParam%uxy(HydroParam%Smallm(iEdge),1,iEdge),HydroParam%uxy(HydroParam%Smallm(iEdge),2,iEdge),HydroParam%uxy(HydroParam%CapitalM(iEdge),1,iEdge),HydroParam%uxy(HydroParam%CapitalM(iEdge),2,iEdge),Chezy,rhoairCell,HydroParam%rho0,HydroParam%windDragConstant,HydroParam%WindVel(:,iEdge),HydroParam%WindXY(:,iEdge),HydroParam%GammaT,HydroParam%GammaB)
-
+        !Call Tension(HydroParam%iWindStress,HydroParam%BottomTensionFlag,iEdge,HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),HydroParam%g,Futn,Fvtn,HydroParam%uxy(HydroParam%CapitalM(iEdge),1,iEdge),HydroParam%uxy(HydroParam%CapitalM(iEdge),2,iEdge),Chezy,rhoairCell,HydroParam%rho0,HydroParam%windDragConstant,HydroParam%WindVel(:,iEdge),HydroParam%WindXY(:,iEdge),HydroParam%GammaT,HydroParam%GammaB)
+        
         ! 11.1.2 If not has neighbour cell:
-        If (r == 0) Then
+        !If (r == 0) Then
+        If (r == l) Then
             ! When has flow boundary condition:
             If (HydroParam%IndexInflowEdge(iEdge) > 0) Then        ! Boundary Condition
                 HydroParam%u(:,iEdge) = HydroParam%Fu(:,iEdge)
             Else
                 HydroParam%u(:,iEdge) = 0.d0
                 ! In which case has Water Level Bound condition:
-                If (HydroParam%IndexWaterLevelEdge(iEdge)>0.and.-HydroParam%hj(iEdge) + HydroParam%eta(l)>HydroParam%PCRI/2+NearZero) Then
+                !If (HydroParam%IndexWaterLevelEdge(iEdge)>0.and.-HydroParam%hj(iEdge) + HydroParam%eta(l)>HydroParam%PCRI/2+NearZero) Then
+                If (HydroParam%IndexWaterLevelEdge(iEdge)>0.and. H > HydroParam%PCRI+NearZero) Then
                     ! 2D Case:
                     If (HydroParam%Smallm(iEdge) == HydroParam%CapitalM(iEdge)) Then
                         !Casulli,2015:
@@ -124,7 +141,8 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
         Else
             !Cell without bound conditions:
             ! If a face is dry, set the velocity to zero
-            If ( Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%etan(l), -HydroParam%hj(iEdge) + HydroParam%etan(r) ) <= HydroParam%PCRI/2+NearZero.or.Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI/2+NearZero) Then
+            !If ( Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%etan(l), -HydroParam%hj(iEdge) + HydroParam%etan(r) ) <= HydroParam%PCRI/2+NearZero.or.Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI/2+NearZero) Then
+            If ( Max( HydroParam%PCRI,-HydroParam%hj(iEdge) + HydroParam%etan(l), -HydroParam%hj(iEdge) + HydroParam%etan(r) ) <= HydroParam%PCRI+NearZero.or.Max( HydroParam%PCRI,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI+NearZero) Then
                 HydroParam%u(:,iEdge)  = 0.d0
             Else
                 !2D Case:
@@ -214,7 +232,7 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
             r = MeshParam%Right(iEdge)
 			If(HydroParam%DZsjt(HydroParam%Smallms(iEdge),iEdge) > 0) Then ! If Edge lower layer have sediment thickness
                 If (r == 0) Then
-                    If (HydroParam%IndexWaterLevelEdge(iEdge)>0.and.-HydroParam%sj(iEdge) + HydroParam%eta(l)>HydroParam%PCRI/2.d0+NearZero) Then
+                    If (HydroParam%IndexWaterLevelEdge(iEdge)>0.and.-HydroParam%sj(iEdge) + HydroParam%eta(l)>HydroParam%PCRI+NearZero) Then
                         If ((HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge).and.HydroParam%Smallms(iEdge) == HydroParam%CapitalM(iEdge) )) Then
                             !HydroParam%Gusub(HydroParam%Smallms(iEdge),iEdge)  = (1-HydroParam%Theta)*HydroParam%us(HydroParam%Smallms(iEdge),iEdge) 
                             !HydroParam%us(HydroParam%Smallms(iEdge),iEdge)  =   HydroParam%Gusub(HydroParam%Smallms(iEdge),iEdge)-MeshParam%Kj(HydroParam%Smallms(iEdge),iEdge)*(HydroParam%etaInf(l) - HydroParam%eta(l))/MeshParam%CirDistance(iEdge)

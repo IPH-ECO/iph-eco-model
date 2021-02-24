@@ -134,6 +134,12 @@
         Real, Allocatable:: Hs(:) !CAYO
         !Real, Allocatable:: Kj(:,:), ei(:,:) !Porosity and Hydraulic Conductivity   !CAYO !MOD_Mesh
         Real, Allocatable:: Vol(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: Vol2(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: Vol1(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: Qk(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: Ci(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: etam(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: d(:) !<Water Volume in element with porous region             !CAYO 
         
         ! 4. Turbulence Model    
         Real,Allocatable:: HorViscosity(:,:,:)      !< Horizontal Eddy Viscosity
@@ -236,6 +242,7 @@
         Integer:: iCoriolis !< Coriolis effect: iCoriolis = 0 (no); iCoriolis = 1 (yes)
         
         Real, Allocatable:: SScalar(:)               ! Salinity Concentration - Current Time Step
+        Real, Allocatable:: SScalarSaturation(:)               ! Salinity Concentration - Current Time Step
         Real, Allocatable:: SScalar2D(:)               ! Salinity Concentration - Current Time Step
         Real, Allocatable:: SVector(:,:)               ! Salinity Concentration - Current Time Step
        

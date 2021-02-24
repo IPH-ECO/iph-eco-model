@@ -39,7 +39,7 @@
     !!$OMP parallel do default(none) shared(a,b,MeshParam,HydroParam,NearZero,Coef) private(iElem,iEdge,Face,Pij,Sum)
     Do iElem = 1, MeshParam%nElem       
         
-        b(iElem) = HydroParam%P(iElem)*a(iElem) !Initializing b vector
+        b(iElem) = (HydroParam%P(iElem)-HydroParam%Qk(iElem))*a(iElem) !Initializing b vector
         Sum1 = 0.d0
         Do iEdge = 1,4
             Face = MeshParam%Edge(iEdge,iElem)

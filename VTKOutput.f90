@@ -25,7 +25,7 @@ Subroutine VTKOutput(simParam,HydroParam,MeshParam,LimnoParam)
     Implicit None
     Integer:: iNode, iElem, iLayer
     Integer:: k, Sum, bb, gg, mm, zz, ben
-    Integer:: TotNumberOfPoints, nElem3D
+    Integer:: TotNumberOfPoints, nElem3D, satLayers
     Real:: Vel(2), lw(2),DIR_VENTO,FF
     Real:: V
     Real:: idate(6)
@@ -167,6 +167,22 @@ Subroutine VTKOutput(simParam,HydroParam,MeshParam,LimnoParam)
         EndDo
         E_IO = VTK_VAR(MeshParam%nElem*MeshParam%KMax,'Depth',HydroParam%SScalar)
     EndIf
+
+    !! x.x Saturation
+    !Do iElem = 1,MeshParam%nElem
+    !    If (MeshParam%Kmax > 1) Then
+    !        satLayers = MeshParam%Kmax
+    !        Do iLayer = 1,MeshParam%KMax
+    !            HydroParam%SScalarSaturation(iElem + (iLayer-1)*MeshParam%nElem) =  MeshParam%Si(iLayer,iElem)
+    !        EndDo
+    !    Else
+    !        satLayers = MeshParam%subfactor
+    !        Do iLayer = 1,MeshParam%subfactor
+    !            HydroParam%SScalarSaturation(iElem + (iLayer-1)*MeshParam%nElem) =  MeshParam%Si(iLayer,iElem)
+    !        EndDo            
+    !    EndIf
+    !EndDo
+    !E_IO = VTK_VAR(MeshParam%nElem*satLayers,'Saturation',HydroParam%SScalarSaturation)
     
     ! 5.4 NonHydrostatic Pressure
     Do iElem = 1,MeshParam%nElem

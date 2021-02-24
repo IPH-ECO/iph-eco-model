@@ -55,11 +55,6 @@ Module MeshVars
         Integer:: EdgeDef(2,4)
         Integer, Allocatable:: Left(:)    !< ID of the left neighbour element for each edge
         Integer, Allocatable:: Right(:)   !<ID of the right neighbour element for each edge
-        Integer, Allocatable:: NeibGrad01(:)
-        Integer, Allocatable:: NeibGrad02(:)
-        Integer, Allocatable:: NeibGrad03(:)
-        Integer, Allocatable:: NeibGrad04(:)
-        Integer, Allocatable:: plus(:)
         Integer, Allocatable:: nVertexElem(:)
         Integer, Allocatable:: VertexElem(:,:)
         Integer:: nEdge, nNode, nElem, nPoint
@@ -102,6 +97,7 @@ Module MeshVars
         Real, Allocatable:: alpha(:,:) !CAYO
         Real, Allocatable:: nSoil(:,:) !CAYO
         Real, Allocatable:: ei(:,:) !CAYO  
+        Integer:: subfactor
         Integer:: iSaturation
     
         
@@ -149,11 +145,26 @@ Module MeshVars
         !this%dy = 6.48d0 !bench 01
         !this%dx = 0.020d0 !bench 01
         !this%nElem = StructuredMeshFeatures%numberOfElements - 36 !bench01
-
+        this%subfactor = 100
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
         Allocate(this%Quadri(4,this%nElem))
-        
+        ! 1. Defining Mesh Vertex
+        ! Using NC and NL we can define a Mathematical Equation to save the vertex for each node without repetition
+        ! For nodes numeration, the Standard is this:
+        !     4     3
+        !     .-----.
+        !     |     |
+        !     |     |
+        !     .-----.
+        !     1     2
+        ! For nodes positions in the vector, the Standard is this:
+        !     2     1
+        !     .-----.
+        !     |     |
+        !     |     |
+        !     .-----.
+        !     3     4 
         Do iElem = 1, this%nElem
             this%xb(iElem) = xCoordinates(iElem)
             this%yb(iElem) = yCoordinates(iElem)            
@@ -170,7 +181,7 @@ Module MeshVars
         Call SortDecreasing(layers,sim%layersLength)
         
         !this%NCAMMAX = 62 !bench02 1 surface + 11 subsurface
-        !this%zL = -0.001 !bench02
+        this%zL = 0.000 !bench02
         !layersub(1) = sim%maximumVerticalLimit-1
         !Do i = 2,this%NCAMMAX-1
         !    layersub(i) = sim%maximumVerticalLimit - i !the top ten layers have 1m thickness
@@ -223,59 +234,8 @@ Module MeshVars
         Else
             Stop 'Incorrect number of Layers'
         Endif    
-    
 
         
-        !! Number of Vertical Subsurface Layers
-        !this%NCAMMAXsub = 11 !bench 02
-        !layersub(1) = sim%maximumVerticalLimit-1
-        !Do i = 1,this%NCAMMAXsub-1
-        !    layersub(i) = 1 !the top ten layers have 1m thickness
-        !EndDo
-        !layersub(this%NCAMMAXsub) = this%zL
-        !
-        !
-        !If (this%NCAMMAXsub == 0) Then
-        !    !Subsurface two-dimensinal or non-existent
-        !    ALLOCATE (this%LIMCAMsub(1))
-        !    ALLOCATE (this%LIMCAMAUXsub(1))
-        !    this%LIMCAMsub = this%LIMCAM
-        !    this%LIMCAMAUXsub = this%LIMCAMAUX
-        !    this%KMaxsub = this%KMax
-        !Else     
-        !    !Subsurface Three-dimensional
-        !    ALLOCATE (this%LIMCAMsub(this%NCAMMAXsub))
-        !    ALLOCATE (this%LIMCAMAUXsub(this%NCAMMAXsub+1))
-        !    Do i = 1,this%NCAMMAXsub
-        !        this%LIMCAMsub(i) = layersub(i)                   ! Layer levels (m)
-        !    EndDo
-        !  
-        !    this%KMaxsub = 1
-        !    Do iLayer = 1,this%NCAMMAXsub
-        !        If (iLayer==1) then
-        !            If (this%LIMCAMsub(iLayer)>this%zL.and.this%LIMCAMsub(iLayer)<this%zR) then
-        !                this%KMaxsub = this%KMaxsub + 1
-        !                this%LIMCAMAUXsub(this%KMaxsub-1) = this%LIMCAMsub(iLayer)
-        !            EndIf
-        !        Elseif (iLayer==this%NCAMMAXsub) then
-        !            If (this%LIMCAMsub(iLayer)>this%zL.and.this%LIMCAMsub(iLayer)<this%LIMCAMsub(iLayer-1)) then
-        !                this%KMaxsub = this%KMaxsub + 1
-        !                this%LIMCAMAUXsub(this%KMaxsub-1) = this%LIMCAMsub(iLayer)
-        !                !LIMCAMAUX(KMax-1) = zL
-        !            Else
-        !                !KMax = KMax + 1
-        !                !LIMCAMAUX(KMax-1) = LIMCAM(iLayer)
-        !            EndIf
-        !        Else
-        !            If (this%LIMCAMsub(iLayer)>this%zL.and.this%LIMCAMsub(iLayer)<this%LIMCAMsub(iLayer-1)) then
-        !                this%KMaxsub = this%KMaxsub + 1
-        !                this%LIMCAMAUXsub(this%KMaxsub-1) = this%LIMCAMsub(iLayer)
-        !            EndIf
-        !        EndIf
-        !    EndDo
-        !    this%LIMCAMAUXsub(this%KMaxsub) = this%zL
-        !Endif    
-     
         this%nNode = MAXVAL(this%Quadri) + 1
         this%nPoint = this%nNode
         Allocate (this%Neighbor(4,this%nElem))
@@ -415,13 +375,6 @@ Module MeshVars
         Allocate(this%Left(this%nEdge))
         Allocate(this%Right(this%nEdge))
         
-        Allocate(this%NeibGrad01(this%nEdge))
-        Allocate(this%NeibGrad02(this%nEdge))
-        Allocate(this%NeibGrad03(this%nEdge))
-        Allocate(this%NeibGrad04(this%nEdge))
-        Allocate(this%plus(this%nEdge))
-        this%plus = 0
-        
         Allocate(this%EdgeLength(this%nEdge))
         Allocate(this%CirDistance(this%nEdge))
         Allocate(this%AbsDelta(this%nEdge))
@@ -484,7 +437,7 @@ Module MeshVars
         
         this%nMaxEgdesatNode = this%nMaxVertexElem + 1
         
-        Allocate(this%EgdesatNode(this%nMaxEgdesatNode,this%nNode)) 
+        Allocate(this%EgdesatNode(this%nMaxEgdesatNode,this%nNode))
         Allocate(this%nEgdesatNode(this%nNode))
         this%nEgdesatNode = 0
         this%EgdesatNode = 0

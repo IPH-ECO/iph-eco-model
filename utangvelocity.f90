@@ -12,13 +12,15 @@ Subroutine utangvelocity(HydroParam,MeshParam,MeteoParam,dt)
     Integer:: iEdge,iLayer, DIM, l, r
     Real:: aTh(MeshParam%KMax), bTh(MeshParam%KMax), cTh(MeshParam%KMax), fTh(MeshParam%KMax)
     Real:: dt,dzk,dzm,DZsjAcum,GammaB,GammaT,rhoair,chezy,rhoaircell
+    Real :: w, H, Futn, Fvtn
     Real:: NearZero = 1e-10
     
     Do iEdge = 1, MeshParam%nEdge
         l = MeshParam%Left(iEdge) 
         r = MeshParam%Right(iEdge)
         
-        ! 6.1 Get roughness 
+        ! 11.1.1 Get roughness 
+        H = HydroParam%H(iEdge)+HydroParam%sj(iEdge)-HydroParam%hj(iEdge) !Surface Water Height
         If (r == 0) Then
             If (HydroParam%iRoughForm == 0.or.HydroParam%iRoughForm == 3) Then ! roughnessChezyConstant
                 Chezy = HydroParam%Rug(l)
@@ -39,7 +41,18 @@ Subroutine utangvelocity(HydroParam,MeshParam,MeteoParam,dt)
             rhoairCell = 0.5*(MeteoParam%rhoair(l) + MeteoParam%rhoair(r))
         EndIf
         
+        If(r==0)Then
+            r = l
+        EndIf
+        If (HydroParam%IndexWaterLevelEdge(iEdge)>0.and. H >HydroParam%PCRI+NearZero) Then
+            Futn = HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etaInfn(l) - HydroParam%etan(l)))
+        Else
+            Futn = HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etan(r) - HydroParam%etan(l)))
+        EndIf
+        Fvtn = HydroParam%Fv(HydroParam%Smallm(iEdge),iEdge) - dt/MeshParam%CirDistance(iEdge)*HydroParam%g*(HydroParam%petan(MeshParam%EdgeNodes(2,iEdge)) - HydroParam%petan(MeshParam%EdgeNodes(1,iEdge)))
+        
         Call Tension(HydroParam%iWindStress,HydroParam%BottomTensionFlag,iEdge,HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),HydroParam%g,HydroParam%uxy(HydroParam%Smallm(iEdge),1,iEdge),HydroParam%uxy(HydroParam%Smallm(iEdge),2,iEdge),HydroParam%uxy(HydroParam%CapitalM(iEdge),1,iEdge),HydroParam%uxy(HydroParam%CapitalM(iEdge),2,iEdge),Chezy,rhoairCell,HydroParam%rho0,HydroParam%windDragConstant,HydroParam%WindVel(:,iEdge),HydroParam%WindXY(:,iEdge),HydroParam%GammaT,HydroParam%GammaB)
+        !Call Tension(HydroParam%iWindStress,HydroParam%BottomTensionFlag,iEdge,HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),HydroParam%g,Futn,Fvtn,HydroParam%uxy(HydroParam%CapitalM(iEdge),1,iEdge),HydroParam%uxy(HydroParam%CapitalM(iEdge),2,iEdge),Chezy,rhoairCell,HydroParam%rho0,HydroParam%windDragConstant,HydroParam%WindVel(:,iEdge),HydroParam%WindXY(:,iEdge),HydroParam%GammaT,HydroParam%GammaB)
 
         ! If a face is dry, set the velocity to zero
         If (HydroParam%H(iEdge) - HydroParam%hj(iEdge) <= HydroParam%PCRI + NearZero) Then
