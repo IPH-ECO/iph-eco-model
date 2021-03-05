@@ -110,16 +110,16 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     MeshParam%iSaturation = 0
     
     !!!Bench 01:
-    !e0 = 0.3 !e0 0.1 b01 0.3
-    !MeshParam%Ksat = 0.01 !k0 0.01 b01 
-    !MeshParam%alpha = 29.0!Casulli == 1 Panday == 2.25
-    !MeshParam%nSoil = 4.0 !Casulli == 1.4 Panday == 1.89
+    e0 = 0.3 !e0 0.1 b01 0.3
+    MeshParam%Ksat = 0.01 !k0 0.01 b01 
+    MeshParam%alpha = 29.0!Casulli == 1 Panday == 2.25
+    MeshParam%nSoil = 4.0 !Casulli == 1.4 Panday == 1.89
     
     !!Bench 02:
-    e0 = 0.1
-    MeshParam%Ksat  = 0.00005 !k0 0.01 b01 0.00005    
-    MeshParam%alpha = 2.25 !Casulli == 1 Panday == 2.25
-    MeshParam%nSoil = 1.89 !Casulli == 1.4 Panday == 1.89    
+    !e0 = 0.1
+    !MeshParam%Ksat  = 0.00005 !k0 0.01 b01 0.00005    
+    !MeshParam%alpha = 2.25 !Casulli == 1 Panday == 2.25
+    !MeshParam%nSoil = 1.89 !Casulli == 1.4 Panday == 1.89    
     
     !k0 = 0.01 !k0 0.01 b01
     HydroParam%PsiCrit = 0.0d0
@@ -282,7 +282,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
                 EndDo        
             Else
                 HydroParam%hj(Face) = Max(HydroParam%hb(l),HydroParam%hb(r))  !  (0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) !Max(Hbat(I,J),HBat(IViz,JViz))!*** !(0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) Verificar sinal posteriormente, se j� entrar como cota n�o precisa do sinal 
-                HydroParam%sj(Face) = Max(HydroParam%sb(l),HydroParam%sb(r))
+                HydroParam%sj(Face) = Max(HydroParam%sb(l),HydroParam%sb(r))              
                 !HydroParam%hj(Face) = 0.5*(HydroParam%hb(l)+HydroParam%hb(r))  !  (0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) !Max(Hbat(I,J),HBat(IViz,JViz))!*** !(0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) Verificar sinal posteriormente, se j� entrar como cota n�o precisa do sinal 
                 !HydroParam%sj(Face) = 0.5*(HydroParam%sb(l)+HydroParam%sb(r))
                 Do iLayer = 1,MeshParam%KMax

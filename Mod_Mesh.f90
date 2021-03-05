@@ -142,9 +142,9 @@ Module MeshVars
         this%dy = this%dx
         !Lock horizontal resolution test
         this%dx = 20.0d0 !bench 02
-        !this%dy = 6.48d0 !bench 01
-        !this%dx = 0.020d0 !bench 01
-        !this%nElem = StructuredMeshFeatures%numberOfElements - 36 !bench01
+        this%dy = 6.48d0 !bench 01
+        this%dx = 0.020d0 !bench 01
+        this%nElem = StructuredMeshFeatures%numberOfElements - 36 !bench01
         this%subfactor = 100
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
@@ -168,7 +168,7 @@ Module MeshVars
         Do iElem = 1, this%nElem
             this%xb(iElem) = xCoordinates(iElem)
             this%yb(iElem) = yCoordinates(iElem)            
-            !this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO b01
+            this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO b01
             this%Quadri(3,iElem) = verticeIds(4*(iElem-1)+1)
             this%Quadri(4,iElem) = verticeIds(4*(iElem-1)+2)
             this%Quadri(1,iElem) = verticeIds(4*(iElem-1)+3)

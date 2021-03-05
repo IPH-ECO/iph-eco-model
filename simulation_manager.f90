@@ -89,7 +89,7 @@
     
 
     character, pointer :: OutputNameFile(:)
-    Integer i, icell, iOutput
+    Integer i, icell, iOutput, iNewton,innerNewton
     Character(200):: FileName,Basename
     Real::  stime,ftime,t1, Simtime
     real :: start_time, finish_time
@@ -220,7 +220,7 @@
         Call GetMeteorologicalData(MeshParam,MeteoParam,simParam%time,HydroParam%AirtempRef)
         Simtime = simParam%dt*simParam%it
         ! Use Casulli's Semi-Implicit Solution (TRIM) to solve the Depth-Averaged Navier-Stokes Equation
-        If (simParam%iSimHydro == 1) Call Hydro(HydroParam,MeshParam,MeteoParam,simParam%dt,simParam%time,Simtime)
+        If (simParam%iSimHydro == 1) Call Hydro(HydroParam,MeshParam,MeteoParam,simParam%dt,simParam%time,Simtime,iNewton,innerNewton)
         
         If (simParam%iSimWQ == 1) Call GetWQBoundaryConditions(HydroParam,LimnoParam,simParam%time)        
         
@@ -244,7 +244,8 @@
         simParam%start=start_time
         simParam%finish=finish_time
         
-        Call WriteOutputs(simParam,HydroParam,MeshParam,LimnoParam,MeteoParam)
+        !Call WriteOutputs(simParam,HydroParam,MeshParam,LimnoParam,MeteoParam,iNewton,innerNewton)
+        Call WriteOutputs(simParam,HydroParam,MeshParam,LimnoParam,MeteoParam,iNewton,innerNewton)
 
         Call SaveRecovery(sim,simParam,MeshParam,HydroParam,LimnoParam)
         
