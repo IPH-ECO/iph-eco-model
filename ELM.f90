@@ -40,7 +40,9 @@
         !Get right/left iElements that share iEdge
         l = MeshParam%Left(iEdge)
         r = MeshParam%Right(iEdge)
-        
+        if(iEdge ==1651 ) Then
+            continue
+        endif
         ! If is a dry cell, the backtrack velocities is equal to zero.
         ! Note that in subsurface coupled case %H(iEdge) can takes into account the freatic water level in Cell.
         ! DZsj represents the Edge freatic component thickness, thus H - DZsj is equivalent only surface water level
@@ -348,7 +350,7 @@
     endif
     dtaux = dtb
     timeAcum = 0.d0
-    if(iEdge ==121 ) Then
+    if(iEdge ==1651 ) Then
         continue
     endif
     
@@ -370,6 +372,9 @@
         !xt=x0
         !yt=y0
         !zt=z0    
+        if(nnel==550)Then
+            continue
+        endif
 
         If (ELM_flag==0) Then !iBilinear Interpolation
             If (FuFw_flag==0) Then !grid for U velocitys
@@ -389,13 +394,17 @@
             !Endif
 
             If (HydroParam%eta(nnel) - HydroParam%hb(nnel) < HydroParam%PCRI + NearZero) Then 
-                uuBtrack = uuint
-                vvBtrack = vvint
-                wwBtrack = wwint
-                timeAcum = dt
-
-                Call iQuadratic(uuBtrack, vvBtrack, wwBtrack, uuNode(:,:), vvNode(:,:), wwNode(:,:), xxNode(:,:), yyNode(:,:), zzNode(:,:), xt, yt, zt)                
-                continue
+                !uuBtrack = uuint
+                !vvBtrack = vvint
+                !wwBtrack = wwint
+                !timeAcum = dt
+                !
+                !Call iQuadratic(uuBtrack, vvBtrack, wwBtrack, uuNode(:,:), vvNode(:,:), wwNode(:,:), xxNode(:,:), yyNode(:,:), zzNode(:,:), xt, yt, zt)                
+                !continue
+                uuBtrack = 0.d0
+                vvBtrack = 0.d0
+                wwBtrack = 0.d0
+                timeAcum = dt                
             !a)ELM-Conservative 
             Elseif (HydroParam%iConv == 4) Then       
                 hhNode(1,1) = zzNode(3,1) - sum(HydroParam%DZsi(:,nnel));   hhNode(1,4) = zzNode(3,4) - sum(HydroParam%DZsi(:,nnel));  hhNode(1,7) = zzNode(3,7) - sum(HydroParam%DZsi(:,nnel))
@@ -544,6 +553,8 @@
             If (timeAcum < dt .and. dtb + timeAcum > dt) Then
                 dtb = dt - timeAcum
             EndIf
+        Elseif( uuint**2 + vvint**2 + wwint**2 == 0.0d0 ) Then
+            timeAcum = dt
         EndIf        
             
     EndDo 

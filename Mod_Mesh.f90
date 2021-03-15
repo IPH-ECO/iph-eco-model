@@ -144,7 +144,7 @@ Module MeshVars
         this%dx = 20.0d0 !bench 02
         this%dy = 6.48d0 !bench 01
         this%dx = 0.020d0 !bench 01
-        this%nElem = StructuredMeshFeatures%numberOfElements - 36 !bench01
+        !this%nElem = StructuredMeshFeatures%numberOfElements - 36!bench01
         this%subfactor = 100
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
