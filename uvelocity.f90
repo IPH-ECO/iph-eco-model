@@ -2,6 +2,8 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
     ! List of Modifications: 
     !   -> 20.08.2019: Routine Update               (Cayo Lopes)
     
+    ![1] Casulli, V., & Cattani, E. (1994). Stability, accuracy and efficiency of a semi-implicit method for three-dimensional shallow water flow. 
+    !Computers & Mathematics with Applications, 27(4), 99-112.
     
     !$ use omp_lib
     Use MeshVars
@@ -54,18 +56,20 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
         If(r==0)Then
             r = l
         EndIf
+        ! Roughness velocity by [1] (p.6, after equation 18)
         If (HydroParam%IndexWaterLevelEdge(iEdge)>0 .and. H >HydroParam%PCRI+NearZero) Then
-            Futn = HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etaInfn(l) - HydroParam%etan(l)))
+            Futn = HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - 0.5*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etaInfn(l) - HydroParam%etan(l)))
         Else
-            Futn = HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etan(r) - HydroParam%etan(l)))
+            Futn = HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - 0.5*(dt/MeshParam%CirDistance(iEdge)/2)*(HydroParam%g*(HydroParam%etan(r) - HydroParam%etan(l)))
         EndIf
         Fvtn = HydroParam%Fv(HydroParam%Smallm(iEdge),iEdge) - dt/MeshParam%CirDistance(iEdge)*HydroParam%g*(HydroParam%petan(MeshParam%EdgeNodes(2,iEdge)) - HydroParam%petan(MeshParam%EdgeNodes(1,iEdge)))
         
         Call Tension(HydroParam%iWindStress,HydroParam%BottomTensionFlag,iEdge,HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),HydroParam%g,HydroParam%uxy(HydroParam%Smallm(iEdge),1,iEdge),HydroParam%uxy(HydroParam%Smallm(iEdge),2,iEdge),HydroParam%uxy(HydroParam%CapitalM(iEdge),1,iEdge),HydroParam%uxy(HydroParam%CapitalM(iEdge),2,iEdge),Chezy,rhoairCell,HydroParam%rho0,HydroParam%windDragConstant,HydroParam%WindVel(:,iEdge),HydroParam%WindXY(:,iEdge),HydroParam%GammaT,HydroParam%GammaB)
-        !Call Tension(HydroParam%iWindStress,HydroParam%BottomTensionFlag,iEdge,HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),HydroParam%g,Futn,Fvtn,HydroParam%uxy(HydroParam%CapitalM(iEdge),1,iEdge),HydroParam%uxy(HydroParam%CapitalM(iEdge),2,iEdge),Chezy,rhoairCell,HydroParam%rho0,HydroParam%windDragConstant,HydroParam%WindVel(:,iEdge),HydroParam%WindXY(:,iEdge),HydroParam%GammaT,HydroParam%GammaB)
+        !Call Tension(HydroParam%iWindStress,HydroParam%BottomTensionFlag,iEdge,HydroParam%CapitalM(iEdge),HydroParam%Smallm(iEdge),HydroParam%g,Futn,Futn,HydroParam%uxy(HydroParam%CapitalM(iEdge),1,iEdge),HydroParam%uxy(HydroParam%CapitalM(iEdge),2,iEdge),Chezy,rhoairCell,HydroParam%rho0,HydroParam%windDragConstant,HydroParam%WindVel(:,iEdge),HydroParam%WindXY(:,iEdge),HydroParam%GammaT,HydroParam%GammaB)
         
         ! 11.1.2 If not has neighbour cell:
         !If (r == 0) Then
+
         If (r == l) Then
             ! When has flow boundary condition:
             If (HydroParam%IndexInflowEdge(iEdge) > 0) Then        ! Boundary Condition
@@ -78,7 +82,7 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
                     ! 2D Case:
                     If (HydroParam%Smallm(iEdge) == HydroParam%CapitalM(iEdge)) Then
                         !Casulli,2015:
-                        HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  = (HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge)/(HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge) + HydroParam%GammaB*dt + NearZero))*(HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (1.-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etaInfn(l) - HydroParam%etan(l))) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%etaInf(l) - HydroParam%eta(l)))                    
+                        HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  = (HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge)/(HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge) + (HydroParam%GammaB + HydroParam%GammaT)*dt + NearZero))*(HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (1.-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etaInfn(l) - HydroParam%etan(l))) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%etaInf(l) - HydroParam%eta(l)))                    
                     Else
                         !3D Case:
                         Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)
@@ -143,12 +147,13 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
             ! If a face is dry, set the velocity to zero
             !If ( Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%etan(l), -HydroParam%hj(iEdge) + HydroParam%etan(r) ) <= HydroParam%PCRI/2+NearZero.or.Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI/2+NearZero) Then
             If ( Max( HydroParam%PCRI,-HydroParam%hj(iEdge) + HydroParam%etan(l), -HydroParam%hj(iEdge) + HydroParam%etan(r) ) <= HydroParam%PCRI+NearZero.or.Max( HydroParam%PCRI,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI+NearZero) Then
+            !If ( Max( 0.0d0,-HydroParam%hj(iEdge) + HydroParam%etan(l), -HydroParam%hj(iEdge) + HydroParam%etan(r) ) <= HydroParam%PCRI+NearZero.or.Max( 0.0d0,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI+NearZero) Then
                 HydroParam%u(:,iEdge)  = 0.d0
             Else
                 !2D Case:
                 If (HydroParam%Smallm(iEdge) == HydroParam%CapitalM(iEdge)) Then
                     !Casulli,2015:
-                    HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  = (HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge)/(HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge) + HydroParam%GammaB*dt + NearZero))*(HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (1.d0-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etan(r) - HydroParam%etan(l))) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%eta(r) - HydroParam%eta(l)))                    
+                    HydroParam%u(HydroParam%Smallm(iEdge),iEdge)  = (HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge)/(HydroParam%DZhjt(HydroParam%Smallm(iEdge),iEdge) + (HydroParam%GammaB + HydroParam%GammaT)*dt + NearZero))*(HydroParam%Fu(HydroParam%Smallm(iEdge),iEdge) - (1.d0-HydroParam%Theta)*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%g*(HydroParam%etan(r) - HydroParam%etan(l))) - HydroParam%Theta*HydroParam%g*(dt/MeshParam%CirDistance(iEdge))*(HydroParam%eta(r) - HydroParam%eta(l)))                    
                     !3D Case:
                 Else             
                     !DZjt must be DZjht for subsurface case
@@ -225,12 +230,12 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
     !11.2 Subsuperficial Velocities
     HydroParam%us(:,:) = 0.d0
     If (MeshParam%iBedrock == 1) Then
-    !$OMP parallel do default(none) shared(MeshParam,HydroParam) private(iLayer,r,l,iEdge,NearZero)
+    !!$OMP parallel do default(none) shared(MeshParam,HydroParam) private(iLayer,r,l,iEdge,NearZero)
         Do iEdge = 1, MeshParam%nEdge
             !DZsjAcum = 0.d0
             l = MeshParam%Left(iEdge) 
             r = MeshParam%Right(iEdge)
-			If(HydroParam%DZsjt(HydroParam%Smallms(iEdge),iEdge) > 0) Then ! If Edge lower layer have sediment thickness
+			If(HydroParam%DZsjt(HydroParam%Smallms(iEdge),iEdge) > HydroParam%PCRI) Then ! If Edge lower layer have sediment thickness
                 If (r == 0) Then
                     If (HydroParam%IndexWaterLevelEdge(iEdge)>0.and.-HydroParam%sj(iEdge) + HydroParam%eta(l)>HydroParam%PCRI+NearZero) Then
                         If ((HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge).and.HydroParam%Smallms(iEdge) == HydroParam%CapitalM(iEdge) )) Then
@@ -274,7 +279,7 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
                 EndDo                  
 			EndIf
         EndDo
-        !$OMP end parallel do
+        !!$OMP end parallel do
     EndIf
     Return    
 End Subroutine uvelocity

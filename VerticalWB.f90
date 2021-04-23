@@ -19,24 +19,30 @@ Subroutine VerticalWB(HydroParam,MeshParam,MeteoParam,dt,SimTime)
     type(HydrodynamicParam) :: HydroParam
     type(MeteorologicalParam) :: MeteoParam
 
+    Integer:: irrigMangueiraID(5),irrigMirimID(8)
+    Real:: irMangEta,irMiriEta
+    
+    !!CELL ID irrigacao BC interna:
+    !irrigMangueiraID(1:5) = (/1039, 2102, 3135, 4174, 5095 /)
+    !irrigMirimID(1:8) = (/792, 1172, 2434, 3695, 5048, 5603, 5698, 6138 /)
+    !HydroParam%irMiriEta = 0.d0
+    !HydroParam%irMangEta = 0.d0
+    !
     etaplus0 = 0.d0
     !If(SimTime <= 5400 ) Then !Bench 02 Superficial
     !    etaplus0 = 10.8d0/1000/3600*dt
     !EndIf
-    
+    !
     !etaplus0 = 0.d0
     !If(SimTime <= 3024000 ) Then !Bench 02 Subsurface
-    !    etaplus0 = 10.8d0/1000/3600*dt
+    !    etaplus0 = 5*10.8d0/1000/3600*dt
     !EndIf
-    
+    !!
     !!
     !!$OMP parallel do default(none) shared(MeshParam,HydroParam,MeteoParam) private(iElem,Er,e_sat,B_Evap,e_evap,Ea,DELTA,NearZero,dt)
     Do iElem=1,MeshParam%nElem
         HydroParam%etaplus(iElem) = etaplus0
         
-        !If(MeshParam%xb(iElem) == 810.0d0) Then  !Bench02
-        !    HydroParam%etaplus(iElem) = etaplus0
-        !EndIf 
       !  If (MeteoParam%iReadEvap==0) Then
       !      HydroParam%etaplus(iElem) = -MeteoParam%Evap(iElem)/86400./1000.
       !  ElseIf (MeteoParam%iReadEvap==1) Then
@@ -53,17 +59,19 @@ Subroutine VerticalWB(HydroParam,MeshParam,MeteoParam,dt,SimTime)
       !       DELTA = 4098*e_sat/( 273.3 + MeteoParam%AirTemp(iElem) )**2.
       !       HydroParam%etaplus(iElem) = -MAX(0.0, ( ( DELTA/( DELTA+66.8 ) )*Er + ( 66.8/( DELTA + 66.8 ) )*Ea )/86400./1000.)         
       !  EndIf
-	     !
+      !  
+      !  If (HydroParam%eta(iElem) - HydroParam%hb(iElem) <= HydroParam%Pcri+NearZero) Then
+      !      HydroParam%etaplus(iElem) = 0.0d0
+      !  EndIf
+      !
       !  If (MeteoParam%iReadRail==0) Then       ! Constant Value
 		    !HydroParam%etaplus(iElem) = HydroParam%etaplus(iElem) + MeteoParam%Precip(iElem)/86400./1000.
       !  ElseIf (MeteoParam%iReadRail==1) Then
       !      !etaplus = etaplus + Precipmm(int((TEMPODIA-TEMPODIA0)/DTDIA)+1)
       !  EndIf
-      !
-      !  HydroParam%etaplus(iElem) = HydroParam%etaplus(iElem)*dt
-      !  
-      !If (HydroParam%eta(iElem) - HydroParam%hb(iElem) <= HydroParam%Pcri+NearZero) HydroParam%etaplus(iElem) = 0.
-    
+        !
+        !HydroParam%etaplus(iElem) = HydroParam%etaplus(iElem)*dt
+      
     EndDo
     !!$OMP end parallel do
 

@@ -560,7 +560,7 @@
         !    Continue
         !EndIf        
     EndDo
-    !
+    !HydroParam%uxy = HydroParam%uxysub
     !Do iElem = 1, MeshParam%nElem
     !    
     !    Do iEdge = 1,4

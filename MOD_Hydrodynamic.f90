@@ -172,6 +172,9 @@
         Real, Allocatable:: WaterLevel(:)
         Integer:: NInflow, NWaterLevel
         Integer, Allocatable:: NRange(:)
+        
+        Real, Allocatable:: irrgMirim(:), irrgMangueira(:) !Bench Lagoas
+        
     
         ! 7. Hydrodynamic Parameters 
         Integer:: NFUT !<Numbers of Sub-time steps for ELM (used in FUFV)

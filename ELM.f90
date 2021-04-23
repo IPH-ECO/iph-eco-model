@@ -40,9 +40,16 @@
         !Get right/left iElements that share iEdge
         l = MeshParam%Left(iEdge)
         r = MeshParam%Right(iEdge)
-        if(iEdge ==1651 ) Then
+        if(r == 456 ) Then
             continue
         endif
+        if(r == 496 ) Then
+            continue
+        endif
+        if(r == 583 ) Then
+            continue
+        endif
+        
         ! If is a dry cell, the backtrack velocities is equal to zero.
         ! Note that in subsurface coupled case %H(iEdge) can takes into account the freatic water level in Cell.
         ! DZsj represents the Edge freatic component thickness, thus H - DZsj is equivalent only surface water level
@@ -353,7 +360,6 @@
     if(iEdge ==1651 ) Then
         continue
     endif
-    
     
     Do While (timeAcum < dt)
         !Posição da partícula no primeiro subpasso de tempo
@@ -750,16 +756,7 @@
         if (nel==179) then
             continue
         endif
-        
-        !bench 02:
-        !if ( 100-NearZero <= MeshParam%EdgeBary(1,isd)<= 100 + NearZero) then
-        !    if (MeshParam%EdgeBary(2,isd) >= 110 - NearZero) then
-        !        r = 0
-        !    elseif(MeshParam%EdgeBary(2,isd) <= 90 + NearZero) then
-        !        r = 0
-        !    endif
-        !endif
-        
+
         !If particle cross iEdge from iElement(nel), so the new iElement is the neighbour Element which share iEdge(nel_j).
         !However, it can a abnormal case which either iEdge(isd) no has neighbour (horizontal exit or wall) or is dry:
         If (r == 0 .or. HydroParam%H(isd)-HydroParam%hj(isd)<=HydroParam%Pcri+NearZero) Then
@@ -792,42 +789,43 @@
             EndIf
             pathl=hvel*trm    
             
-        ElseIf (HydroParam%eta(MeshParam%Neighbor(nel_j,nnel)) - HydroParam%hb(MeshParam%Neighbor(nel_j,nnel)) <= HydroParam%PCRI + NearZero) Then !CAYO
-            lit=1
-        
-            !Nudge intersect (xin,yin), and update starting pt
-            xin=(1-1.0d-4)*xin+1.0d-4*MeshParam%xb(nel)
-            yin=(1-1.0d-4)*yin+1.0d-4*MeshParam%yb(nel)
-            xcg=xin
-            ycg=yin
+        ElseIf( MeshParam%Neighbor(nel_j,nnel) .ne. 0 ) Then
+                If (HydroParam%eta(MeshParam%Neighbor(nel_j,nnel)) - HydroParam%hb(MeshParam%Neighbor(nel_j,nnel)) <= HydroParam%PCRI + NearZero) Then !CAYO
+                    lit=1
+                    !Nudge intersect (xin,yin), and update starting pt
+                    xin=(1-1.0d-4)*xin+1.0d-4*MeshParam%xb(nel)
+                    yin=(1-1.0d-4)*yin+1.0d-4*MeshParam%yb(nel)
+                    xcg=xin
+                    ycg=yin
             
-            !Set tang. velocities:
-            xvel = 0.!uxy(jlev,1,isd)
-            yvel = 0.!uxy(jlev,2,isd)
-            zvel = 0.5*((HydroParam%uNode(jlev,3,md1)+HydroParam%uNode(jlev,3,md2))/2. + (HydroParam%uNode(jlev+1,3,md1)+HydroParam%uNode(jlev+1,3,md2))/2.)
+                    !Set tang. velocities:
+                    xvel = 0.!uxy(jlev,1,isd)
+                    yvel = 0.!uxy(jlev,2,isd)
+                    zvel = 0.5*((HydroParam%uNode(jlev,3,md1)+HydroParam%uNode(jlev,3,md2))/2. + (HydroParam%uNode(jlev+1,3,md1)+HydroParam%uNode(jlev+1,3,md2))/2.)
             
-            !Update Pt:
-            xt=xin-xvel*trm
-            yt=yin-yvel*trm
-            zt=zin-zvel*trm
+                    !Update Pt:
+                    xt=xin-xvel*trm
+                    yt=yin-yvel*trm
+                    zt=zin-zvel*trm
             
-            !Horizontal velocity magnitude:
-            hvel=dsqrt(xvel**2+yvel**2)
-            If(hvel.lt.1.e-4) Then !Checar essa condi��o, todos os casos entram aqui CAYO
+                    !Horizontal velocity magnitude:
+                    hvel=dsqrt(xvel**2+yvel**2)
+                    If(hvel.lt.1.e-4) Then !Checar essa condi��o, todos os casos entram aqui CAYO
+                        nfl=1
+                        xt=xin
+                        yt=yin
+                        zt=zin
+                        nnel=nel
+                        exit loop4
+                    EndIf
+                pathl=hvel*trm
+            ElseIf(dmax1(zt,HydroParam%hb(nel0)) < HydroParam%hb(MeshParam%Neighbor(nel_j,nnel)) ) Then
+                nnel = nel0 
+                xt=(1-1.0d-4)*MeshParam%EdgeBary(1,MeshParam%Edge(nel_j,nel0)) + 1.0d-4*MeshParam%xb(nel0)
+                yt=(1-1.0d-4)*MeshParam%EdgeBary(2,MeshParam%Edge(nel_j,nel0)) + 1.0d-4*MeshParam%yb(nel0)
                 nfl=1
-                xt=xin
-                yt=yin
-                zt=zin
-                nnel=nel
                 exit loop4
             EndIf
-            pathl=hvel*trm
-        ElseIf(dmax1(zt,HydroParam%hb(nel0)) < HydroParam%hb(MeshParam%Neighbor(nel_j,nnel)) ) Then
-            nnel = nel0 
-            xt=(1-1.0d-4)*MeshParam%EdgeBary(1,MeshParam%Edge(nel_j,nel0)) + 1.0d-4*MeshParam%xb(nel0)
-            yt=(1-1.0d-4)*MeshParam%EdgeBary(2,MeshParam%Edge(nel_j,nel0)) + 1.0d-4*MeshParam%yb(nel0)
-            nfl=1
-            exit loop4
         EndIf
 
         !Else in normal cases, we need get the neighbour element which shares the iEdge(nel_j):

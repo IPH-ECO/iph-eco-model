@@ -3,7 +3,7 @@
     Use MeshVars 
     Use Hydrodynamic
     Implicit none
-    Real :: eta, etaplus, V
+    Real :: eta, etaplus, V, DSmin, H1, H2, DSmax, vaux
     Integer :: iElem, iLayer
     type(MeshGridParam) :: MeshParam
     type(HydrodynamicParam) :: HydroParam
@@ -17,10 +17,47 @@
     If (V(eta,HydroParam%sb(iElem)) > 0.0d0 ) Then ! Wet Cell
         If (V(eta,HydroParam%hb(iElem)) > 0.0d0) Then 
             ! Superficial Layer:
-            !HydroParam%Vol(iElem)  = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*(Dot_Product(MeshParam%ei(:,iElem),HydroParam%DZsi(:,iElem)) + V(eta,HydroParam%hb(iElem)) ) !V1 = %Vol and V2 is zero.
-            !HydroParam%Vol1(iElem) =  MeshParam%Area(iElem)*(sum(HydroParam%DZsi(:,iElem)) + V(eta,HydroParam%hb(iElem)) )
+            HydroParam%Vol(iElem)  = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*(Dot_Product(MeshParam%ei(:,iElem),HydroParam%DZsi(:,iElem)) + V(eta,HydroParam%hb(iElem)) ) !V1 = %Vol and V2 is zero.
+            HydroParam%Vol1(iElem) =  MeshParam%Area(iElem)*(sum(HydroParam%DZsi(:,iElem)) + V(eta,HydroParam%hb(iElem)) )
+            
             HydroParam%Vol(iElem)  = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*(Dot_Product(MeshParam%ei(:,iElem),HydroParam%DZsi(:,iElem)) + V(eta,HydroParam%hb(iElem)) )
-            HydroParam%Vol1(iElem) = MeshParam%Area(iElem)*etaplus + MeshParam%Area(iElem)*V(eta,HydroParam%sb(iElem))
+            
+            !Haux = 0.d0
+            !if(HydroParam%hb(iElem) > 0.d0) Then
+            !    !DSmax = max(HydroParam%hj(MeshParam%Edge(1,iElem)),HydroParam%hj(MeshParam%Edge(2,iElem)),HydroParam%hj(MeshParam%Edge(3,iElem)),HydroParam%hj(MeshParam%Edge(4,iElem)))            
+            !    !DSmin = min(HydroParam%hj(MeshParam%Edge(1,iElem)),HydroParam%hj(MeshParam%Edge(2,iElem)),HydroParam%hj(MeshParam%Edge(3,iElem)),HydroParam%hj(MeshParam%Edge(4,iElem)))  
+            !    !
+            !    DSmax = max(HydroParam%hj(MeshParam%Edge(2,iElem)),HydroParam%hb(iElem))
+            !    DSmin = min(HydroParam%hj(MeshParam%Edge(2,iElem)),HydroParam%hb(iElem))
+            !    H1 = 0.5*(DSmax - DSmin)*MeshParam%Area(iElem)
+            !    
+            !    DSmax = max(HydroParam%hj(MeshParam%Edge(4,iElem)),HydroParam%hb(iElem))
+            !    DSmin = min(HydroParam%hj(MeshParam%Edge(4,iElem)),HydroParam%hb(iElem))
+            !    H2 = 0.5*(DSmax - DSmin)*MeshParam%Area(iElem)             
+            !    
+            !endif
+            !
+            !H1 = 0.5*(-HydroParam%hj(MeshParam%Edge(2,iElem)) + HydroParam%hb(iElem))*MeshParam%Area(iElem)
+            !if(H1<0.d0) then
+            !    H1 = H1*MeshParam%ei(1,iElem)
+            !endif
+            !
+            !H2 = 0.5*(-HydroParam%hj(MeshParam%Edge(4,iElem)) + HydroParam%hb(iElem))*MeshParam%Area(iElem)
+            !if(H2<0.d0) then
+            !    H2 = H2*MeshParam%ei(1,iElem)
+            !endif
+            ! 
+            !if(H1/= 0.d0) then
+            !    continue
+            !endif
+            !
+            !
+            !HydroParam%Vol(iElem)  = H1 + H2 + HydroParam%Vol(iElem) +  MeshParam%Area(iElem)*(Dot_Product(MeshParam%ei(:,iElem),HydroParam%DZsi(:,iElem)) + V(eta,HydroParam%hb(iElem)) )
+            !
+            !vaux = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*(Dot_Product(MeshParam%ei(:,iElem),HydroParam%DZsi(:,iElem)) + V(eta,HydroParam%hb(iElem)) )
+            !HydroParam%Vol1(iElem) = MeshParam%Area(iElem)*etaplus + MeshParam%Area(iElem)*V(eta,HydroParam%sb(iElem))
+            
+            
             !!! Subsurface Layer:
             !Do iLayer = HydroParam%ElSmallms(iElem),HydroParam%ElCapitalMs(iElem)
             !    If(HydroParam%DZsi(iLayer,iElem) > 0 ) Then
@@ -34,9 +71,26 @@
         Else
             HydroParam%Vol(iElem)  = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*MeshParam%ei(HydroParam%ElCapitalMs(iElem),iElem)*V(eta,HydroParam%sb(iElem)) !V1 = %Vol and V2 is zero.
             HydroParam%Vol1(iElem) =  MeshParam%Area(iElem)*V(eta,HydroParam%sb(iElem))
+            
             HydroParam%P(iElem)  = MeshParam%Area(iElem)
             HydroParam%Ci(iElem) = MeshParam%Area(iElem)*MeshParam%ei(HydroParam%ElCapitalMs(iElem),iElem)
             
+            
+            !H1 = 0.d0
+            !if(eta - HydroParam%hj(MeshParam%Edge(2,iElem))> 0.d0) then
+            !    H1 = (eta - HydroParam%hj(MeshParam%Edge(2,iElem)))*MeshParam%Area(iElem)*0.5
+            !endif
+            !
+            !H2 = 0.d0
+            !if(eta - HydroParam%hj(MeshParam%Edge(4,iElem))> 0.d0) then
+            !    H2 = (eta - HydroParam%hj(MeshParam%Edge(4,iElem)))*MeshParam%Area(iElem)*0.5
+            !endif
+            ! 
+            !if(H1/= 0.d0) then
+            !    continue
+            !endif    
+            !
+            !HydroParam%Vol(iElem)  = (1/MeshParam%ei(1,iElem)-MeshParam%ei(1,iElem))*H1 + (1/MeshParam%ei(1,iElem)-MeshParam%ei(1,iElem))*H2 + HydroParam%Vol(iElem) + MeshParam%Area(iElem)*MeshParam%ei(HydroParam%ElCapitalMs(iElem),iElem)*V(eta,HydroParam%sb(iElem)) !V1 = %Vol and V2 is zero.
             !! Only Subsurface Flow:
             !MeshParam%Si(HydroParam%ElSmallm(iElem):HydroParam%ElCapitalM(iElem),iElem) = 0.d0
             !Do iLayer = HydroParam%ElSmallms(iElem),HydroParam%ElCapitalMs(iElem)

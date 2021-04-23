@@ -48,6 +48,7 @@
                 !Face with pressure head boundary condition:
                 !!Casulli,2015:
                 Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( - a(iElem) )*(HydroParam%Theta*dt)*(HydroParam%Theta*HydroParam%g*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))
+                !Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( - a(iElem) )*((HydroParam%Theta*dt)*HydroParam%Theta*HydroParam%g*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face)*dt)
                 !Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( - a(iElem) )*(HydroParam%Theta*dt)*(HydroParam%Theta*HydroParam%g*dt*HydroParam%DZiADZ(Face) + HydroParam%Theta*HydroParam%DZK(Face))
             Else
                 If (Pij == 0) Then
@@ -56,6 +57,7 @@
                 Else
                     !Casulli,2015:
                     Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*(HydroParam%Theta*dt)*(HydroParam%Theta*HydroParam%g*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))
+                    !Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*(HydroParam%Theta*dt*HydroParam%Theta*HydroParam%g*dt*HydroParam%DZiADZ(Face) + dt*HydroParam%DZK(Face))
                     !Sum1 = Sum1 + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( ( a(Pij) - a(iElem) ) )*(HydroParam%Theta*dt)*(HydroParam%Theta*HydroParam%g*dt*HydroParam%DZiADZ(Face) + HydroParam%Theta*HydroParam%DZK(Face))
                 EndIf
             EndIf            

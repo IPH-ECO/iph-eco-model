@@ -476,7 +476,13 @@ Subroutine ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,IniTime,Fina
         EndIf
     EndDo    
     
-   
+    
+    
+    !Open(96,FILE=trim(simParam%OutputPath)//'/'//trim(Basename)//trim(FileName)//'.txt',STATUS='OLD',ACTION='READ')
+    !Do i=1,HydroParam%InflownTime(1)
+    !    READ(96,*) HydroParam%irrgMirim(i), HydroParam%irrgMangueira(i)    
+    !EndDo
+        
    
 End Subroutine ReadHydroBoundaryCondition
     

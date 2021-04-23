@@ -159,6 +159,17 @@ Subroutine VTKOutput(simParam,HydroParam,MeshParam,LimnoParam)
         EndDo
         E_IO = VTK_VAR(MeshParam%nElem*MeshParam%KMax,'SurfaceWaterElevation',HydroParam%SScalar)
     EndIf
+
+    ! 5.2 Surface Water Elevation
+    If (simParam%OutputHydro(2)==1) Then
+        Do iElem = 1,MeshParam%nElem
+            Do iLayer = 1,MeshParam%KMax
+                HydroParam%SScalar(iElem + (iLayer-1)*MeshParam%nElem) = Max(HydroParam%hb(iElem), NearZero) 
+            EndDo
+        EndDo
+        E_IO = VTK_VAR(MeshParam%nElem*MeshParam%KMax,'SedimentElevation',HydroParam%SScalar)
+    EndIf    
+    
     
     ! 5.3 Depth
     If (simParam%OutputHydro(3)==1) Then

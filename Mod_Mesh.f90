@@ -141,11 +141,11 @@ Module MeshVars
         this%dx = StructuredMeshFeatures%resolution
         this%dy = this%dx
         !Lock horizontal resolution test
-        this%dx = 20.0d0 !bench 02
-        this%dy = 6.48d0 !bench 01
-        this%dx = 0.020d0 !bench 01
-        !this%nElem = StructuredMeshFeatures%numberOfElements - 36!bench01
-        this%subfactor = 100
+        !this%dx = 20.0d0 !bench 02 - bacia
+        !this%dy = 6.48d0 !bench 01
+        !this%dx = 0.020d0 !bench 01 - maré 
+        !this%nElem = StructuredMeshFeatures%numberOfElements - 36!bench01 - maré
+        !this%subfactor = 1
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
         Allocate(this%Quadri(4,this%nElem))
@@ -168,7 +168,7 @@ Module MeshVars
         Do iElem = 1, this%nElem
             this%xb(iElem) = xCoordinates(iElem)
             this%yb(iElem) = yCoordinates(iElem)            
-            this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO b01
+            !this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO bench 01- maré
             this%Quadri(3,iElem) = verticeIds(4*(iElem-1)+1)
             this%Quadri(4,iElem) = verticeIds(4*(iElem-1)+2)
             this%Quadri(1,iElem) = verticeIds(4*(iElem-1)+3)
@@ -193,7 +193,7 @@ Module MeshVars
             ALLOCATE (this%LIMCAMAUX(this%NCAMMAX+1))
             Do i = 1,this%NCAMMAX
                 this%LIMCAM(i) = layers(i)                   ! Layer levels (m)
-                this%LIMCAM(i) = layersub(i) !bench02
+                !this%LIMCAM(i) = layersub(i) !bench02
             EndDo
         Else
             ALLOCATE (this%LIMCAM(1))

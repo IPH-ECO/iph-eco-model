@@ -114,16 +114,16 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     MeshParam%Ksat = 0.01 !k0 0.01 b01 
     MeshParam%alpha = 29.0!Casulli == 1 Panday == 2.25
     MeshParam%nSoil = 4.0 !Casulli == 1.4 Panday == 1.89
-    
-    !!Bench 02:
+    !
+    !!!!Bench 02:
     !e0 = 0.1
     !MeshParam%Ksat  = 0.00005 !k0 0.01 b01 0.00005    
     !MeshParam%alpha = 2.25 !Casulli == 1 Panday == 2.25
     !MeshParam%nSoil = 1.89 !Casulli == 1.4 Panday == 1.89    
-    
-    !!!Bench 03:
-    e0 = 0.5!0.2 !e0 0.1 b01 0.3
-    MeshParam%Ksat = 0.005 !0.0005 !k0 0.01 b01
+    !
+    !!!!Bench 03:
+    !e0 = 0.5!0.2 !e0 0.1 b01 0.3
+    !MeshParam%Ksat = 0.005 !0.0005 !k0 0.01 b01
     
     !k0 = 0.01 !k0 0.01 b01
     HydroParam%PsiCrit = 0.0d0
@@ -142,12 +142,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     EndIf
     HydroParam%etan = HydroParam%eta
     
-    
-    !HydroParam%eta = HydroParam%eta -0.01
-    !HydroParam%eta(3) = HydroParam%eta(3) + 0.01
-    
-    
-    
+
     !!Filling sinks
     !npit = 1 
     !Do While (npit /= 0)   
@@ -209,6 +204,12 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
             Do iLayer = 1,MeshParam%KMax
                 If (abs(HydroParam%hb(iElem)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<HydroParam%PCRI) then
                     HydroParam%hb(iElem)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)
+                    !HydroParam%hb(iElem) = 0.0d0
+                    !HydroParam%hb(iElem)= Max(-0.33,0.5*abs(MeshParam%xb(iElem)-1.40 - 2.64) - 0.35)
+                    !HydroParam%hb(iElem)= -dmin1(0.d0,HydroParam%hb(iElem))
+                    if(HydroParam%hb(iElem)<=HydroParam%Pcri) then
+                        HydroParam%hb(iElem) = 0.0d0
+                    endif
                 EndIf
                 If (abs(HydroParam%sb(iElem)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<HydroParam%PCRI) then
                     HydroParam%sb(iElem)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)
@@ -243,7 +244,8 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
         !    HydroParam%hb(iElem) = HydroParam%eta(iElem)
         !EndIf
         
-        If (HydroParam%eta(iElem) - HydroParam%sb(iElem) <= HydroParam%Pcri+NearZero) Then
+        !If (HydroParam%eta(iElem) - HydroParam%sb(iElem) <= HydroParam%Pcri+NearZero) Then
+        If (HydroParam%eta(iElem) - HydroParam%sb(iElem) <=NearZero) Then
             !HydroParam%eta(iElem) = HydroParam%sb(iElem) + HydroParam%Pcri/2.d0 !*** Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
             HydroParam%eta(iElem) = HydroParam%sb(iElem)!*** Verificar sinal posteriormente, se já entrar como cota não precisa do sinal 
         EndIf
@@ -302,21 +304,6 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
         
     EndDo
     
-    !Do iElem = 1, MeshParam%nElem
-    !    If( 810.0d0 - 0.0001 <= MeshParam%xb(iElem)) Then
-    !        If( MeshParam%xb(iElem) <= 810.d0 +  0.0001 ) Then
-    !            HydroParam%hb(iElem) = -(10 - 0.02*MeshParam%yb(iElem)) + 10 
-    !        EndIf
-    !    endif        
-    !EndDo
-    !
-    !Do iEdge = 1, MeshParam%nEdge
-    !    If( 810.0d0 - 0.0001 <= MeshParam%EdgeBary(1,iEdge)) Then
-    !        If( MeshParam%EdgeBary(1,iEdge) <= 810.d0 +  0.0001 ) Then
-    !            HydroParam%hj(iEdge) = -(10 - 0.02*MeshParam%EdgeBary(2,iEdge)) + 10 
-    !        EndIf
-    !    endif
-    !EndDo
      
     ! 4. Compute the New Vertical Velocity Field
     ! w(Smallm-1,:) = 0.d0 -> No flux through the Bottom
@@ -455,22 +442,22 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
         HydroParam%DZhi(:,iElem) = HydroParam%DZi(:,iElem)
 		If (MeshParam%iBedrock == 1) Then
             
-            If(MeshParam%iSaturation == 0) Then !Darcy's Model
-                HydroParam%PsiCrit(iElem) = 0.0
-            ElseIf(MeshParam%iSaturation == 1) Then ! Brooks and Corey's Model
-                HydroParam%PsiCrit(iElem) = 1/MeshParam%alpha(HydroParam%ElCapitalMs(iElem),iElem)
-            Else !van Genuchten's Model
-                HydroParam%PsiCrit(iElem) = ((MeshParam%nSoil(HydroParam%ElCapitalMs(iElem),iElem) - 1)/MeshParam%nSoil(HydroParam%ElCapitalMs(iElem),iElem))**(1/MeshParam%nSoil(HydroParam%ElCapitalMs(iElem),iElem))/(MeshParam%alpha(HydroParam%ElCapitalMs(iElem),iElem)*MeshParam%nSoil(HydroParam%ElCapitalMs(iElem),iElem))        
-                !HydroParam%PsiCrit(iElem) = etatol
-            EndIf            
+            !If(MeshParam%iSaturation == 0) Then !Darcy's Model
+            !    HydroParam%PsiCrit(iElem) = 0.0
+            !ElseIf(MeshParam%iSaturation == 1) Then ! Brooks and Corey's Model
+            !    HydroParam%PsiCrit(iElem) = 1/MeshParam%alpha(HydroParam%ElCapitalMs(iElem),iElem)
+            !Else !van Genuchten's Model
+            !    HydroParam%PsiCrit(iElem) = ((MeshParam%nSoil(HydroParam%ElCapitalMs(iElem),iElem) - 1)/MeshParam%nSoil(HydroParam%ElCapitalMs(iElem),iElem))**(1/MeshParam%nSoil(HydroParam%ElCapitalMs(iElem),iElem))/(MeshParam%alpha(HydroParam%ElCapitalMs(iElem),iElem)*MeshParam%nSoil(HydroParam%ElCapitalMs(iElem),iElem))        
+            !    !HydroParam%PsiCrit(iElem) = etatol
+            !EndIf            
             
             Do iLayer = HydroParam%ElSmallms(iElem), HydroParam%ElCapitalM(iElem)
             
-                If (iLayer >= HydroParam%ElSmallm(iElem) .or.  HydroParam%ElSmallms(iElem) ==  HydroParam%ElSmallm(iElem)) Then
-                    continue
-                Else
-                    MeshParam%ei(iLayer,iElem) = e0
-                EndIf
+                !If (iLayer >= HydroParam%ElSmallm(iElem) .or.  HydroParam%ElSmallms(iElem) ==  HydroParam%ElSmallm(iElem)) Then
+                !    continue
+                !Else
+                !    MeshParam%ei(iLayer,iElem) = e0
+                !EndIf
 
                 If (iLayer < HydroParam%ElSmallm(iElem)) Then
                     HydroParam%DZhi(iLayer,iElem) = 0.d0
@@ -642,43 +629,53 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
         HydroParam%DZK(iEdge) = 0.d0
         If (MeshParam%iBedrock == 1) Then
             Do iLayer = HydroParam%Smallms(iEdge), HydroParam%CapitalM(iEdge) ! 
-
-                If (iLayer < HydroParam%Smallm(iEdge)) Then
-                    HydroParam%DZhj(iLayer,iEdge) = 0.
-                    HydroParam%DZsj(iLayer,iEdge) = HydroParam%DZj(iLayer,iEdge)
-                ElseIf (iLayer > HydroParam%Smallm(iEdge)) Then
-                    HydroParam%DZhj(iLayer,iEdge) = HydroParam%DZj(iLayer,iEdge)
-                    HydroParam%DZsj(iLayer,iEdge) = 0.
-                    continue
-                Else
-                    If ( HydroParam%Z(iLayer+1,iEdge) > HydroParam%hj(iEdge) ) Then
-                        HydroParam%DZhj(iLayer,iEdge) = HydroParam%Z(iLayer+1,iEdge) - HydroParam%hj(iEdge)
-                        HydroParam%DZsj(iLayer,iEdge) = HydroParam%hj(iEdge) - HydroParam%Z(iLayer,iEdge)
-                    Else
+                    
+                If (HydroParam%H(iEdge) > HydroParam%Pcri) Then
+                    If (iLayer < HydroParam%Smallm(iEdge)) Then
                         HydroParam%DZhj(iLayer,iEdge) = 0.
-                        HydroParam%DZsj(iLayer,iEdge) = Max(HydroParam%Pcri,HydroParam%Z(iLayer+1,iEdge) - HydroParam%Z(iLayer,iEdge))
-                        If(HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge) .and. MeshParam%iSaturation == 0) Then
-                            If(HydroParam%H(iEdge) < HydroParam%hj(iEdge) ) Then
-                                HydroParam%DZsj(iLayer,iEdge) = HydroParam%H(iEdge)
-                            ElseIf(HydroParam%H(iEdge) <= HydroParam%sj(iEdge))Then
-                                HydroParam%DZsj(iLayer,iEdge) = 0.d0
-                            EndIf   
-                        EndIf                       
-                    EndIf
-                EndIf    
-                
-                If (HydroParam%DZsj(iLayer,iEdge) > 0) Then 
-                    !If Neighbour lower layer is above Elem layer, the lower Element layer is 
-                    If (iLayer < HydroParam%ElSmallms(r) .and. MeshParam%Ki(iLayer,l) > 0) Then
-                        MeshParam%Kj(iLayer,iEdge) = MeshParam%Ki(iLayer,l)
-                    ElseIf (iLayer < HydroParam%ElSmallms(l) .and. MeshParam%Ki(iLayer,r) > 0) Then     
-                        MeshParam%Kj(iLayer,iEdge) = MeshParam%Ki(iLayer,r)                
+                        HydroParam%DZsj(iLayer,iEdge) = HydroParam%DZj(iLayer,iEdge)
+                    ElseIf (iLayer > HydroParam%Smallm(iEdge)) Then
+                        HydroParam%DZhj(iLayer,iEdge) = HydroParam%DZj(iLayer,iEdge)
+                        HydroParam%DZsj(iLayer,iEdge) = 0.
+                        continue
                     Else
-                        MeshParam%Kj(iLayer,iEdge) = Max(MeshParam%Ki(iLayer,l),MeshParam%Ki(iLayer,r))
-                    EndIf
-                EndIf
+                        If ( HydroParam%Z(iLayer+1,iEdge) > HydroParam%hj(iEdge) ) Then
+                            HydroParam%DZhj(iLayer,iEdge) = HydroParam%Z(iLayer+1,iEdge) - HydroParam%hj(iEdge)
+                            HydroParam%DZsj(iLayer,iEdge) = HydroParam%hj(iEdge) - HydroParam%Z(iLayer,iEdge)
+                        Else
+                            HydroParam%DZhj(iLayer,iEdge) = 0.
+                            HydroParam%DZsj(iLayer,iEdge) = Max(HydroParam%Pcri,HydroParam%Z(iLayer+1,iEdge) - HydroParam%Z(iLayer,iEdge))
+                            !If(HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge) .and. MeshParam%iSaturation == 0) Then
+                            !    If(HydroParam%H(iEdge) < HydroParam%hj(iEdge) ) Then
+                            !        HydroParam%DZsj(iLayer,iEdge) = HydroParam%H(iEdge)
+                            !    ElseIf(HydroParam%H(iEdge) <= HydroParam%sj(iEdge))Then
+                            !        HydroParam%DZsj(iLayer,iEdge) = 0.d0
+                            !    EndIf   
+                            !EndIf                       
+                        EndIf
+                    EndIf    
                 
-                HydroParam%DZK(iEdge) = HydroParam%DZK(iEdge) + HydroParam%DZsj(iLayer,iEdge)*MeshParam%Kj(iLayer,iEdge) !Sediment Layer
+                    If(HydroParam%Smallms(iEdge) == HydroParam%CapitalMs(iEdge) .and. MeshParam%iSaturation == 0) Then
+                        If(HydroParam%H(iEdge) < HydroParam%hj(iEdge) ) Then
+                            HydroParam%DZsj(iLayer,iEdge) = HydroParam%H(iEdge)
+                        ElseIf(HydroParam%H(iEdge) <= HydroParam%sj(iEdge))Then
+                            HydroParam%DZsj(iLayer,iEdge) = 0.d0
+                        EndIf   
+                    EndIf                   
+                
+                    If (HydroParam%DZsj(iLayer,iEdge) > 0) Then 
+                        !If Neighbour lower layer is above Elem layer, the lower Element layer is 
+                        If (iLayer < HydroParam%ElSmallms(r) .and. MeshParam%Ki(iLayer,l) > 0) Then
+                            MeshParam%Kj(iLayer,iEdge) = MeshParam%Ki(iLayer,l)
+                        ElseIf (iLayer < HydroParam%ElSmallms(l) .and. MeshParam%Ki(iLayer,r) > 0) Then     
+                            MeshParam%Kj(iLayer,iEdge) = MeshParam%Ki(iLayer,r)                
+                        Else
+                            MeshParam%Kj(iLayer,iEdge) = Max(MeshParam%Ki(iLayer,l),MeshParam%Ki(iLayer,r))
+                        EndIf
+                    EndIf
+                
+                    HydroParam%DZK(iEdge) = HydroParam%DZK(iEdge) + HydroParam%DZsj(iLayer,iEdge)*MeshParam%Kj(iLayer,iEdge) !Sediment Layer
+                EndIf
             EndDo
 		EndIf
         
