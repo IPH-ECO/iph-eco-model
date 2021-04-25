@@ -20,7 +20,7 @@
             HydroParam%Vol(iElem)  = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*(Dot_Product(MeshParam%ei(:,iElem),HydroParam%DZsi(:,iElem)) + V(eta,HydroParam%hb(iElem)) ) !V1 = %Vol and V2 is zero.
             HydroParam%Vol1(iElem) =  MeshParam%Area(iElem)*(sum(HydroParam%DZsi(:,iElem)) + V(eta,HydroParam%hb(iElem)) )
             
-            HydroParam%Vol(iElem)  = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*(Dot_Product(MeshParam%ei(:,iElem),HydroParam%DZsi(:,iElem)) + V(eta,HydroParam%hb(iElem)) )
+            !HydroParam%Vol(iElem)  = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*(Dot_Product(MeshParam%ei(:,iElem),HydroParam%DZsi(:,iElem)) + V(eta,HydroParam%hb(iElem)) )
             
             !Haux = 0.d0
             !if(HydroParam%hb(iElem) > 0.d0) Then

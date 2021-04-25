@@ -181,7 +181,7 @@ Module MeshVars
         Call SortDecreasing(layers,sim%layersLength)
         
         !this%NCAMMAX = 62 !bench02 1 surface + 11 subsurface
-        this%zL = 0.000 !bench02
+        !this%zL = 0.000 !bench02
         !layersub(1) = sim%maximumVerticalLimit-1
         !Do i = 2,this%NCAMMAX-1
         !    layersub(i) = sim%maximumVerticalLimit - i !the top ten layers have 1m thickness
