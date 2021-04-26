@@ -14,6 +14,7 @@
     MeshParam%Ki(HydroParam%ElSmallm(iElem):HydroParam%ElCapitalM(iElem),iElem)  = 0.d0    
     MeshParam%Ki(HydroParam%ElSmallms(iElem):HydroParam%ElCapitalMs(iElem),iElem) = MeshParam%Ksat(HydroParam%ElSmallms(iElem):HydroParam%ElCapitalMs(iElem),iElem)
     HydroParam%Ci(iElem) = 0.d0
+    HydroParam%P(iElem) = MeshParam%Area(iElem)
     If (V(eta,HydroParam%sb(iElem)) > 0.0d0 ) Then ! Wet Cell
         If (V(eta,HydroParam%hb(iElem)) > 0.0d0) Then 
             ! Superficial Layer:

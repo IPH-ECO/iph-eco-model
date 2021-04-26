@@ -141,10 +141,10 @@ Module MeshVars
         this%dx = StructuredMeshFeatures%resolution
         this%dy = this%dx
         !Lock horizontal resolution test
-        !this%dx = 20.0d0 !bench 02 - bacia
-        !this%dy = 6.48d0 !bench 01
-        !this%dx = 0.020d0 !bench 01 - maré 
-        !this%nElem = StructuredMeshFeatures%numberOfElements - 36!bench01 - maré
+        !!this%dx = 20.0d0 !bench 02 - bacia
+        this%dy = 6.48d0 !bench 01
+        this%dx = 0.020d0 !bench 01 - maré 
+        this%nElem = StructuredMeshFeatures%numberOfElements - 36!bench01 - maré
         !this%subfactor = 1
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
@@ -168,7 +168,7 @@ Module MeshVars
         Do iElem = 1, this%nElem
             this%xb(iElem) = xCoordinates(iElem)
             this%yb(iElem) = yCoordinates(iElem)            
-            !this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO bench 01- maré
+            this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO bench 01- maré
             this%Quadri(3,iElem) = verticeIds(4*(iElem-1)+1)
             this%Quadri(4,iElem) = verticeIds(4*(iElem-1)+2)
             this%Quadri(1,iElem) = verticeIds(4*(iElem-1)+3)
@@ -181,7 +181,7 @@ Module MeshVars
         Call SortDecreasing(layers,sim%layersLength)
         
         !this%NCAMMAX = 62 !bench02 1 surface + 11 subsurface
-        !this%zL = 0.000 !bench02
+        this%zL = 0.000 !bench02
         !layersub(1) = sim%maximumVerticalLimit-1
         !Do i = 2,this%NCAMMAX-1
         !    layersub(i) = sim%maximumVerticalLimit - i !the top ten layers have 1m thickness
