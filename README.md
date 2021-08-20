@@ -10,7 +10,7 @@ Atualizado em 20-08-2021
 * Intel oneAPI Base Toolkit (https://software.intel.com/content/www/us/en/develop/tools/oneapi/base-toolkit/download.html)
 * Instalar Intel oneAPI HPC Toolkit (https://software.intel.com/content/www/us/en/develop/tools/oneapi/hpc-toolkit/download.html)
   
-*Todos os programas listados acima são gratuitos.*
+> Todos os programas listados acima são gratuitos.
 
 2. Abrir o Visual Studio 2019
 
@@ -26,7 +26,7 @@ Atualizado em 20-08-2021
 
 3. No campo "Command Line" em "Build Events > Post-Build Events", inserir o seguinte comando:
 
-`<addr>` copy "caminho para iph-eco-model.dll" "pasta de instalação da interface gráfica"
+  copy "caminho para iph-eco-model.dll" "pasta de instalação da interface gráfica"
 
-* Ex. copy "E:\iph-eco-model\x64\Debug\iph-eco-model.dll" "E:\IPH-ECO" *
+> Ex. copy "E:\iph-eco-model\x64\Debug\iph-eco-model.dll" "E:\IPH-ECO" *
 
