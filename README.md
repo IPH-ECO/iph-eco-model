@@ -1,4 +1,4 @@
-# IPH-ECO-model
+# IPH-ECO model
 
 Atualizado em 20-08-2021
 
