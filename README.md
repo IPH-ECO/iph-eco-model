@@ -26,7 +26,7 @@ Atualizado em 20-08-2021
 
 3. No campo "Command Line" em "Build Events > Post-Build Events", inserir o seguinte comando:
 
-      copy "caminho para iph-eco-model.dll" "pasta de instalação da interface gráfica"
+      `copy "caminho para iph-eco-model.dll" "pasta de instalação da interface gráfica"`
 
 > Ex. copy "E:\iph-eco-model\x64\Debug\iph-eco-model.dll" "E:\IPH-ECO" *
 
