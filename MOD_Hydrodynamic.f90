@@ -127,6 +127,7 @@
         Real, Allocatable:: rhsnonHydro(:,:)
         Real, Allocatable:: q(:,:),pq(:,:)
         Real, Allocatable:: Rug(:) !< Roughness coefficient
+        Real, Allocatable:: GammaB(:) ! Bed Friction Coefficient
         Real, Allocatable:: uIniVec(:,:) !< Initial condition of velocity components
         Real, Allocatable:: sDRhoW(:,:) !<Water density
         Real, Allocatable:: sDRhoWt(:,:) !<Water density
@@ -136,10 +137,10 @@
         Real, Allocatable:: Vol(:) !<Water Volume in element with porous region             !CAYO 
         Real, Allocatable:: Vol2(:) !<Water Volume in element with porous region             !CAYO 
         Real, Allocatable:: Vol1(:) !<Water Volume in element with porous region             !CAYO 
-        Real, Allocatable:: Qk(:) !<Water Volume in element with porous region             !CAYO 
-        Real, Allocatable:: Ci(:) !<Water Volume in element with porous region             !CAYO 
-        Real, Allocatable:: etam(:) !<Water Volume in element with porous region             !CAYO 
-        Real, Allocatable:: d(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: Qk(:) 
+        Real, Allocatable:: Ci(:) 
+        Real, Allocatable:: etam(:) 
+        Real, Allocatable:: d(:) 
         
         ! 4. Turbulence Model    
         Real,Allocatable:: HorViscosity(:,:,:)      !< Horizontal Eddy Viscosity
@@ -184,9 +185,9 @@
         Real:: ALB  !<Albedo
         Real:: OMEGA !<Earth angular velocity (in rad/sec)
         Real:: g !<Acceleration due to gravity (m/s²)
-        Real:: CFL  !<Courant–Friedrich–Lewy Number
+        Real, Allocatable:: CFL(:)  !<Courant–Friedrich–Lewy Number
         Real:: nux, nuy, nuz
-        Real:: GammaB !<Tension in the bottom layer
+        !Real:: GammaB !<Tension in the bottom layer
         Real:: GammaT !<Tension in the surface layer
         Real:: Theta !<Implicitness coefficient (from 0.5 to 1.00)
         Real:: CSmag !<Smagorinsky coefficient (from 0.10 to 0.20)

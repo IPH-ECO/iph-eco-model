@@ -66,6 +66,8 @@ Subroutine AllocateHydroVars(HydroParam,MeshParam)
     
     
     ! 2.2. Others Variables
+    Allocate(HydroParam%CFL(MeshParam%nEdge))
+    Allocate(HydroParam%GammaB(MeshParam%nEdge))
     Allocate(HydroParam%etaInf(MeshParam%nElem))
     Allocate(HydroParam%etaInfn(MeshParam%nElem))
     Allocate(HydroParam%etaplus(MeshParam%nElem))

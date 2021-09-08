@@ -141,11 +141,13 @@ Module MeshVars
         this%dx = StructuredMeshFeatures%resolution
         this%dy = this%dx
         !Lock horizontal resolution test
-        !!this%dx = 20.0d0 !bench 02 - bacia
+        !this%dx = 20.0d0 !bench 02 - bacia
         !this%dy = 6.48d0 !bench 01
-        !this%dx = 0.020d0 !bench 01 - maré 
+        this%dx = 0.020d0 !bench 01 - maré 
+        this%dy = this%dx
         !this%nElem = StructuredMeshFeatures%numberOfElements - 36!bench01 - maré
-        !this%subfactor = 1
+        
+        this%subfactor = 1
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
         Allocate(this%Quadri(4,this%nElem))
@@ -171,10 +173,20 @@ Module MeshVars
             !this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO bench 01- maré
             this%Quadri(3,iElem) = verticeIds(4*(iElem-1)+1)
             this%Quadri(4,iElem) = verticeIds(4*(iElem-1)+2)
-            this%Quadri(1,iElem) = verticeIds(4*(iElem-1)+3)
+            this%Quadri(1,iElem) = verticeIds(4*(iElem-1)+3) ! ser igual a 3 para a cell 1
             this%Quadri(2,iElem) = verticeIds(4*(iElem-1)+4)
         EndDo
-    
+        
+        !Do iElem = 1, this%nElem
+        !    this%xb(iElem) = xCoordinates(iElem)
+        !    this%yb(iElem) = yCoordinates(iElem)            
+        !    !this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO bench 01- maré
+        !    this%Quadri(3,iElem) = verticeIds(4*(iElem-1)+1)
+        !    this%Quadri(4,iElem) = verticeIds(4*(iElem-1)+2)
+        !    this%Quadri(1,iElem) = verticeIds(4*(iElem-1)+3) ! ser igual a 3 para a cell 1
+        !    this%Quadri(2,iElem) = verticeIds(4*(iElem-1)+4)
+        !EndDo
+        
         this%NCAMMAX = sim%layersLength       ! Number of Vertical Layers
         this%zL = sim%minimumVerticalLimit-0.001
         this%zR = sim%maximumVerticalLimit

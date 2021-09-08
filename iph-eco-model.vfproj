@@ -86,6 +86,7 @@
 		<File RelativePath=".\Pressure.f90"/>
 		<File RelativePath=".\solve_tridiag.f90"/>
 		<File RelativePath=".\Source1.f90"/>
+		<File RelativePath=".\BedFriction.f90"/>
 		<File RelativePath=".\Tension.f90"/>
 		<File RelativePath=".\Turbulence.f90"/>
 		<File RelativePath=".\utangvelocity.f90"/>

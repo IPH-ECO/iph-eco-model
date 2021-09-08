@@ -57,6 +57,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     HydroParam%uNode = 0.d0
     HydroParam%HorViscosity = 0.d0
     HydroParam%HorDiffusivity = 0.d0
+    HydroParam%CFL = 0.d0
     If ( HydroParam%iVTurb == 0 ) Then 
         HydroParam%VerEddyVisc = HydroParam%VerEddyVisc_Cte
         HydroParam%VerEddyDiff = HydroParam%VerEddyDiff_Cte
@@ -116,8 +117,8 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     MeshParam%nSoil = 4.0 !Casulli == 1.4 Panday == 1.89
     !
     !!!!Bench 02:
-    !e0 = 0.1
-    !MeshParam%Ksat  = 0.00005 !k0 0.01 b01 0.00005    
+    !e0 = 0.9
+    !MeshParam%Ksat  = 0.005 !k0 0.01 b01 0.00005    
     !MeshParam%alpha = 2.25 !Casulli == 1 Panday == 2.25
     !MeshParam%nSoil = 1.89 !Casulli == 1.4 Panday == 1.89    
     !
@@ -198,7 +199,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
             EndIf
         EndDo
         
-      ! LIMCAMAUX stores bottom level from each layer defined by user. The following for set a correction in the hb/sb level in order to your values
+      ! LIMCAMAUX stores bottom level from each layer defined by user. The following "for" set a correction in the hb/sb level in order to your values
       ! match with the bottom level from this layers in cases where the difference between hb/sb and LIMCAUX is lower PCRI.
         If (MeshParam%KMax==1) Then ! Two-dimensional
             Do iLayer = 1,MeshParam%KMax
@@ -491,7 +492,6 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
         Call MoistureContent(HydroParam%eta(iElem),0.d0,iElem,HydroParam,MeshParam)  
         
     EndDo  
-    
     
     
     !Compute Index Smallm(j) and CapitalM(j)

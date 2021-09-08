@@ -22,6 +22,7 @@ Subroutine GetHydroBoundaryConditions(HydroParam,MeshParam,dt,time,SimTime)
     Do i =1,HydroParam%NWaterLevel
         Call interp_linear( 1, HydroParam%WaterLevelnTime(i), HydroParam%WaterLevelTime(i,1:HydroParam%WaterLevelnTime(i)), HydroParam%WaterLevelValue(i,1:HydroParam%WaterLevelnTime(i)), 1, t_interp, p_interp )
         HydroParam%WaterLevel(i) = p_interp(1,1)
+        HydroParam%WaterLevel(i) = 0.214 + 0.06*cos(2*HydroParam%pi*(Simtime-dt)/(355.0d0)) !CAYO bench01 - maré
     EndDo
 
     !HydroParam%WaterLevel(1) = 0.214 + 0.06*cos(2*HydroParam%pi*(Simtime-dt)/(355.0d0)) !CAYO bench01 - maré

@@ -6,6 +6,7 @@ Subroutine DestroyHydro(HydroParam)
    
     type(HydrodynamicParam) :: HydroParam
     
+    Deallocate(HydroParam%CFL)
     Deallocate(HydroParam%Z)
     Deallocate(HydroParam%Ze)
     Deallocate(HydroParam%Zb)
@@ -69,8 +70,10 @@ Subroutine DestroyHydro(HydroParam)
     Deallocate(HydroParam%FuxyNode)
     Deallocate(HydroParam%Fub)
     Deallocate(HydroParam%Rug)
+    Deallocate(HydroParam%GammaB)
     Deallocate(HydroParam%uIniVec)
     Deallocate(HydroParam%sDRhoW)
+    
     
     Deallocate(HydroParam%HorViscosity)
     Deallocate(HydroParam%HorDiffusivity)

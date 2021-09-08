@@ -15,7 +15,7 @@
     MeshParam%Ki(HydroParam%ElSmallms(iElem):HydroParam%ElCapitalMs(iElem),iElem) = MeshParam%Ksat(HydroParam%ElSmallms(iElem):HydroParam%ElCapitalMs(iElem),iElem)
     HydroParam%Ci(iElem) = 0.d0
     HydroParam%P(iElem) = MeshParam%Area(iElem)
-    If (V(eta,HydroParam%sb(iElem)) > 0.0d0 ) Then ! Wet Cell
+    If (V(eta,HydroParam%sb(iElem)) >= 0.0d0 ) Then ! Wet Cell
         If (V(eta,HydroParam%hb(iElem)) > 0.0d0) Then 
             ! Superficial Layer:
             HydroParam%Vol(iElem)  = HydroParam%Vol(iElem) + MeshParam%Area(iElem)*(Dot_Product(MeshParam%ei(:,iElem),HydroParam%DZsi(:,iElem)) + V(eta,HydroParam%hb(iElem)) ) !V1 = %Vol and V2 is zero.
@@ -75,8 +75,7 @@
             
             HydroParam%P(iElem)  = MeshParam%Area(iElem)
             HydroParam%Ci(iElem) = MeshParam%Area(iElem)*MeshParam%ei(HydroParam%ElCapitalMs(iElem),iElem)
-            
-            
+                            
             !H1 = 0.d0
             !if(eta - HydroParam%hj(MeshParam%Edge(2,iElem))> 0.d0) then
             !    H1 = (eta - HydroParam%hj(MeshParam%Edge(2,iElem)))*MeshParam%Area(iElem)*0.5
