@@ -58,14 +58,15 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime,iNewton,innerNe
     
     !MeshParam%ei = 0.1 !e0 0.3 b01
     !MeshParam%Ksat = 0.00005!k0 0.01 b01 0.00005
+    !Bench 01:    
     e0 = 0.3 !e0 0.3 b01
-    !e0 = 0.9 !e0 0.1 b02
-    
+    !Bench 02:
+    e0 = 0.9 !e0 0.1 b02
     !!Bench 03:
     !e0 = 0.5 !0.2 !e0 0.1 b01 0.3
 
     HydroParam%iConv = 0
-    HydroParam%iConv = 5
+    HydroParam%iConv = 0
     !HydroParam%iNonHydro=0
     
     ! 0. Compute turbulence

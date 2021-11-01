@@ -53,7 +53,7 @@ Subroutine VTKOutput(simParam,HydroParam,MeshParam,LimnoParam)
                     trim(OutputTime), &
                     'UNSTRUCTURED_GRID')
     
-    NearZero = 0.001
+    NearZero = 0.01
     
     ! 2. Define Geometry
     ! VTK coordinates
@@ -154,7 +154,7 @@ Subroutine VTKOutput(simParam,HydroParam,MeshParam,LimnoParam)
     If (simParam%OutputHydro(2)==1) Then
         Do iElem = 1,MeshParam%nElem
             Do iLayer = 1,MeshParam%KMax
-                HydroParam%SScalar(iElem + (iLayer-1)*MeshParam%nElem) = Max(HydroParam%eta(iElem), NearZero) 
+                HydroParam%SScalar(iElem + (iLayer-1)*MeshParam%nElem) = Max(HydroParam%eta(iElem), HydroParam%sb(iElem) + NearZero) 
             EndDo
         EndDo
         E_IO = VTK_VAR(MeshParam%nElem*MeshParam%KMax,'SurfaceWaterElevation',HydroParam%SScalar)
@@ -164,7 +164,7 @@ Subroutine VTKOutput(simParam,HydroParam,MeshParam,LimnoParam)
     If (simParam%OutputHydro(2)==1) Then
         Do iElem = 1,MeshParam%nElem
             Do iLayer = 1,MeshParam%KMax
-                HydroParam%SScalar(iElem + (iLayer-1)*MeshParam%nElem) = Max(HydroParam%hb(iElem), NearZero) 
+                HydroParam%SScalar(iElem + (iLayer-1)*MeshParam%nElem) = Max(HydroParam%hb(iElem),NearZero) 
             EndDo
         EndDo
         E_IO = VTK_VAR(MeshParam%nElem*MeshParam%KMax,'SedimentElevation',HydroParam%SScalar)

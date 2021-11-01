@@ -73,8 +73,8 @@
             ! velocity in layer is set equal the iEdge:
             If(vmag.le.1.e-6) Then ! No activity or Water Level Condition
                 HydroParam%uxyback(iLayer,1:2,iEdge) = (/ uuint, vvint /)    
-            Elseif (HydroParam%eta(nnel) < HydroParam%hb(nnel) .and. HydroParam%eta(r) > HydroParam%hb(r)) Then
-                HydroParam%uxyback(iLayer,1:2,iEdge) = (/ uuint, vvint /)   
+            !Elseif (HydroParam%eta(nnel) < HydroParam%hb(nnel) .and. HydroParam%eta(r) > HydroParam%hb(r)) Then
+            !    HydroParam%uxyback(iLayer,1:2,iEdge) = (/ uuint, vvint /)   
             Else
             ! Else, the backtracking process is initialized:
                 If (r==0) Then !.and.HydroParam%u(iLayer,iEdge)>0
@@ -86,13 +86,13 @@
                     Else 
                         ! If TrajectoryFlag == 0 System Defined Intervals to Integrate Particle Trajectory,  
                         ! else User Defined Intervals to Integrate Particle Trajectory. 
-                        !TrajectoryFlag = 0
+                        TrajectoryFlag = 0
                         ! Find the Local Time Step (dtb) to Integrate Trajectory:
                         If ( TrajectoryFlag == 0 ) Then         ! System Calculation - [7,8]
                             dtb   = MinVal(MeshParam%InCircle)/vmag ! ( InCircle(lElem)/Sqrt( Veloc(1)**2. + Veloc(2)**2. ), InCircle(r)/Sqrt( Veloc(1)**2. + Veloc(2)**2. ) )    
-                            dtbCFL = Max((1/HydroParam%CFL(l)),(1/HydroParam%CFL(r)))
-                            ndels = Max(Floor(dt/dtb),HydroParam%NFUT,Floor(dt/dtbCFL))
-                            !ndels = Max(Floor(dt/dtb),HydroParam%NFUT)
+                            !dtbCFL = Max((1/HydroParam%CFL(l)),(1/HydroParam%CFL(r)))
+                            !ndels = Max(Floor(dt/dtb),HydroParam%NFUT,Floor(dt/dtbCFL))
+                            ndels = Max(Floor(dt/dtb),HydroParam%NFUT)
                             dtb = dt/ndels
                         ElseIf ( TrajectoryFlag == 1 ) Then
                             dtbCFL = Max((1/HydroParam%CFL(l)),(1/HydroParam%CFL(r)))
@@ -290,7 +290,7 @@
     Integer:: IntersectFlag,nel,nnelIni,idt,iflqs1,i,j,l,nd,nn,lev, jjlev,n1,n2,n3,n4, n5, n6, n7, n8, n9,iNode1,iNode2,iEdge,iNode, Nodes(9), addLayer, N, S, Face, r, ll, nnel0,psi_flag,nel_j
     Real:: trat,zup,zrat,aa1,aa2,aa3,aa4,aa,csi,etta,wdown,wup,weit, xtaux, ytaux, ztaux, dtaux
     Real:: NearZero = 1e-10 !< Small Number
-    Real:: talx, taly, talz, tal, timeAcum, dtin,dtbCFL
+    Real:: talx, taly, talz, tal, timeAcum, dtin,dtbCFL, maxZbed, minZeta
     Integer:: i34 = 4
     type(MeshGridParam) :: MeshParam
     type(HydrodynamicParam) :: HydroParam
@@ -341,6 +341,10 @@
                 timeAcum = timeAcum + dtb
                 ! Get nodals' velocities and positions:
                 Call iQuadraticNodes(uuNode(:,:), vvNode(:,:), wwNode(:,:), uuNodet(:,:), vvNodet(:,:), wwNodet(:,:), xxNode(:,:), yyNode(:,:), zzNode(:,:), nnel, jlev, HydroParam, MeshParam)     
+                maxZbed = maxval(zzNode(1,:))
+                minZeta = minval(zzNode(3,:))
+                zt = min(minZeta,max(zt,maxZbed))
+                
                 If (HydroParam%eta(nnel) - HydroParam%hb(nnel) < HydroParam%PCRI + NearZero) Then 
                     timeAcum = dt                
                 Else
@@ -369,8 +373,8 @@
             tal = min(MeshParam%dx/abs(uuint), MeshParam%dy/abs(vvint), (zzNode(3,5) - zzNode(1,5))/abs(wwint))
             dtbCFL = 1/HydroParam%CFL(nnel)
             if (tal > 0 ) then
-                !dtb = min(tal,dt,dtb)
-                dtb = min(tal,dt,dtb,dtbCFL) 
+                dtb = min(tal,dt,dtb)
+                !dtb = min(tal,dt,dtb,dtbCFL) 
             endif
             nnel0 = nnel
             If (timeAcum < dt .and. dtb + timeAcum > dt) Then
@@ -1061,10 +1065,13 @@
     !1.1. - find the  Lagrange coefficient formula 
     !for vertical interpolations
  
+    
     Do iNode=1,9
         ! Check if Nodes in this vertical Line is dry or wet:
         LZ(:,iNode) = 0.0d0
+        
         If(zzN(1,iNode) < zzN(3,iNode)) Then
+            
             If(zzN(1,iNode)==zzN(2,iNode)) Then
                 ! First Order Lagrange polynomial approach:
                 LZ(1,iNode) = 0.0d0
@@ -1097,6 +1104,7 @@
             EndIf
         Endif
     EndDo
+    
     !1.2. - Interpolating velocties (u, v, w) to the btrack particle cota 
     Do iNode=1,9        
         Zuu(iNode) = LZ(1,iNode)*uuN(1,iNode)+LZ(2,iNode)*uuN(2,iNode)+LZ(3,iNode)*uuN(3,iNode)

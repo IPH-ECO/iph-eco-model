@@ -76,7 +76,7 @@
                 med=0.5d0
                 
                 ! CFL Number in Element =  dt*sum(u*Aj)/Vol, dt multiplication is done in Hydro.f90 after this routine call:            
-                HydroParam%CFL(iElem) = HydroParam%CFL(iElem) + HydroParam%u(iLayer,iEdge)*HydroParam%DZhj(iLayer,iEdge)*MeshParam%EdgeLength(iEdge)/HydroParam%Vol(iElem)
+                HydroParam%CFL(iElem) = HydroParam%CFL(iElem) + ABS(HydroParam%u(iLayer,iEdge))*HydroParam%DZhj(iLayer,iEdge)*MeshParam%EdgeLength(iEdge)/HydroParam%Vol(iElem)
                 
                 If (r/=0) Then
                     !If Neighbour lower layer is above Elem layer, the lower Element layer is 

@@ -143,7 +143,7 @@ Module MeshVars
         !Lock horizontal resolution test
         !this%dx = 20.0d0 !bench 02 - bacia
         !this%dy = 6.48d0 !bench 01
-        this%dx = 0.020d0 !bench 01 - maré 
+        !this%dx = 0.020d0 !bench 01 - maré 
         this%dy = this%dx
         !this%nElem = StructuredMeshFeatures%numberOfElements - 36!bench01 - maré
         

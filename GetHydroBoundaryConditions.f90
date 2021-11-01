@@ -22,7 +22,7 @@ Subroutine GetHydroBoundaryConditions(HydroParam,MeshParam,dt,time,SimTime)
     Do i =1,HydroParam%NWaterLevel
         Call interp_linear( 1, HydroParam%WaterLevelnTime(i), HydroParam%WaterLevelTime(i,1:HydroParam%WaterLevelnTime(i)), HydroParam%WaterLevelValue(i,1:HydroParam%WaterLevelnTime(i)), 1, t_interp, p_interp )
         HydroParam%WaterLevel(i) = p_interp(1,1)
-        HydroParam%WaterLevel(i) = 0.214 + 0.06*cos(2*HydroParam%pi*(Simtime-dt)/(355.0d0)) !CAYO bench01 - maré
+       ! HydroParam%WaterLevel(i) = 0.214 + 0.06*cos(2*HydroParam%pi*(Simtime-dt)/(355.0d0)) !CAYO bench01 - maré
     EndDo
 
     !HydroParam%WaterLevel(1) = 0.214 + 0.06*cos(2*HydroParam%pi*(Simtime-dt)/(355.0d0)) !CAYO bench01 - maré
@@ -50,6 +50,10 @@ Subroutine GetHydroBoundaryConditions(HydroParam,MeshParam,dt,time,SimTime)
             Else
                 Call interp_linear( 1, HydroParam%InflownTime(i), HydroParam%InflowTime(i,1:HydroParam%InflownTime(i)), HydroParam%InflowValue(i,1:HydroParam%InflownTime(i)), 1, t_interp, p_interp )
                 HydroParam%Fu(iLayer,iEdge) = -(Sig(iElem,MeshParam%Right(iEdge),MeshParam%Left(iEdge)))*(p_interp(1,1))/(sum(HydroParam%DZj(HydroParam%InFlowSmallm(i):HydroParam%InFlowCapitalM(i),iEdge))*MeshParam%EdgeLength(iEdge))
+              
+                H = HydroParam%H(iEdge)+HydroParam%sj(iEdge)-HydroParam%hj(iEdge) !Surface Water Height
+                HydroParam%Fu(iLayer,iEdge) = (Sig(iElem,MeshParam%Right(iEdge),MeshParam%Left(iEdge)))*sqrt(HydroParam%g*Max(0.0d0,H)) !Critical Depth Cayo                                                                               
+
             EndIf
         EndDo
     EndDo

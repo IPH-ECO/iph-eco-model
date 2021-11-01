@@ -117,8 +117,8 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     MeshParam%nSoil = 4.0 !Casulli == 1.4 Panday == 1.89
     !
     !!!!Bench 02:
-    !e0 = 0.9
-    !MeshParam%Ksat  = 0.005 !k0 0.01 b01 0.00005    
+    e0 = 0.9
+    MeshParam%Ksat  = 0.005 !k0 0.01 b01 0.00005    
     !MeshParam%alpha = 2.25 !Casulli == 1 Panday == 2.25
     !MeshParam%nSoil = 1.89 !Casulli == 1.4 Panday == 1.89    
     !
