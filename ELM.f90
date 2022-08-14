@@ -52,7 +52,7 @@
             Cycle
         EndIf
         
-        ! In the case that Cell is Wet:
+        ! In case that Cell is Wet:
         Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)
             ! The particle is set in iEdge barycenter (x0,y0,z0) on Left side Element (nnel):
             nnel = l 
@@ -182,7 +182,7 @@
             EndIf
             HydroParam%Fv(iLayer,iEdge) = HydroParam%uxyback(iLayer,1,iEdge)*MeshParam%TangentVector(1,lEdge,l) + HydroParam%uxyback(iLayer,2,iEdge)*MeshParam%TangentVector(2,lEdge,l)
         EndDo
-    EndDo
+    EndDo  
 
     !! When we try to calculating Fu and Fw with the particle starting from the center of the cell
     !Do iElem = 1,MeshParam%nElem
@@ -298,13 +298,13 @@
     Integer :: Interpolate_Flag = 1
     Real:: xaux,yaux,zaux
     
-    jjlev = jlev
-    nnelIni = nnel
-    nnel0 = nnel
+    jjlev = jlev !Initial Edge
+    nnelIni = nnel  !Initial Element
+    nnel0 = nnel !Currently Element
     
     dtaux = dtb
-    timeAcum = 0.d0
-    IntersectFlag = 0
+    timeAcum = 0.d0 !Integration time for particle tracking
+    IntersectFlag = 0 !Flag to check if particle intersects bottom
     
     Do While (timeAcum < dt)
         !Posição da partícula no primeiro subpasso de tempo
@@ -341,8 +341,13 @@
                 timeAcum = timeAcum + dtb
                 ! Get nodals' velocities and positions:
                 Call iQuadraticNodes(uuNode(:,:), vvNode(:,:), wwNode(:,:), uuNodet(:,:), vvNodet(:,:), wwNodet(:,:), xxNode(:,:), yyNode(:,:), zzNode(:,:), nnel, jlev, HydroParam, MeshParam)     
+                
+                !Get max value to bed elevation between nine nodes in cell:
                 maxZbed = maxval(zzNode(1,:))
+                !Get min value to bed elevation between nine nodes in cell:
                 minZeta = minval(zzNode(3,:))
+                !Checking to keep particle z position in the cell limits. If zt is not in the z interval inside cell (out of bounds),
+                !zt is brought to the z limits:
                 zt = min(minZeta,max(zt,maxZbed))
                 
                 If (HydroParam%eta(nnel) - HydroParam%hb(nnel) < HydroParam%PCRI + NearZero) Then 
@@ -367,7 +372,7 @@
         z0=zt
                    
         !Adaptative sub-time step:
-        If (nnel /= nnel0) Then
+        If (nnel /= nnel0 .and. timeAcum < dt ) Then
             
             dtb = dtaux
             tal = min(MeshParam%dx/abs(uuint), MeshParam%dy/abs(vvint), (zzNode(3,5) - zzNode(1,5))/abs(wwint))
@@ -377,7 +382,7 @@
                 !dtb = min(tal,dt,dtb,dtbCFL) 
             endif
             nnel0 = nnel
-            If (timeAcum < dt .and. dtb + timeAcum > dt) Then
+            If (dtb + timeAcum > dt) Then
                 dtb = dt - timeAcum
             EndIf
             
@@ -434,7 +439,7 @@
     Real, intent(inout) :: xt,yt,zt
     Real:: trm,aa,aa1,ae,xcg,ycg,pathl,xin,yin,zin,tt1,tt2,dist,xvel,yvel,zvel,hvel
     Real:: uuint,vvint,wwint,dtin
-    Integer:: IntersectFlag
+       Integer:: IntersectFlag
     Integer:: nel,i,j,k,n1,n2,nel_j,iflag,it,md1,md2,lit,k1,k2,jd1,jd2,r,isd,nel0,INOUT
     Real:: NearZero = 1e-10 !< Small Number
     Integer :: NWater
@@ -1061,11 +1066,10 @@
     Real:: LZ(3,9), LY(3,3), LX(3), Zuu(9), Zvv(9), Zww(9), Yuu(3), Yvv(3), Yww(3), Xuu, Xvv, Xww, P1, P2, resto, Uresto, Vresto, Wresto, soma
     Integer:: m, iNode, iTimes, cont
     Real:: NearZero = 1e-5
+    
     !1. Interpolatting in Z direction 9 times, one for each node. (e.g. Hodges, 2000)
     !1.1. - find the  Lagrange coefficient formula 
     !for vertical interpolations
- 
-    
     Do iNode=1,9
         ! Check if Nodes in this vertical Line is dry or wet:
         LZ(:,iNode) = 0.0d0
@@ -1114,8 +1118,8 @@
     
     !2. Interpolate in Y direction 3 times
     !2.1. - find the  Lagrange coefficient formula
-    cont=0
-    Do iNode=1,7,3
+    cont = 0
+    Do iNode = 1,7,3
         cont=cont+1
         Do m=1,3
             if (m==1) then

@@ -189,6 +189,7 @@ Module MeshVars
         
         this%NCAMMAX = sim%layersLength       ! Number of Vertical Layers
         this%zL = sim%minimumVerticalLimit-0.001
+        this%zL = sim%minimumVerticalLimit
         this%zR = sim%maximumVerticalLimit
         Call SortDecreasing(layers,sim%layersLength)
         

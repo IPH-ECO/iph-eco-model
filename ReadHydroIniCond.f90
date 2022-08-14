@@ -16,7 +16,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     type(HydrodynamicParameter), pointer :: hydroParameters(:)
     type(SimulationParam) :: simParam
     character(len=200):: text
-    Real:: sum1,sum0,AuxVel,V, SimTime, e0, k0
+    Real:: sum1, sum0, AuxVel,V, SimTime, e0, k0
     Real:: NearZero = 1e-10
     type(MeshGridParam) :: MeshParam
     type(HydrodynamicParam) :: HydroParam
@@ -84,8 +84,8 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     HydroParam%ubV = 0.d0
     HydroParam%uxyL = 0.d0
     HydroParam%wfc = 0.d0
-    MeshParam%Si = 0.d0
-    MeshParam%ei = 1.d0
+    MeshParam%Si = 0.d0 !Saturação
+    MeshParam%ei = 1.d0 !Porosidade, se for água superficial é 1 , caso seja subsuperficial terá um valor associado a porosidade do material -> Precisa ser inserida como dado de entrada na interface
     HydroParam%DZK = 0.d0
     MeshParam%Kj = 0.d0
     HydroParam%DZsi = 0.d0
@@ -93,15 +93,14 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     HydroParam%DZhit = 0.d0
     HydroParam%DZhj = 0.d0
     HydroParam%DZsj = 0.d0
-    HydroParam%us = 0.d0
-    HydroParam%ustang = 0.d0
-    HydroParam%um = 0.d0  
-    HydroParam%wm = 0.d0 
+    HydroParam%us = 0.d0 !Velocidade normal subsuperficial
+    HydroParam%ustang = 0.d0 !Velocidade tangencial subsuperficial
+    HydroParam%um = 0.d0 !Velocidade normal média -> média ponderada entre a velocidade superficial (%u) e a subsuperficial (%us)
+    HydroParam%wm = 0.d0 !Velocidade vertical média
     HydroParam%uxysub = 0.d0
     HydroParam%ubsub = 0.d0
     HydroParam%etaInfn = 0.d0
     HydroParam%etaInf = 0.d0
-    MeshParam%ei = 1
     
     HydroParam%rhsnonHydro = 0.d0
     HydroParam%q = 0.d0
@@ -110,24 +109,25 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     
     MeshParam%iSaturation = 0
     
-    !!!Bench 01:
-    e0 = 0.3 !e0 0.1 b01 0.3
-    MeshParam%Ksat = 0.01 !k0 0.01 b01 
-    MeshParam%alpha = 29.0!Casulli == 1 Panday == 2.25
-    MeshParam%nSoil = 4.0 !Casulli == 1.4 Panday == 1.89
-    !
-    !!!!Bench 02:
-    e0 = 0.9
-    MeshParam%Ksat  = 0.005 !k0 0.01 b01 0.00005    
+    !!!!Bench 01:
+    e0 = 0.3 !e0 0.1 b01 0.3 !Porosidade do material -> Precisa ser inserida como dado de entrada na interface
+    
+    !MeshParam%Ksat = 0.01 !k0 0.01 b01 !Porosidade -> Precisa ser inserida como dado de entrada na interface
+    !MeshParam%alpha = 29.0!Casulli == 1 Panday == 2.25
+    !MeshParam%nSoil = 4.0 !Casulli == 1.4 Panday == 1.89
+    !!
+    !!!!!Bench 02:
+    !e0 = 0.1
+    !MeshParam%Ksat  = 0.00005 !k0 0.01 b01 0.00005    
     !MeshParam%alpha = 2.25 !Casulli == 1 Panday == 2.25
     !MeshParam%nSoil = 1.89 !Casulli == 1.4 Panday == 1.89    
-    !
+    
     !!!!Bench 03:
     !e0 = 0.5!0.2 !e0 0.1 b01 0.3
     !MeshParam%Ksat = 0.005 !0.0005 !k0 0.01 b01
     
     !k0 = 0.01 !k0 0.01 b01
-    HydroParam%PsiCrit = 0.0d0
+    HydroParam%PsiCrit = 0.0d0 ! PScrit usado na resolução dos modelos de camadas não-saturadas do solo (desativado)
      
     ! Set Initial Conditions of Free-Surface Elevation
     If (MeshParam%ieta0 == 1) Then
@@ -258,17 +258,27 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     EndIf
     
     !Compute nodal elevations for tang. vel.
-    Do iNode=1,MeshParam%nNode
-        sum1 = 0.d0 !sum of elemental elevations
-        sum0 = 0.d0 !sum of areas
-        do j=1,MeshParam%nVertexElem(iNode)
-            ie=MeshParam%VertexElem(j,iNode)
-            sum1 = sum1 + MeshParam%Area(ie)*HydroParam%eta(ie)
-            sum0 = sum0 + MeshParam%Area(ie)
-        Enddo !j=1,nne(i)
-        HydroParam%peta(iNode) = sum1/sum0
+    !Do iNode=1,MeshParam%nNode
+    !    sum1 = 0.d0 !sum of elemental elevations
+    !    sum0 = 0.d0 !sum of areas
+    !    do j=1,MeshParam%nVertexElem(iNode)
+    !        ie=MeshParam%VertexElem(j,iNode)
+    !        sum1 = sum1 + MeshParam%Area(ie)*HydroParam%eta(ie)
+    !        sum0 = sum0 + MeshParam%Area(ie)
+    !    Enddo !j=1,nne(i)
+    !    HydroParam%peta(iNode) = sum1/sum0
+    !EndDo !i=1,np   
+    !HydroParam%petan = HydroParam%peta !store for transport eqs.
+    
+    Do iNode=1,MeshParam%nNode  
+        HydroParam%peta(iNode) = HydroParam%eta(MeshParam%VertexElem(1,iNode))
+        do j=1,MeshParam%nVertexElem(iNode)-1
+            ie=MeshParam%VertexElem(j+1,iNode)
+            ! Nodal water elevation is the maximum surround value:
+            HydroParam%peta(iNode) = Max(HydroParam%peta(iNode),HydroParam%eta(ie))
+        Enddo !j=1,nne(i)     
     EndDo !i=1,np   
-    HydroParam%petan = HydroParam%peta !store for transport eqs.
+    
     
     ! Set Bathymetry in th edges
     Do iElem = 1, MeshParam%nElem 
@@ -291,7 +301,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
                 HydroParam%hj(Face) = Max(HydroParam%hb(l),HydroParam%hb(r))  !  (0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) !Max(Hbat(I,J),HBat(IViz,JViz))!*** !(0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) Verificar sinal posteriormente, se j� entrar como cota n�o precisa do sinal 
                 HydroParam%sj(Face) = Max(HydroParam%sb(l),HydroParam%sb(r))              
                 !HydroParam%hj(Face) = 0.5*(HydroParam%hb(l)+HydroParam%hb(r))  !  (0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) !Max(Hbat(I,J),HBat(IViz,JViz))!*** !(0.5d0)*( Hbat(I,J) + HBat(IViz,JViz) ) Verificar sinal posteriormente, se j� entrar como cota n�o precisa do sinal 
-                !HydroParam%sj(Face) = 0.5*(HydroParam%sb(l)+HydroParam%sb(r))
+               ! HydroParam%sj(Face) = 0.5*(HydroParam%sb(l)+HydroParam%sb(r))
                 Do iLayer = 1,MeshParam%KMax
                     If (abs(HydroParam%hj(Face)-MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1))<HydroParam%PCRI) then
                         HydroParam%hj(Face)=MeshParam%LIMCAMAUX(MeshParam%KMax-iLayer+1)
@@ -411,12 +421,15 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
         ! 4.1.2 Update the Element Vertical Spacing
         !If ( HydroParam%eta(iElem) - HydroParam%hb(iElem) <= HydroParam%PCRI+NearZero ) Then
         If ( HydroParam%eta(iElem) - HydroParam%hb(iElem) <= NearZero ) Then
+            ! If element is dry, Ze on the element top is equal to bathmetry:
             !HydroParam%Ze(HydroParam%ElCapitalM(iElem)+1,iElem) = HydroParam%hb(iElem) + HydroParam%PCRI !- hb(iElem)       ! Free-Surface (verificar com Rafael)
             HydroParam%Ze(HydroParam%ElCapitalM(iElem)+1,iElem) = HydroParam%hb(iElem) !- hb(iElem)       ! Free-Surface (verificar com Rafael)
         Else
+            ! Else, Ze on the element top is the water surface elevation:
             HydroParam%Ze(HydroParam%ElCapitalM(iElem)+1,iElem) = HydroParam%eta(iElem) !- hb(iElem)       ! Free-Surface (verificar com Rafael)    
             !HydroParam%Ze(HydroParam%ElCapitalM(iElem)+1,iElem) = Max(HydroParam%eta(iElem), HydroParam%Ze(HydroParam%ElCapitalM(iElem),iElem)     
         EndIf
+        ! Intializing others Ze values setting equal to top value:
         HydroParam%Ze(:,iElem) = HydroParam%Ze(HydroParam%ElCapitalM(iElem)+1,iElem)
         
         Do iLayer = HydroParam%ElSmallms(iElem)+1, HydroParam%ElCapitalM(iElem)
@@ -484,11 +497,12 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
                 EndIf                                    
                 
                 If(HydroParam%DZsi(iLayer,iElem)>0) Then
-                    MeshParam%ei(iLayer,iElem) = e0
+                    MeshParam%ei(iLayer,iElem) = e0 ! e0 é a porosidade do material (precisa ser inserido como dado de entrada na interface)
                 EndIf                  
             EndDo
         EndIf
         
+        !Calculo da saturação e do volume de agua no elemento iElem
         Call MoistureContent(HydroParam%eta(iElem),0.d0,iElem,HydroParam,MeshParam)  
         
     EndDo  
@@ -619,7 +633,8 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
         ! 1.4 Compute the Vertical Mesh Spacing
         Do iLayer = HydroParam%Smallms(iEdge), HydroParam%CapitalM(iEdge)
             HydroParam%DZj(iLayer,iEdge) = HydroParam%Z(iLayer+1,iEdge) - HydroParam%Z(iLayer,iEdge)
-            HydroParam%DZj(iLayer,iEdge) = Max(HydroParam%Pcri,HydroParam%DZj(iLayer,iEdge))
+            !HydroParam%DZj(iLayer,iEdge) = Max(HydroParam%Pcri,HydroParam%DZj(iLayer,iEdge))
+            HydroParam%DZj(iLayer,iEdge) = Max(0.0d0,HydroParam%DZj(iLayer,iEdge))
         EndDo        
         
         !1.5 Compute Kj and DZhj/DZsj
@@ -674,6 +689,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
                         EndIf
                     EndIf
                 
+                    ! Matriz de multiplicando a espessura da camada subsuperficial multiplicada pelo seu respectivo coeficiente de permeabilidade (usada na solução das matrizes de volume e velocidade)
                     HydroParam%DZK(iEdge) = HydroParam%DZK(iEdge) + HydroParam%DZsj(iLayer,iEdge)*MeshParam%Kj(iLayer,iEdge) !Sediment Layer
                 EndIf
             EndDo
@@ -707,7 +723,7 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
     EndDo
     If (simParam%it > 0) Then
         HydroParam%w = simParam%wsave
-        Call VelocitiesSub(HydroParam,MeshParam)
+        Call VelocitiesSub(HydroParam,MeshParam,simParam%dt)
     Else
         HydroParam%w = HydroParam%Wini
     EndIf

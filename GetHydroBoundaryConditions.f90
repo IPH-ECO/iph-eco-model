@@ -39,10 +39,12 @@ Subroutine GetHydroBoundaryConditions(HydroParam,MeshParam,dt,time,SimTime)
                     !HydroParam%Fu(iLayer,iEdge) = (Sig(iElem,MeshParam%Right(iEdge),MeshParam%Left(iEdge)))*(Max(HydroParam%Pcri,H)**(2./3.))*(HydroParam%InflowValue(i,1)**(1./2.))/(Max(HydroParam%Pcri,H)**(1./6.)/(HydroParam%Rug(iElem)+NearZero))                            
                     HydroParam%Fu(iLayer,iEdge) = (Sig(iElem,MeshParam%Right(iEdge),MeshParam%Left(iEdge)))*(Max(0.d0,H)**(2./3.))*(HydroParam%InflowValue(i,1)**(1./2.))/(Max(HydroParam%Pcri,H)**(1./6.)/(HydroParam%Rug(iElem)+NearZero))                            
                     HydroParam%Fu(iLayer,iEdge) = (Sig(iElem,MeshParam%Right(iEdge),MeshParam%Left(iEdge)))*sqrt(HydroParam%g*Max(0.d0,H)) !Critical Depth Cayo                                                            
+                
                 ElseIf (HydroParam%iRoughForm == 1.or.HydroParam%iRoughForm == 4) Then ! roughnessManningConstant
                     !HydroParam%Fu(iLayer,iEdge) = (Sig(iElem,MeshParam%Right(iEdge),MeshParam%Left(iEdge)))*(Max(HydroParam%Pcri,H)**(2./3.))*(HydroParam%InflowValue(i,1)**(1./2.))/(HydroParam%Rug(iElem)+NearZero) !Gradient/Zero-Depth Gradient Condition
                     HydroParam%Fu(iLayer,iEdge) = (Sig(iElem,MeshParam%Right(iEdge),MeshParam%Left(iEdge)))*(Max(0.d0,H)**(2./3.))*(HydroParam%InflowValue(i,1)**(1./2.))/(HydroParam%Rug(iElem)+NearZero) !Gradient/Zero-Depth Gradient Condition
                     HydroParam%Fu(iLayer,iEdge) = (Sig(iElem,MeshParam%Right(iEdge),MeshParam%Left(iEdge)))*sqrt(HydroParam%g*Max(0.0d0,H)) !Critical Depth Cayo                                                                               
+                
                 ElseIf (HydroParam%iRoughForm == 2.or.HydroParam%iRoughForm == 5) Then ! roughnessWhiteColebrookConstant
                     !HydroParam%Fu(iLayer,iEdge) = (Sig(iElem,MeshParam%Right(iEdge),MeshParam%Left(iEdge)))*(Max(HydroParam%Pcri,H)**(2./3.))*(HydroParam%InflowValue(i,1)**(1./2.))/(Max(HydroParam%Pcri,H)**(1./6.)/((18.*log10(12.*Max(HydroParam%Pcri,H)/(HydroParam%Rug(iElem)/30.+NearZero)))+NearZero)) 
                     HydroParam%Fu(iLayer,iEdge) = (Sig(iElem,MeshParam%Right(iEdge),MeshParam%Left(iEdge)))*(Max(0.d0,H)**(2./3.))*(HydroParam%InflowValue(i,1)**(1./2.))/(Max(HydroParam%Pcri,H)**(1./6.)/((18.*log10(12.*Max(HydroParam%Pcri,H)/(HydroParam%Rug(iElem)/30.+NearZero)))+NearZero)) 

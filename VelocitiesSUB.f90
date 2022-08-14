@@ -1,4 +1,4 @@
-	Subroutine VelocitiesSUB(HydroParam,MeshParam)
+	Subroutine VelocitiesSUB(HydroParam,MeshParam,dt)
 
 	! This routine calculates the mean water velocity for each cell
     ! Called in routine 0-MAIN
@@ -12,8 +12,8 @@
      
 	Implicit none 
     Integer:: r,l,iElem, Elem,iLayer,iEdge,iNode,Sig,Face,icountU, icountV, icountW,kin,j,cond, ncond, lockElem, small
-    Integer:: y1Elem,x1Elem,y2Elem,x2Elem,Facexin,Faceyin,neighElem
-    Real ::weit, weitW,signa, weitU, weitV, med
+    Integer:: y1Elem,x1Elem,y2Elem,x2Elem,Facexin,Faceyin,neighElem, rGammab
+    Real ::weit, weitW,signa, weitU, weitV, med, medGammaB, ub, vb, dt, H
     Real:: aa(5), aaU, aaV, lPoint(2), lArea,luNode(2,4), luEdge(2,4), z1, z2, z3, zp, UiQuad
     Integer:: lEdge(4), lTri(4),n1,n2,n3,n4,iel
     Real:: USUL,UNORTE,VOESTE,VLESTE
@@ -89,6 +89,240 @@
                         EndIf
                     EndIf
                 EndIf
+
+                n1 = MeshParam%Edge(1,iElem)
+                n2 = MeshParam%Edge(2,iElem)
+                n3 = MeshParam%Edge(3,iElem)
+                n4 = MeshParam%Edge(4,iElem)                
+                
+                H = HydroParam%H(Face)+HydroParam%sj(Face)-HydroParam%hj(Face)
+                
+                !If (HydroParam%H(Face)+HydroParam%sj(Face)-HydroParam%hj(Face) > HydroParam%PCRI+NearZero) Then
+                
+                ! If para cálculo do coeficiente de rugosidade de fundo nas faces (Gammab) considerando a velocidade tangencial calculada pela formula da apostila do Casulli
+                ! ubottom = Fu - g.dt/meshCirc*(eta(right cell) - eta(left cell))
+                
+                If (H > HydroParam%PCRI+NearZero) Then    
+                    
+                    
+                    If (iEdge==1) Then !North Edge
+                        
+                        ub = 0.0d0
+                        vb = 0.0d0
+                        
+                        rGammab = MeshParam%right(n2)
+                        !Verifica se a face é compartilhada por duas células ou se tem uma condição de contorno de nível aplicada:
+                        If (rGammab/=0) Then
+                            ub = HydroParam%Fu(HydroParam%Smallm(n2),n2) - (dt/MeshParam%CirDistance(n2))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(iElem)))
+                            ub = -Sig(iElem,MeshParam%Right(n2),MeshParam%Left(n2))*ub  
+                        ElseIf (HydroParam%IndexWaterLevelEdge(n2)>0) Then
+                            ub = HydroParam%Fu(HydroParam%Smallm(n2),n2) - (dt/MeshParam%CirDistance(n2))*(HydroParam%g*(HydroParam%etaInf(n2) - HydroParam%eta(iElem)))
+                            ub = -Sig(iElem,MeshParam%Right(n2),MeshParam%Left(n2))*ub
+                        EndIf   
+                        
+                        rGammab = MeshParam%right(n4)
+                        If (rGammab/=0) Then
+                            ub = ub + Sig(iElem,MeshParam%Right(n4),MeshParam%Left(n4))*(HydroParam%Fu(HydroParam%Smallm(n4),n4) - (dt/MeshParam%CirDistance(n4))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(iElem))))
+                        ElseIf (HydroParam%IndexWaterLevelEdge(n4)>0) Then
+                            ub = ub + Sig(iElem,MeshParam%Right(n4),MeshParam%Left(n4))*(HydroParam%Fu(HydroParam%Smallm(n4),n4) - (dt/MeshParam%CirDistance(n4))*(HydroParam%g*(HydroParam%etaInf(n4) - HydroParam%eta(iElem))))
+                        EndIf
+                        medGammaB = 0.5
+                        
+                        If (r /= 0) Then
+                            medGammaB = 0.25
+                            
+                            vb = HydroParam%Fu(HydroParam%Smallm(n1),n1) - (dt/MeshParam%CirDistance(n1))*(HydroParam%g*(HydroParam%eta(r) - HydroParam%eta(iElem)))
+                        
+                            Elem = MeshParam%Neighbor(1,iElem)
+                            n2 = MeshParam%Edge(2,Elem)
+                            n4 = MeshParam%Edge(4,Elem) 
+
+                            rGammab = MeshParam%right(n2)
+                            If (rGammab/=0) Then
+                                ub = ub -Sig(Elem,MeshParam%Right(n2),MeshParam%Left(n2))*(HydroParam%Fu(HydroParam%Smallm(n2),n2) - (dt/MeshParam%CirDistance(n2))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(Elem))))
+                            ElseIf (HydroParam%IndexWaterLevelEdge(n2)>0) Then
+                                ub = ub - Sig(Elem,MeshParam%Right(n2),MeshParam%Left(n2))*(HydroParam%Fu(HydroParam%Smallm(n2),n2) - (dt/MeshParam%CirDistance(n2))*(HydroParam%g*(HydroParam%etaInf(n2) - HydroParam%eta(Elem))))
+                            EndIf
+                            
+                            rGammab = MeshParam%right(n4)
+                            If (rGammab/=0) Then
+                                ub = ub + Sig(Elem,MeshParam%Right(n4),MeshParam%Left(n4))*(HydroParam%Fu(HydroParam%Smallm(n4),n4) - (dt/MeshParam%CirDistance(n4))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(Elem))))
+                            ElseIf (HydroParam%IndexWaterLevelEdge(n4)>0) Then
+                                ub = ub + Sig(Elem,MeshParam%Right(n4),MeshParam%Left(n4))*(HydroParam%Fu(HydroParam%Smallm(n4),n4) - (dt/MeshParam%CirDistance(n4))*(HydroParam%g*(HydroParam%etaInf(n4) - HydroParam%eta(Elem))))
+                            EndIf
+                        Else
+                            vb = HydroParam%Fu(HydroParam%Smallm(n1),n1)
+                        EndIf
+                        
+                        ub = medGammab*ub
+                        
+                        call EdgeGammab(n1, ub, vb, HydroParam, MeshParam)
+                        
+                    ElseIf(iEdge==2) Then
+                        
+                        ub = 0.0d0
+                        vb = 0.0d0
+                        
+                        rGammab = MeshParam%right(n1)
+                        If (rGammab/=0) Then
+                            vb = HydroParam%Fu(HydroParam%Smallm(n1),n1) - (dt/MeshParam%CirDistance(n1))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(iElem)))
+                            vb = Sig(iElem,MeshParam%Right(n1),MeshParam%Left(n1))*vb  
+                        ElseIf (HydroParam%IndexWaterLevelEdge(n1)>0) Then
+                            vb = HydroParam%Fu(HydroParam%Smallm(n1),n1) - (dt/MeshParam%CirDistance(n1))*(HydroParam%g*(HydroParam%etaInf(n1) - HydroParam%eta(iElem)))
+                            vb = Sig(iElem,MeshParam%Right(n1),MeshParam%Left(n1))*vb
+                        EndIf
+                        
+                        rGammab = MeshParam%right(n3)
+                        If (rGammab/=0) Then
+                            vb = vb - Sig(iElem,MeshParam%Right(n3),MeshParam%Left(n3))*(HydroParam%Fu(HydroParam%Smallm(n3),n3) - (dt/MeshParam%CirDistance(n3))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(iElem))))
+                        ElseIf (HydroParam%IndexWaterLevelEdge(n3)>0) Then
+                            vb = vb - Sig(iElem,MeshParam%Right(n3),MeshParam%Left(n3))*(HydroParam%Fu(HydroParam%Smallm(n3),n3) - (dt/MeshParam%CirDistance(n3))*(HydroParam%g*(HydroParam%etaInf(n3) - HydroParam%eta(iElem))))
+                        EndIf
+                        medGammaB = 0.5
+                        
+                        If (r /= 0) Then
+                            medGammaB = 0.25
+                            
+                            ub = HydroParam%Fu(HydroParam%Smallm(n2),n2) - (dt/MeshParam%CirDistance(n2))*(HydroParam%g*(HydroParam%eta(r) - HydroParam%eta(iElem)))
+                        
+                            Elem = MeshParam%Neighbor(2,iElem)
+                            n1 = MeshParam%Edge(1,Elem)
+                            n3 = MeshParam%Edge(3,Elem) 
+
+                            rGammab = MeshParam%right(n2)
+                            If (rGammab/=0) Then
+                                vb = vb + Sig(Elem,MeshParam%Right(n1),MeshParam%Left(n1))*(HydroParam%Fu(HydroParam%Smallm(n1),n1) - (dt/MeshParam%CirDistance(n1))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(Elem))))
+                            ElseIf (HydroParam%IndexWaterLevelEdge(n1)>0) Then
+                                vb = vb + Sig(Elem,MeshParam%Right(n1),MeshParam%Left(n1))*(HydroParam%Fu(HydroParam%Smallm(n1),n1) - (dt/MeshParam%CirDistance(n1))*(HydroParam%g*(HydroParam%etaInf(n1) - HydroParam%eta(Elem))))
+                            EndIf
+                            
+                            rGammab = MeshParam%right(n4)
+                            If (rGammab/=0) Then
+                                vb = vb - Sig(Elem,MeshParam%Right(n3),MeshParam%Left(n3))*(HydroParam%Fu(HydroParam%Smallm(n3),n3) - (dt/MeshParam%CirDistance(n3))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(Elem))))
+                            ElseIf (HydroParam%IndexWaterLevelEdge(n3)>0) Then
+                                vb = vb - Sig(Elem,MeshParam%Right(n3),MeshParam%Left(n3))*(HydroParam%Fu(HydroParam%Smallm(n3),n3) - (dt/MeshParam%CirDistance(n3))*(HydroParam%g*(HydroParam%etaInf(n3) - HydroParam%eta(Elem))))
+                            EndIf
+                        Else
+                            ub = HydroParam%Fu(HydroParam%Smallm(n2),n2)
+                        EndIf
+                        
+                        vb = medGammab*vb
+                        
+                        call EdgeGammab(n2, ub, vb, HydroParam, MeshParam)
+                    
+                    ElseIf(iEdge==3) Then
+                        
+                        ub = 0.0d0
+                        vb = 0.0d0
+                        
+                        rGammab = MeshParam%right(n2)
+                        If (rGammab/=0) Then
+                            ub = HydroParam%Fu(HydroParam%Smallm(n2),n2) - (dt/MeshParam%CirDistance(n2))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(iElem)))
+                            ub = -Sig(iElem,MeshParam%Right(n2),MeshParam%Left(n2))*ub  
+                        ElseIf (HydroParam%IndexWaterLevelEdge(n2)>0) Then
+                            ub = HydroParam%Fu(HydroParam%Smallm(n2),n2) - (dt/MeshParam%CirDistance(n2))*(HydroParam%g*(HydroParam%etaInf(n2) - HydroParam%eta(iElem)))
+                            ub = -Sig(iElem,MeshParam%Right(n2),MeshParam%Left(n2))*ub
+                        EndIf   
+                        
+                        rGammab = MeshParam%right(n4)
+                        If (rGammab/=0) Then
+                            ub = ub + Sig(iElem,MeshParam%Right(n4),MeshParam%Left(n4))*(HydroParam%Fu(HydroParam%Smallm(n4),n4) - (dt/MeshParam%CirDistance(n4))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(iElem))))
+                        ElseIf (HydroParam%IndexWaterLevelEdge(n4)>0) Then
+                            ub = ub + Sig(iElem,MeshParam%Right(n4),MeshParam%Left(n4))*(HydroParam%Fu(HydroParam%Smallm(n4),n4) - (dt/MeshParam%CirDistance(n4))*(HydroParam%g*(HydroParam%etaInf(n4) - HydroParam%eta(iElem))))
+                        EndIf
+                        
+                        medGammaB = 0.5
+                        
+                        If (r /= 0) Then
+                            medGammaB = 0.25
+                            
+                            vb = HydroParam%Fu(HydroParam%Smallm(n3),n3) - (dt/MeshParam%CirDistance(n3))*(HydroParam%g*(HydroParam%eta(r) - HydroParam%eta(iElem)))
+                        
+                            Elem = MeshParam%Neighbor(3,iElem)
+                            n2 = MeshParam%Edge(2,Elem)
+                            n4 = MeshParam%Edge(4,Elem) 
+
+                            rGammab = MeshParam%right(n2)
+                            If (rGammab/=0) Then
+                                ub = ub -Sig(Elem,MeshParam%Right(n2),MeshParam%Left(n2))*(HydroParam%Fu(HydroParam%Smallm(n2),n2) - (dt/MeshParam%CirDistance(n2))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(Elem))))
+                            ElseIf (HydroParam%IndexWaterLevelEdge(n2)>0) Then
+                                ub = ub - Sig(Elem,MeshParam%Right(n2),MeshParam%Left(n2))*(HydroParam%Fu(HydroParam%Smallm(n2),n2) - (dt/MeshParam%CirDistance(n2))*(HydroParam%g*(HydroParam%etaInf(n2) - HydroParam%eta(Elem))))
+                            EndIf
+                            
+                            rGammab = MeshParam%right(n4)
+                            If (rGammab/=0) Then
+                                ub = ub + Sig(Elem,MeshParam%Right(n4),MeshParam%Left(n4))*(HydroParam%Fu(HydroParam%Smallm(n4),n4) - (dt/MeshParam%CirDistance(n4))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(Elem))))
+                            ElseIf (HydroParam%IndexWaterLevelEdge(n4)>0) Then
+                                ub = ub + Sig(Elem,MeshParam%Right(n4),MeshParam%Left(n4))*(HydroParam%Fu(HydroParam%Smallm(n4),n4) - (dt/MeshParam%CirDistance(n4))*(HydroParam%g*(HydroParam%etaInf(n4) - HydroParam%eta(Elem))))
+                            EndIf
+                        Else
+                            vb = HydroParam%Fu(HydroParam%Smallm(n3),n3)
+                        EndIf
+                        
+                        ub = medGammab*ub
+                        
+                        call EdgeGammab(n3, ub, vb, HydroParam, MeshParam)
+                        
+                    Else
+                        
+                        ub = 0.0d0
+                        vb = 0.0d0
+                        
+                        rGammab = MeshParam%right(n1)
+                        If (rGammab/=0) Then
+                            vb = HydroParam%Fu(HydroParam%Smallm(n1),n1) - (dt/MeshParam%CirDistance(n1))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(iElem)))
+                            vb = Sig(iElem,MeshParam%Right(n1),MeshParam%Left(n1))*vb  
+                        ElseIf (HydroParam%IndexWaterLevelEdge(n1)>0) Then
+                            vb = HydroParam%Fu(HydroParam%Smallm(n1),n1) - (dt/MeshParam%CirDistance(n1))*(HydroParam%g*(HydroParam%etaInf(n1) - HydroParam%eta(iElem)))
+                            vb = Sig(iElem,MeshParam%Right(n1),MeshParam%Left(n1))*vb
+                        EndIf
+                        
+                        rGammab = MeshParam%right(n3)
+                        If (rGammab/=0) Then
+                            vb = vb - Sig(iElem,MeshParam%Right(n3),MeshParam%Left(n3))*(HydroParam%Fu(HydroParam%Smallm(n3),n3) - (dt/MeshParam%CirDistance(n3))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(iElem))))
+                        ElseIf (HydroParam%IndexWaterLevelEdge(n3)>0) Then
+                            vb = vb - Sig(iElem,MeshParam%Right(n3),MeshParam%Left(n3))*(HydroParam%Fu(HydroParam%Smallm(n3),n3) - (dt/MeshParam%CirDistance(n3))*(HydroParam%g*(HydroParam%etaInf(n3) - HydroParam%eta(iElem))))
+                        EndIf
+                        medGammaB = 0.5
+                        
+                        If (r /= 0) Then
+                            
+                            medGammaB = 0.25
+                            
+                            ub = HydroParam%Fu(HydroParam%Smallm(n4),n4) - (dt/MeshParam%CirDistance(n4))*(HydroParam%g*(HydroParam%eta(r) - HydroParam%eta(iElem)))
+                        
+                            Elem = MeshParam%Neighbor(4,iElem)
+                            n1 = MeshParam%Edge(1,Elem)
+                            n3 = MeshParam%Edge(3,Elem)
+
+                            rGammab = MeshParam%right(n2)
+                            If (rGammab/=0) Then
+                                vb = vb + Sig(Elem,MeshParam%Right(n1),MeshParam%Left(n1))*(HydroParam%Fu(HydroParam%Smallm(n1),n1) - (dt/MeshParam%CirDistance(n1))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(Elem))))
+                            ElseIf (HydroParam%IndexWaterLevelEdge(n1)>0) Then
+                                vb = vb + Sig(Elem,MeshParam%Right(n1),MeshParam%Left(n1))*(HydroParam%Fu(HydroParam%Smallm(n1),n1) - (dt/MeshParam%CirDistance(n1))*(HydroParam%g*(HydroParam%etaInf(n1) - HydroParam%eta(Elem))))
+                            EndIf
+                            
+                            rGammab = MeshParam%right(n4)
+                            If (rGammab/=0) Then
+                                vb = vb - Sig(Elem,MeshParam%Right(n3),MeshParam%Left(n3))*(HydroParam%Fu(HydroParam%Smallm(n3),n3) - (dt/MeshParam%CirDistance(n3))*(HydroParam%g*(HydroParam%eta(rGammab) - HydroParam%eta(Elem))))
+                            ElseIf (HydroParam%IndexWaterLevelEdge(n3)>0) Then
+                                vb = vb - Sig(Elem,MeshParam%Right(n3),MeshParam%Left(n3))*(HydroParam%Fu(HydroParam%Smallm(n3),n3) - (dt/MeshParam%CirDistance(n3))*(HydroParam%g*(HydroParam%etaInf(n3) - HydroParam%eta(Elem))))
+                            EndIf
+                        Else
+                            ub = HydroParam%Fu(HydroParam%Smallm(n2),n2)
+                        EndIf
+                        
+                        vb = medGammab*vb
+                        
+                        call EdgeGammab(n4, ub, vb, HydroParam, MeshParam)
+                        
+                    EndIf
+                EndIf
+                ! Fim do cálculo do GammaB na face
+                
+                
+                
+
                 
      !!            !Set particle's Z position
      !           If(iEdge==1) Then
@@ -150,7 +384,13 @@
      !                   uxyFv(iLayer,2,Face) = -Sig(iElem,MeshParam%Right(MeshParam%Edge(4,iElem)),MeshParam%Left(MeshParam%Edge(4,iElem)))*HydroParam%utang(iLayer,Face)
      !               EndIf   
      !           EndIf
-                If (HydroParam%H(iEdge)+HydroParam%sj(iEdge)-HydroParam%hj(iEdge) > HydroParam%PCRI+NearZero) Then            
+                
+                
+                !If (HydroParam%H(iEdge)+HydroParam%sj(iEdge)-HydroParam%hj(iEdge) > HydroParam%PCRI+NearZero) Then  
+                
+                ! Cálculo das componente de velocidades nas faces:
+                If (H > HydroParam%PCRI+NearZero) Then            
+                    
                     If (iEdge==1) Then !North Edge
                         If (r == 0.or.lockElem==1) Then
 						    If (HydroParam%IndexInflowEdge(Face)>0.or.HydroParam%IndexWaterLevelEdge(Face)>0) Then
@@ -193,16 +433,21 @@
                         ! Set particle's tangential velocity
                         !uxy(iLayer,1,Face) = 0.25*( - Sig(iElem,Right(Edge(2,iElem)),Left(Edge(2,iElem)))*u(iLayer,Edge(2,iElem)) + 2.*UNORTE + Sig(iElem,Right(Edge(4,iElem)),Left(Edge(4,iElem)))*u(iLayer,Edge(4,iElem)) )
                         HydroParam%uxy(iLayer,2,Face) = Sig(iElem,MeshParam%Right(MeshParam%Edge(1,iElem)),MeshParam%Left(MeshParam%Edge(1,iElem)))*HydroParam%u(iLayer,MeshParam%Edge(1,iElem)) 
+                    
                     ElseIf (iEdge==2) then !West Edge
+                        
                         If (r == 0.or.lockElem==1) Then
+                            
 						    If (HydroParam%IndexInflowEdge(Face)>0.or.HydroParam%IndexWaterLevelEdge(Face)>0) then
 							    HydroParam%uxy(iLayer,2,Face) = 0. !
 						    Else
 							    If (abs (HydroParam%u(iLayer,MeshParam%Edge(1,iElem)))>NearZero2 .and. abs (HydroParam%u(iLayer,MeshParam%Edge(3,iElem)))<NearZero2) then
 								    HydroParam%uxy(iLayer,2,Face) = Sig(iElem,MeshParam%Right(MeshParam%Edge(1,iElem)),MeshParam%Left(MeshParam%Edge(1,iElem)))*HydroParam%u(iLayer,MeshParam%Edge(1,iElem))
-							    ElseIf (abs (HydroParam%u(iLayer,MeshParam%Edge(3,iElem)))>NearZero2 .and. abs (HydroParam%u(iLayer,MeshParam%Edge(1,iElem)))<NearZero2) then
+                                ElseIf (abs (HydroParam%u(iLayer,MeshParam%Edge(3,iElem)))>NearZero2 .and. abs (HydroParam%u(iLayer,MeshParam%Edge(1,iElem)))<NearZero2) then
 								    HydroParam%uxy(iLayer,2,Face) = - Sig(iElem,MeshParam%Right(MeshParam%Edge(3,iElem)),MeshParam%Left(MeshParam%Edge(3,iElem)))*HydroParam%u(iLayer,MeshParam%Edge(3,iElem))
-							    ElseIf (abs (HydroParam%u(iLayer,MeshParam%Edge(1,iElem)))>NearZero2.and.abs (HydroParam%u(iLayer,MeshParam%Edge(3,iElem)))>NearZero2) then
+                                    
+                                ElseIf (abs (HydroParam%u(iLayer,MeshParam%Edge(1,iElem)))>NearZero2.and.abs (HydroParam%u(iLayer,MeshParam%Edge(3,iElem)))>NearZero2) then
+                                    
 								    HydroParam%uxy(iLayer,2,Face) = 0.5d0*( - Sig(iElem,MeshParam%Right(MeshParam%Edge(3,iElem)),MeshParam%Left(MeshParam%Edge(3,iElem)))*HydroParam%u(iLayer,MeshParam%Edge(3,iElem))+ Sig(iElem,MeshParam%Right(MeshParam%Edge(1,iElem)),MeshParam%Left(MeshParam%Edge(1,iElem)))*HydroParam%u(iLayer,MeshParam%Edge(1,iElem)) )
 							    Else
 								    HydroParam%uxy(iLayer,2,Face) = 0. !
@@ -210,14 +455,15 @@
 						    EndIf
                     
                         Else
-						    Elem=MeshParam%Neighbor(2,iElem)
+						    Elem = MeshParam%Neighbor(2,iElem)
+                            
 						    If (abs (HydroParam%u(iLayer,MeshParam%Edge(1,Elem)))>NearZero2 .and. abs (HydroParam%u(iLayer,MeshParam%Edge(3,Elem)))<NearZero2) then
 							    VOESTE = Sig(Elem,MeshParam%Right(MeshParam%Edge(1,Elem)),MeshParam%Left(MeshParam%Edge(1,Elem)))*HydroParam%u(iLayer,MeshParam%Edge(1,Elem))
-						    ElseIf (abs (HydroParam%u(iLayer,MeshParam%Edge(3,Elem)))>NearZero2 .and. abs (HydroParam%u(iLayer,MeshParam%Edge(1,Elem)))<NearZero2) then
-							    VOESTE = - Sig(Elem,MeshParam%Right(MeshParam%Edge(3,Elem)),MeshParam%Left(MeshParam%Edge(3,Elem)))*HydroParam%u(iLayer,MeshParam%Edge(3,Elem))
-						    ElseIf (abs (HydroParam%u(iLayer,MeshParam%Edge(1,Elem)))>NearZero2.and.abs (HydroParam%u(iLayer,MeshParam%Edge(3,Elem)))>NearZero2) then
+                            ElseIf (abs (HydroParam%u(iLayer,MeshParam%Edge(3,Elem)))>NearZero2 .and. abs (HydroParam%u(iLayer,MeshParam%Edge(1,Elem)))<NearZero2) then
+							    VOESTE = - Sig(Elem,MeshParam%Right(MeshParam%Edge(3,Elem)),MeshParam%Left(MeshParam%Edge(3,Elem)))*HydroParam%u(iLayer,MeshParam%Edge(3,Elem))  
+                            ElseIf (abs (HydroParam%u(iLayer,MeshParam%Edge(1,Elem)))>NearZero2.and.abs (HydroParam%u(iLayer,MeshParam%Edge(3,Elem)))>NearZero2) then
 							    VOESTE = 0.5d0*( - Sig(Elem,MeshParam%Right(MeshParam%Edge(3,Elem)),MeshParam%Left(MeshParam%Edge(3,Elem)))*HydroParam%u(iLayer,MeshParam%Edge(3,Elem))+ Sig(Elem,MeshParam%Right(MeshParam%Edge(1,Elem)),MeshParam%Left(MeshParam%Edge(1,Elem)))*HydroParam%u(iLayer,MeshParam%Edge(1,Elem)) )
-						    Else
+                            Else
 							    VOESTE = 0. !
                                 med=1
 						    EndIf
@@ -357,7 +603,9 @@
            !     error(iLayer,1,Face) = HydroParam%uxy(iLayer,1,Face) - uxyFv(iLayer,1,Face)
            !     error(iLayer,2,Face) = HydroParam%uxy(iLayer,2,Face) - uxyFv(iLayer,2,Face)
            ! EndDo
-            ! If subsurface flow occurs, uxysub are calculated:
+            
+            
+            ! If subsurface flow occurs, uxysub (velocity components normal/tangential in subsurface layer) are calculated:
             If (MeshParam%iBedrock == 1) Then
                 
                 If (r==0) Then
@@ -563,6 +811,11 @@
         !    Continue
         !EndIf        
     EndDo
+    
+    ! Fim da definição das componentes de velocidade nas faces
+    
+    
+    
     !HydroParam%uxy = HydroParam%uxysub
     !Do iElem = 1, MeshParam%nElem
     !    
@@ -1447,3 +1700,4 @@
     EndIf
     
     End Function neighElem  
+       

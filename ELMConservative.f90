@@ -92,8 +92,7 @@
                         HydroParam%uxyback(iLayer,1:2,iEdge) = (/ uuint, vvint /)
                     Else
                         If (iLayer < Hydroparam%ElSmallm(r)) then
-                            HydroParam%uxyback(iLayer,1,iEdge) =  uuint
-                            HydroParam%uxyback(iLayer,2,iEdge) =  vvint
+                            HydroParam%uxyback(iLayer,1:2,iEdge) = (/ uuint, vvint /)
                         Else 
                             ! If TrajectoryFlag == 0 System Defined Intervals to Integrate Particle Trajectory,  
                             ! else User Defined Intervals to Integrate Particle Trajectory. 
@@ -111,6 +110,10 @@
                             Call btrackConservative(ndelt,dtb,dt,uuint,vvint, wwint, x0,y0,z0,&
                                 &xt, yt, zt, nnel, jlev, iFace, HydroParam, MeshParam, iLayer, iEdge) 
                             
+                            
+                        !Call btrack(ndels,dtb,dt,uuint,vvint,wwint,hhint,&
+                        !&x0,y0,z0,xt,yt,zt,nnel,jlev,iEdge0,HydroParam,MeshParam, FuFw_flag, iLayer, iEdge)
+
                             HydroParam%uxyback(iLayer,1:2,iEdge) = (/ uuint, vvint /)
                         EndIf
                     EndIf
@@ -377,6 +380,7 @@
     Integer, intent(inout) :: nnel,jlev,id0
     Real:: xpoly(4),ypoly(4)
     Real, intent(inout) :: xt,yt,zt
+    Integer:: IntersectFlag
     Real:: trm,aa,aa1,ae,xcg,ycg,pathl,xin,yin,zin,tt1,tt2,dist,xvel,yvel,zvel,hvel
     Integer:: nel,i,j,k,n1,n2,nel_j,iflag,it,md1,md2,lit,k1,k2,jd1,jd2,r,isd,nel0,INOUT
     Real:: NearZero = 1e-10 !< Small Number
@@ -538,12 +542,10 @@
         !    endif
         !endif
 
-        !If particle cross iEdge from iElement(nel), so the new iElement is the neighbour Element which shares iEdge(nel_j).
+        !If particle cross iEdge from iElement(nel), so the new iElement is the neighbour Element which share iEdge(nel_j).
         !However, it can a abnormal case which either iEdge(isd) no has neighbour (horizontal exit or wall) or is dry:
-        If (r == 0 .or. HydroParam%H(isd)-HydroParam%hj(isd)<=HydroParam%Pcri/2.d0+NearZero) Then !CAYO
-        !If (r == 0 .or. HydroParam%H(isd)<=HydroParam%Pcri/2.d0+NearZero) Then !CAYO
+        If (r == 0 .or. HydroParam%H(isd)-HydroParam%hj(isd)<=HydroParam%Pcri+NearZero) Then
             lit=1
-       
             !Nudge intersect (xin,yin), and update starting pt
             xin=(1-1.0d-4)*xin+1.0d-4*MeshParam%xb(nel)
             yin=(1-1.0d-4)*yin+1.0d-4*MeshParam%yb(nel)
@@ -568,51 +570,51 @@
                 yt=yin
                 zt=zin
                 nnel=nel
+                IntersectFlag = 1
                 exit loop4
             EndIf
             pathl=hvel*trm    
             
-        ElseIf (HydroParam%eta(MeshParam%Neighbor(nel_j,nnel)) - HydroParam%hb(MeshParam%Neighbor(nel_j,nnel)) <= HydroParam%PCRI/2.d0 + NearZero) Then !CAYO
-            lit=1
-        
-            !Nudge intersect (xin,yin), and update starting pt
-            xin=(1-1.0d-4)*xin+1.0d-4*MeshParam%xb(nel)
-            yin=(1-1.0d-4)*yin+1.0d-4*MeshParam%yb(nel)
-            xcg=xin
-            ycg=yin
+        ElseIf( MeshParam%Neighbor(nel_j,nnel) .ne. 0 ) Then
+                If (HydroParam%eta(MeshParam%Neighbor(nel_j,nnel)) - HydroParam%hb(MeshParam%Neighbor(nel_j,nnel)) <= HydroParam%PCRI + NearZero) Then !CAYO
+                    lit=1
+                    !Nudge intersect (xin,yin), and update starting pt
+                    xin=(1-1.0d-4)*xin+1.0d-4*MeshParam%xb(nel)
+                    yin=(1-1.0d-4)*yin+1.0d-4*MeshParam%yb(nel)
+                    xcg=xin
+                    ycg=yin
             
-            !Set tang. velocities:
+                    !Set tang. velocities:
+                    xvel = 0.!uxy(jlev,1,isd)
+                    yvel = 0.!uxy(jlev,2,isd)
+                    zvel = 0.5*((HydroParam%uNode(jlev,3,md1)+HydroParam%uNode(jlev,3,md2))/2. + (HydroParam%uNode(jlev+1,3,md1)+HydroParam%uNode(jlev+1,3,md2))/2.)
             
-            xvel = 0.!uxy(jlev,1,isd)
-            yvel = 0.!uxy(jlev,2,isd)
-            zvel = 0.5*((HydroParam%uNode(jlev,3,md1)+HydroParam%uNode(jlev,3,md2))/2. + (HydroParam%uNode(jlev+1,3,md1)+HydroParam%uNode(jlev+1,3,md2))/2.)
+                    !Update Pt:
+                    xt=xin-xvel*trm
+                    yt=yin-yvel*trm
+                    zt=zin-zvel*trm
             
-            !Update Pt:
-            xt=xin-xvel*trm
-            yt=yin-yvel*trm
-            zt=zin-zvel*trm
-            
-            !Horizontal velocity magnitude:
-            hvel=dsqrt(xvel**2+yvel**2)
-            If(hvel.lt.1.e-4) Then !Checar essa condi��o, todos os casos entram aqui CAYO
+                    !Horizontal velocity magnitude:
+                    hvel=dsqrt(xvel**2+yvel**2)
+                    If(hvel.lt.1.e-4) Then !Checar essa condi��o, todos os casos entram aqui CAYO
+                        nfl=1
+                        xt=xin
+                        yt=yin
+                        zt=zin
+                        nnel=nel
+                        IntersectFlag = 1
+                        exit loop4
+                    EndIf
+                pathl=hvel*trm
+            ElseIf(dmax1(zt,HydroParam%hb(nel0)) < HydroParam%hb(MeshParam%Neighbor(nel_j,nnel)) ) Then
+                nnel = nel0 
+                xt=(1-1.0d-4)*MeshParam%EdgeBary(1,MeshParam%Edge(nel_j,nel0)) + 1.0d-4*MeshParam%xb(nel0)
+                yt=(1-1.0d-4)*MeshParam%EdgeBary(2,MeshParam%Edge(nel_j,nel0)) + 1.0d-4*MeshParam%yb(nel0)
                 nfl=1
-                xt=xin
-                yt=yin
-                zt=zin
-                nnel=nel
+                IntersectFlag = 1
                 exit loop4
             EndIf
-            pathl=hvel*trm
-        ElseIf(dmax1(zt,HydroParam%hb(nel0)) < HydroParam%hb(MeshParam%Neighbor(nel_j,nnel)) ) Then
-            nnel = nel0 
-            xt=(1-1.0d-4)*MeshParam%EdgeBary(1,MeshParam%Edge(nel_j,nel0)) + 1.0d-4*MeshParam%xb(nel0)
-            yt=(1-1.0d-4)*MeshParam%EdgeBary(2,MeshParam%Edge(nel_j,nel0)) + 1.0d-4*MeshParam%yb(nel0)
-            !xt = MeshParam%EdgeBary(1,MeshParam%Edge(nel_j,nel0))
-            !yt = MeshParam%EdgeBary(2,MeshParam%Edge(nel_j,nel0))
-            nfl=1
-            exit loop4
         EndIf
-        
         !Else in normal cases, we need get the neighbour element which shares the iEdge(nel_j):
         If(lit.eq.0) Then
             !next front element
@@ -1683,38 +1685,58 @@
     Real, intent(out) :: uuBtrack, vvBtrack, wwBtrack
     Real:: LZ(3,9), LY(3,3), LX(3), Zuu(9), Zvv(9), Zww(9), Yuu(3), Yvv(3), Yww(3), Xuu, Xvv, Xww, P1, P2, resto, Uresto, Vresto, Wresto, soma
     Integer:: m, iNode, iTimes, cont
-
+    Real:: NearZero = 1e-5
     !1. Interpolatting in Z direction 9 times, one for each node. (e.g. Hodges, 2000)
     !1.1. - find the  Lagrange coefficient formula 
     !for vertical interpolations
-
+ 
     
     Do iNode=1,9
-        Do m=1,3
-            if (m==1) then
-                P1 = ((zp-zzN(2,iNode))/(zzN(1,iNode)-zzN(2,iNode)))
-                P2 = ((zp-zzN(3,iNode))/(zzN(1,iNode)-zzN(3,iNode)))
-            elseif (m==2) then
-                P1 = ((zp-zzN(1,iNode))/(zzN(2,iNode)-zzN(1,iNode)))
-                P2 = ((zp-zzN(3,iNode))/(zzN(2,iNode)-zzN(3,iNode)))
-            else
-                P1 = ((zp-zzN(1,iNode))/(zzN(m,iNode)-zzN(1,iNode)))
-                P2 = ((zp-zzN(2,iNode))/(zzN(m,iNode)-zzN(2,iNode)))
-            Endif
-            LZ(m,iNode)=P1*P2
-        EndDo
-        soma = LZ(1,iNode)+LZ(2,iNode)+LZ(3,iNode)
-        if (isnan(P1).or.isnan(P2)) then
-            continue
-        endif
+        ! Check if Nodes in this vertical Line is dry or wet:
+        LZ(:,iNode) = 0.0d0
         
+        If(zzN(1,iNode) < zzN(3,iNode)) Then
+            
+            If(zzN(1,iNode)==zzN(2,iNode)) Then
+                ! First Order Lagrange polynomial approach:
+                LZ(1,iNode) = 0.0d0
+                LZ(2,iNode) = ((zp-zzN(3,iNode))/(zzN(2,iNode)-zzN(3,iNode)))
+                LZ(3,iNode) = ((zp-zzN(2,iNode))/(zzN(3,iNode)-zzN(2,iNode)))
+                soma = LZ(1,iNode)+LZ(2,iNode)+LZ(3,iNode)
+                If(soma /= 1.0d0) Then
+                    LZ(2,iNode) = LZ(2,iNode)/soma
+                    LZ(3,iNode) = LZ(3,iNode)/soma
+                EndIf 
+            Else
+                ! Second Order Lagrange polynomial approach:
+                Do m=1,3
+                    if (m==1) then
+                        P1 = ((zp-zzN(2,iNode))/(zzN(1,iNode)-zzN(2,iNode)))
+                        P2 = ((zp-zzN(3,iNode))/(zzN(1,iNode)-zzN(3,iNode)))
+                    elseif (m==2) then
+                        P1 = ((zp-zzN(1,iNode))/(zzN(2,iNode)-zzN(1,iNode)))
+                        P2 = ((zp-zzN(3,iNode))/(zzN(2,iNode)-zzN(3,iNode)))
+                    else
+                        P1 = ((zp-zzN(1,iNode))/(zzN(m,iNode)-zzN(1,iNode)))
+                        P2 = ((zp-zzN(2,iNode))/(zzN(m,iNode)-zzN(2,iNode)))
+                    Endif
+                    LZ(m,iNode)=P1*P2
+                EndDo
+                soma = LZ(1,iNode)+LZ(2,iNode)+LZ(3,iNode)
+                if (isnan(P1).or.isnan(P2)) then
+                    continue
+                endif
+            EndIf
+        Endif
     EndDo
+    
     !1.2. - Interpolating velocties (u, v, w) to the btrack particle cota 
     Do iNode=1,9        
         Zuu(iNode) = LZ(1,iNode)*uuN(1,iNode)+LZ(2,iNode)*uuN(2,iNode)+LZ(3,iNode)*uuN(3,iNode)
         Zvv(iNode) = LZ(1,iNode)*vvN(1,iNode)+LZ(2,iNode)*vvN(2,iNode)+LZ(3,iNode)*vvN(3,iNode)
         Zww(iNode) = LZ(1,iNode)*wwN(1,iNode)+LZ(2,iNode)*wwN(2,iNode)+LZ(3,iNode)*wwN(3,iNode)
     EndDo
+    
     !2. Interpolate in Y direction 3 times
     !2.1. - find the  Lagrange coefficient formula
     cont=0
@@ -1740,12 +1762,14 @@
     EndDo
     !2.2. - Interpolating velocties (u, v, w) to the btrack particle yt
     cont=0
+    
     Do iNode=1,7,3
         cont=cont+1
         Yuu(cont) = LY(1,cont)*Zuu(iNode)+LY(2,cont)*Zuu(iNode+1)+LY(3,cont)*Zuu(iNode+2)
         Yvv(cont) = LY(1,cont)*Zvv(iNode)+LY(2,cont)*Zvv(iNode+1)+LY(3,cont)*Zvv(iNode+2)
         Yww(cont) = LY(1,cont)*Zww(iNode)+LY(2,cont)*Zww(iNode+1)+LY(3,cont)*Zww(iNode+2)
     EndDo
+    
     !3. Interpolate in X direction one times
     !3.1. - find the  Lagrange coefficient formula
     Do m=1,3
@@ -1776,8 +1800,8 @@
     wwBtrack = Xww
 
     Return
-    End Subroutine iQuadratic    
-   
+    End Subroutine iQuadratic   
+
   Subroutine iQuadraticNodes(uuNode, vvNode, wwNode, xxNode, yyNode, zzNode, bbElem, bbLayer, HydroParam, MeshParam)
     
     Use MeshVars !, Only: 
@@ -5984,15 +6008,6 @@
                         
     ! Upper neighbour:
     !nr = n9, nu = n4, nu1 = n5, nl = n6
-    
-    !bench 02:
-    if ( 100-NearZero <= MeshParam%EdgeBary(1,n3)<= 100 + NearZero) then
-        if (MeshParam%EdgeBary(2,n3) >= 110 - NearZero) then
-            r = 0
-        elseif(MeshParam%EdgeBary(2,n3) <= 90 + NearZero) then
-            r = 0
-        endif
-    endif
     
     nu = r              
     If (nu == 0) Then

@@ -61,12 +61,12 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime,iNewton,innerNe
     !Bench 01:    
     e0 = 0.3 !e0 0.3 b01
     !Bench 02:
-    e0 = 0.9 !e0 0.1 b02
+    !e0 = 0.1 !e0 0.1 b02
     !!Bench 03:
     !e0 = 0.5 !0.2 !e0 0.1 b01 0.3
 
     HydroParam%iConv = 0
-    HydroParam%iConv = 0
+
     !HydroParam%iNonHydro=0
     
     ! 0. Compute turbulence
@@ -74,34 +74,12 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime,iNewton,innerNe
         
     ! 1. Convective Term
     If (HydroParam%iConv == 0.or.HydroParam%iConv == 4) Then
+        
         HydroParam%Fw = HydroParam%w
         HydroParam%Fu = HydroParam%u
         HydroParam%Fv = HydroParam%utang
         Call FuFv(HydroParam,MeshParam,dt)
-        !Do iEdge = 1,MeshParam%nEdge
-            
-            !Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge) 
-            !    HydroParam%Fu(iLayer,iEdge) = (1.-HydroParam%epson(iLayer,iEdge))*HydroParam%Fu(iLayer,iEdge) 
-            !EndDo
-            
-            !if (HydroParam%IndexWaterLevelEdge(iEdge)>0) then
-            !    l = MeshParam%Left(iEdge)
-            !    Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)
-            !        cont=0
-            !        vel=0
-            !        Do lEdge=1,4 
-            !            If (HydroParam%Fu(iLayer,MeshParam%Edge(lEdge,l))>0.and.HydroParam%IndexWaterLevelEdge(MeshParam%Edge(lEdge,l))==0) Then
-            !                cont=cont+1
-            !                vel = vel + HydroParam%Fu(iLayer,MeshParam%Edge(lEdge,l))
-            !            EndIf
-            !        EndDo
-            !        if (cont>0) then    
-            !            HydroParam%Fu(iLayer,iEdge) = vel/cont
-            !        endif
-            !    EndDo    
-            !Endif 
-        !EndDo
-        
+
     ElseIf (HydroParam%iConv == 1) Then
         
     ElseIf (HydroParam%iConv == 2) Then
@@ -120,39 +98,16 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime,iNewton,innerNe
         !HydroParam%Fw = HydroParam%w
         HydroParam%Fu = HydroParam%u
         HydroParam%Fv = HydroParam%utang
-        !Call FuFvConservative(HydroParam,MeshParam,dt)
-        !Do iEdge = 1,MeshParam%nEdge
-        !    
-        !    !Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge) 
-        !    !    HydroParam%Fu(iLayer,iEdge) = (1.-HydroParam%epson(iLayer,iEdge))*HydroParam%Fu(iLayer,iEdge) 
-        !    !EndDo
-        !    
-        !    if (HydroParam%IndexWaterLevelEdge(iEdge)>0) then
-        !        l = MeshParam%Left(iEdge)
-        !        Do iLayer = HydroParam%Smallm(iEdge), HydroParam%CapitalM(iEdge)
-        !            cont=0
-        !            vel=0
-        !            Do lEdge=1,4 
-        !                If (HydroParam%Fu(iLayer,MeshParam%Edge(lEdge,l))>0.and.HydroParam%IndexWaterLevelEdge(MeshParam%Edge(lEdge,l))==0) Then
-        !                    cont=cont+1
-        !                    vel = vel + HydroParam%Fu(iLayer,MeshParam%Edge(lEdge,l))
-        !                EndIf
-        !            EndDo
-        !            If (cont>0) then    
-        !                HydroParam%Fu(iLayer,iEdge) = vel/cont
-        !            Endif
-        !        EndDo    
-        !    endif 
-        !EndDo        
+        Call FuFvConservative(HydroParam,MeshParam,dt)
         
     EndIf
     
     ! 2. Getting hydrodynamic boundary condition values at current step time
     Call GetHydroBoundaryConditions(HydroParam,MeshParam,dt,time,SimTime)
     
-    if(simtime == dt*202) then
-        continue
-    endif
+    !if(simtime == dt*202) then
+    !    continue
+    !endif
 
     ! 3. Baroclinic pressure effect
     Call Pressure(HydroParam,MeshParam,dt)
@@ -166,7 +121,8 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime,iNewton,innerNe
     !! 6. Vertical Water Balance (Precipitation and Evaporation)
     Call VerticalWB(HydroParam,MeshParam,MeteoParam,dt,SimTime)
     
-    Call BedFriction(HydroParam,MeshParam,dt)
+    ! Calculate bed friction coefficient, in this point the velocity field is time tn. This coefficient is using to calculate new velocity field (in tn + 1):
+    !Call BedFriction(HydroParam,MeshParam,dt)
     
     ! 7. Assemble Matrix
     !!$OMP parallel do default(none) shared(MeshParam,HydroParam,MeteoParam) private(iEdge,iLayer,l,r,Chezy,rhoairCell,aTh,bTh,cTh,dzp,dzm,DIM,NearZero,dt)
@@ -339,8 +295,9 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime,iNewton,innerNe
             Pij = MeshParam%Neighbor(iEdge,iElem) 
             If (Pij == 0.and.HydroParam%IndexWaterLevelEdge(Face)>0) Then   
                 HydroParam%etaInfn(iElem) =  HydroParam%etaInf(iElem)
-				If ((HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))-HydroParam%hj(Face))<HydroParam%PCRI/2.d0+NearZero) Then
-                    HydroParam%etaInf(iElem) = HydroParam%hj(Face) + HydroParam%PCRI/2.d0 !Rever
+				If ((HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))-HydroParam%hj(Face))<HydroParam%PCRI  +NearZero) Then
+                    !HydroParam%etaInf(iElem) = HydroParam%hj(Face) + HydroParam%PCRI/2.d0 !Rever
+                    HydroParam%etaInf(iElem) = HydroParam%hj(Face)
                 Else
                     HydroParam%etaInf(iElem) = HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))
         !            If(iElem > 3) Then
@@ -695,7 +652,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime,iNewton,innerNe
     !    EndIf
     !            
     !EndDo
-   HydroParam%eta = Max(HydroParam%eta + HydroParam%sb, HydroParam%sb)
+
 
 !!!################################################################################################# FIM ALGORITMO NOVO NEWTON #####################
 !!
@@ -753,31 +710,37 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime,iNewton,innerNe
     ! 9. Water Level Corrective Step
     
     !!$OMP parallel do default(none) shared(MeshParam,HydroParam,NearZero) private(iElem)
-    Do iElem = 1,MeshParam%nElem
-        If ( HydroParam%eta(iElem) - HydroParam%sb(iElem) <= HydroParam%PCRI + NearZero ) Then
-            HydroParam%eta(iElem) = HydroParam%sb(iElem) + HydroParam%PCRI/2.0d0
-        EndIf
-    EndDo
+    !Do iElem = 1,MeshParam%nElem
+    !    If ( HydroParam%eta(iElem) - HydroParam%sb(iElem) <= HydroParam%PCRI + NearZero ) Then
+    !        HydroParam%eta(iElem) = HydroParam%sb(iElem) + HydroParam%PCRI/2.0d0
+    !    EndIf
+    !EndDo
     
+    HydroParam%eta = Max(HydroParam%eta + HydroParam%sb, HydroParam%sb)
     !!$OMP end parallel do
     
     ! 9.1 Compute nodal elevations for tang. vel.
     HydroParam%petan=HydroParam%peta !store for transport eqs. 
     !$OMP parallel do default(none) shared(MeshParam,HydroParam) private(iNode,sum1,sum0,ie,j)
+    !Compute nodal elevations for tang. vel. MAX VALUE
+    !Do iNode=1,MeshParam%nNode
+    !    sum1 = 0.d0 !sum of elemental elevations
+    !    sum0 = 0.d0 !sum of areas
+    !    do j=1,MeshParam%nVertexElem(iNode)
+    !        ie=MeshParam%VertexElem(j,iNode)
+    !        sum1 = sum1 + MeshParam%Area(ie)*HydroParam%eta(ie)
+    !        sum0 = sum0 + MeshParam%Area(ie)
+    !    Enddo !j=1,nne(i)
+    !    HydroParam%peta(iNode) = sum1/sum0
+    !EndDo !i=1,np
+    
     Do iNode=1,MeshParam%nNode  
-        sum1=0 !sum of elemental elevations
-        sum0=0 !sum of Areas
         HydroParam%peta(iNode) = HydroParam%eta(MeshParam%VertexElem(1,iNode))
-        do j=1,MeshParam%nVertexElem(iNode)
-            ie=MeshParam%VertexElem(j,iNode)
-            sum1=sum1+MeshParam%Area(ie)*HydroParam%eta(ie)
-            sum0=sum0+MeshParam%Area(ie)
-            
+        do j=1,MeshParam%nVertexElem(iNode)-1
+            ie=MeshParam%VertexElem(j+1,iNode)
+            ! Nodal water elevation is the maximum surround value:
             HydroParam%peta(iNode) = Max(HydroParam%peta(iNode),HydroParam%eta(ie))
-            
-        Enddo !j=1,nne(i)
-        HydroParam%peta(iNode)=sum1/sum0
-!        
+        Enddo !j=1,nne(i)     
     EndDo !i=1,np   
     !$OMP end parallel do
     
@@ -786,7 +749,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime,iNewton,innerNe
     HydroParam%DZhjt = HydroParam%DZhj
     HydroParam%DZsjt = HydroParam%DZsj 
 
-    ! 11. Compute the New Horizontal Normal/Tangetial Velocity Field 
+    ! 11. Compute the New Horizontal Normal/Tangetial Velocity Field
     HydroParam%ut = HydroParam%u
     HydroParam%umt = HydroParam%um
     Call uvelocity(HydroParam,MeshParam,MeteoParam,dt)
@@ -1212,8 +1175,8 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime,iNewton,innerNe
 
     ! 15. Compute Nodal Velocities:
     !Call Velocities(HydroParam,MeshParam)
-    Call VelocitiesSUB(HydroParam,MeshParam)
-    HydroParam%CFL = HydroParam%CFL*dt
+    Call VelocitiesSUB(HydroParam,MeshParam,dt)
+    !HydroParam%CFL = HydroParam%CFL*dt
     
    ! Call ExchangeTime(HydroParam,MeshParam,MeteoParam,dt)
     

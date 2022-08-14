@@ -1,4 +1,4 @@
-Subroutine BedFriction(HydroParam,MeshParam,dt)
+Subroutine BedFriction2(HydroParam,MeshParam,dt)
     
     !$ use omp_lib
     Use MeshVars !, Only: nEdge,Left,Right,CirDistance
@@ -51,7 +51,7 @@ Subroutine BedFriction(HydroParam,MeshParam,dt)
         
     EndDo
     
-    End Subroutine BedFriction
+    End Subroutine BedFriction2
     
     
     

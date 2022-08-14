@@ -32,7 +32,7 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
         EndIf
         
         !! 11.1.1 Get roughness 
-        !H = HydroParam%H(iEdge)+HydroParam%sj(iEdge)-HydroParam%hj(iEdge) !Surface Water Height
+        H = HydroParam%H(iEdge)+HydroParam%sj(iEdge)-HydroParam%hj(iEdge) !Surface Water Height
         !If (r == 0) Then
         !    If (HydroParam%iRoughForm == 0.or.HydroParam%iRoughForm == 3) Then ! roughnessChezyConstant
         !        Chezy = HydroParam%Rug(l)
@@ -148,6 +148,7 @@ Subroutine uvelocity(HydroParam,MeshParam,MeteoParam,dt)
             !Cell without bound conditions:
             ! If a face is dry, set the velocity to zero
             !If ( Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%etan(l), -HydroParam%hj(iEdge) + HydroParam%etan(r) ) <= HydroParam%PCRI/2+NearZero.or.Max( HydroParam%PCRI/2,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI/2+NearZero) Then
+            !If ( Max( HydroParam%PCRI,-HydroParam%hj(iEdge) + HydroParam%etan(l), -HydroParam%hj(iEdge) + HydroParam%etan(r) ) <= HydroParam%PCRI+NearZero.or.Max( HydroParam%PCRI,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI+NearZero) Then
             If ( Max( HydroParam%PCRI,-HydroParam%hj(iEdge) + HydroParam%etan(l), -HydroParam%hj(iEdge) + HydroParam%etan(r) ) <= HydroParam%PCRI+NearZero.or.Max( HydroParam%PCRI,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI+NearZero) Then
             !If ( Max( 0.0d0,-HydroParam%hj(iEdge) + HydroParam%etan(l), -HydroParam%hj(iEdge) + HydroParam%etan(r) ) <= HydroParam%PCRI+NearZero.or.Max( 0.0d0,-HydroParam%hj(iEdge) + HydroParam%eta(l), -HydroParam%hj(iEdge) + HydroParam%eta(r) ) <= HydroParam%PCRI+NearZero) Then
                 HydroParam%u(:,iEdge)  = 0.d0
