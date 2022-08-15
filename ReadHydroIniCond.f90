@@ -503,7 +503,11 @@ Subroutine ReadHydroIniCond(HydroParam,hydroConfiguration,simParam,MeshParam)
         EndIf
         
         !Calculo da saturação e do volume de agua no elemento iElem
-        Call MoistureContent(HydroParam%eta(iElem),0.d0,iElem,HydroParam,MeshParam)  
+        Call MoistureContent(HydroParam%eta(iElem),0.d0,iElem,HydroParam,MeshParam)
+        
+        !Call MoistureContent(Max(HydroParam%eta(iElem) - HydroParam%sb(iElem), HydroParam%eta(iElem) - HydroParam%hb(iElem), 0.0d0),0.d0,iElem,HydroParam,MeshParam)  
+        
+        
         
     EndDo  
     
