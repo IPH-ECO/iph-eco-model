@@ -22,6 +22,8 @@ Subroutine VerticalWB(HydroParam,MeshParam,MeteoParam,dt,SimTime)
     Integer:: irrigMangueiraID(5),irrigMirimID(8)
     Real:: irMangEta,irMiriEta
     
+    etaplus0 = 0.0d0
+    
     !!CELL ID irrigacao BC interna:
     !irrigMangueiraID(1:5) = (/1039, 2102, 3135, 4174, 5095 /)
     !irrigMirimID(1:8) = (/792, 1172, 2434, 3695, 5048, 5603, 5698, 6138 /)

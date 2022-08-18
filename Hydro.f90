@@ -295,7 +295,7 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime,iNewton,innerNe
             Pij = MeshParam%Neighbor(iEdge,iElem) 
             If (Pij == 0.and.HydroParam%IndexWaterLevelEdge(Face)>0) Then   
                 HydroParam%etaInfn(iElem) =  HydroParam%etaInf(iElem)
-				If ((HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))-HydroParam%hj(Face))<HydroParam%PCRI  +NearZero) Then
+				If ((HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))-HydroParam%hj(Face))<HydroParam%PCRI+NearZero) Then !Prescribed water Level above surface level
                     !HydroParam%etaInf(iElem) = HydroParam%hj(Face) + HydroParam%PCRI/2.d0 !Rever
                     HydroParam%etaInf(iElem) = HydroParam%hj(Face)
                 Else
