@@ -1,4 +1,4 @@
-Subroutine CGOp(a,b,dt,HydroParam,MeshParam)
+Subroutine CGOpSub(a,b,dt,HydroParam,MeshParam)
     
     ! Matrix Free Conjugate Gradient Method
     ! Input:
@@ -28,10 +28,12 @@ Subroutine CGOp(a,b,dt,HydroParam,MeshParam)
     Real:: r(MeshParam%nElem), Ab(MeshParam%nElem), pCG(MeshParam%nElem), v(MeshParam%nElem)
     
     N = MeshParam%nElem
+    !%Deta = %F == residual k == V1(eta) + [T - Q(k-1)]eta - d(k-1) = Error in Water Volume
     b = a                           ! Initial guess
-    Call MatOp(b,Ab,dt,HydroParam,MeshParam)
-    ! b - Ab = %Deta - (P+T).eta(k,0)
-    r = b - Ab
+    !Ab == (P(k,l-1) + T - Q(k-1,l-1)).eta(k,l)
+    Call MatOp(HydroParam%eta,Ab,dt,HydroParam,MeshParam)
+    ! b - Ab = V1(eta) + [T - Q(k-1)]eta - d(k-1) + P(k,l-1).eta(k,l-1)
+    r = b - Ab + HydroParam%P*HydroParam%eta
     pCG = r                         ! Steepest Descent Direction
     alpha = Dot_Product(r,r)        ! Square of the norm of r
     tol = 1e-14                     ! Tolerance
@@ -55,4 +57,4 @@ Subroutine CGOp(a,b,dt,HydroParam,MeshParam)
     EndDo
         
     Return
-End Subroutine CGOp
+End Subroutine CGOpSub

@@ -17,7 +17,8 @@ Subroutine Psi_value(psi_flag,r_face,Courant,fi_small,psi_face)
         fi_big = Max(fi_small,Max(Min(1.d0, 2.d0*r_face),Min(2.d0, r_face))) !Max(fi_small, Max(Min(1., 2.*r_face), Min(2., r_face)))
         psi_face = fi_big - fi_small
     ElseIf (psi_flag == 3) Then         !Van Leer
-        fi_big = Max(fi_small, (r_face + abs(r_face)/(1 + abs(r_face))))
+        !fi_big = Max(fi_small, (r_face + abs(r_face)/(1 + abs(r_face)))) !HUGO
+        fi_big = Max(fi_small, (r_face + abs(r_face))/(1 + r_face))
         psi_face = fi_big - fi_small
     ElseIf (psi_flag == 4) Then         !MINMOD
         fi_big = Max(fi_small, Min(1., r_face))

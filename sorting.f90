@@ -35,6 +35,31 @@ CONTAINS
    END FUNCTION  FindMinimum
 
 ! --------------------------------------------------------------------
+! INTEGER FUNCTION  FindMaximum():
+!    This function returns the location of the maximum in the section
+! between Start and End.
+! --------------------------------------------------------------------
+
+   INTEGER FUNCTION  FindMaximum(x, Start, End)
+      IMPLICIT  NONE
+      Real, DIMENSION(1:), INTENT(IN) :: x
+      INTEGER, INTENT(IN)                :: Start, End
+      Real                               :: Maximum
+      INTEGER                            :: Location
+      INTEGER                            :: i
+
+      Maximum  = x(Start)		! assume the first is the max
+      Location = Start			! record its position
+      DO i = Start+1, End		! start with next elements
+         IF (x(i) > Maximum) THEN	!   if x(i) greater than the max?
+            Maximum  = x(i)		!      Yes, a new maximum found
+            Location = i                !      record its position
+         END IF
+      END DO
+      FindMaximum = Location        	! return the position
+   END FUNCTION  FindMaximum
+   
+! --------------------------------------------------------------------
 ! SUBROUTINE  Swap():
 !    This subroutine swaps the values of its two formal arguments.
 ! --------------------------------------------------------------------
@@ -67,5 +92,18 @@ CONTAINS
          CALL  Swap(x(i), x(Location))	! swap this and the minimum
       END DO
    END SUBROUTINE  Sort
+    
+   SUBROUTINE  SortDecreasing(x, Size)
+      IMPLICIT  NONE
+      Real, DIMENSION(1:), INTENT(INOUT) :: x
+      INTEGER, INTENT(IN)                   :: Size
+      INTEGER                               :: i
+      INTEGER                               :: Location
 
+      DO i = 1, Size-1			! except for the last
+         Location = FindMaximum(x, i, Size)	! find min from this to last
+         CALL  Swap(x(i), x(Location))	! swap this and the minimum
+      END DO
+   END SUBROUTINE  SortDecreasing
+   
 END Module  Sorting

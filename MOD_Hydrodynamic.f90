@@ -43,6 +43,11 @@
         
        
         Real, Allocatable:: DZK(:) !Sediment Layer
+        Real, Allocatable:: PsiCrit(:) !Sediment Layer
+        Real, Allocatable:: Gusub(:,:) !Sediment Layer
+
+        Real, Allocatable:: psij(:,:)!CAYO
+        Real, Allocatable:: rj(:,:)!CAYO
         
         Real, Allocatable:: DZsj(:,:)!CAYO
         Real, Allocatable:: DZsjt(:,:)!CAYO
@@ -61,6 +66,7 @@
         Real, Allocatable:: ut(:,:) !< Normal velocity at previous time step, dimension: Kmax,nEdge
         Real, Allocatable:: utang(:,:) !< Normal velocity at the edges in each layer, dimension: Kmax,nEdge
         Real, Allocatable:: uxyback(:,:,:) !< horizontal backtracking velocity components at the edges in each layer, dimension: Kmax,2,nEdge
+        Real, Allocatable:: uArrow(:,:,:)
         Real, Allocatable:: uNode(:,:,:) !< Nodal velocity , dimension: Kmax,2,nNode
         Real, Allocatable:: uxy(:,:,:) !< horizontal velocity components at current time step ,dimension: (Kmax,2,nEdge)
         Real, Allocatable:: uxyL(:,:,:) !< horizontal velocity components in the center of each k+1/2 Layer for eack Element ,dimension: (Kmax+1,2,nElem)
@@ -78,17 +84,35 @@
         Real, Allocatable:: epson(:,:) !< Normal velocity at the edges in each layer, dimension: Kmax,nEdge
         Real, Allocatable:: psi_edge(:,:)
         Real, Allocatable:: psi_cell(:,:)
+
         
+        Real, Allocatable:: uNodet(:,:,:) !< Nodal velocity , dimension: Kmax,2,nNode
+        Real, Allocatable:: uxyt(:,:,:) !< horizontal velocity components at current time step ,dimension: (Kmax,2,nEdge)
+        Real, Allocatable:: uxyLt(:,:,:)        
+        Real, Allocatable:: ugt(:,:),vgt(:,:),wgt(:,:) !< Velocities in each face in k+1/2 Layer dimension: (nEdge,Kmax+1)
+        Real, Allocatable:: ubt(:,:,:)  !< cell-centered three components of velocity, dimension: ub(Kmax,3,nElem)
+        Real, Allocatable:: ubVt(:,:,:) 
+        Real, Allocatable:: wfct(:,:) 
+        
+        Integer, Allocatable:: utangNodes(:,:) 
+        Real, Allocatable:: uxysub(:,:,:)
+        Real, Allocatable:: ubsub(:,:,:) 
         Real, Allocatable:: us(:,:) !< Normal superficial flow velocity at the edges in each layer, dimension: Kmax,nEdge !CAYO
         Real, Allocatable:: ust(:,:) !< Normal superficial flow  velocity at previous time step, dimension: Kmax,nEdge !CAYO
+        Real, Allocatable:: ustang(:,:) !< Normal superficial flow  velocity at previous time step, dimension: Kmax,nEdge !CAYO
         Real, Allocatable:: um(:,:) !<  Kmax,nEdge !CAYO
         Real, Allocatable:: umt(:,:) !< Kmax,nEdge    !CAYO
+        Real, Allocatable:: umtang(:,:) !< Kmax,nEdge    !CAYO
+        Real, Allocatable:: wm(:,:) 
+        Real, Allocatable:: wmt(:,:) 
         ! 3.1. Others Variables
         Real, Allocatable:: etaInf(:) !< Tidal boundary condition
+        Real, Allocatable:: etaInfn(:) !< Tidal boundary condition in time n-1
         Real, Allocatable:: etaplus(:) !< Vertical water balance at current time step  dimension: nElem
         Real, Allocatable:: peta(:) !< Nodal free-Surface Elevation at current time step  dimension: nNode
         Real, Allocatable:: petan(:)     ! Nodal Free-Surface Elevation from previous timestep n (Time Step N+1; Time Step N) dimension: nElem
         Real, Allocatable:: eta(:) !< Cell-centered Free-Surface Elevation at current time step  dimension: nElem
+        Real, Allocatable:: etak(:) !< Cell-centered Free-Surface Elevation at current time step  dimension: nElem
         Real, Allocatable:: etan(:)     ! Cell-centered Free-Surface Elevation from previous timestep n (Time Step N+1; Time Step N) dimension: nElem
         Real, Allocatable:: hb(:) !< elevation at the center of each element dimension: nElem
         Real, Allocatable:: sb(:)
@@ -110,6 +134,12 @@
         Real, Allocatable:: Hs(:) !CAYO
         !Real, Allocatable:: Kj(:,:), ei(:,:) !Porosity and Hydraulic Conductivity   !CAYO !MOD_Mesh
         Real, Allocatable:: Vol(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: Vol2(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: Vol1(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: Qk(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: Ci(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: etam(:) !<Water Volume in element with porous region             !CAYO 
+        Real, Allocatable:: d(:) !<Water Volume in element with porous region             !CAYO 
         
         ! 4. Turbulence Model    
         Real,Allocatable:: HorViscosity(:,:,:)      !< Horizontal Eddy Viscosity
@@ -212,6 +242,7 @@
         Integer:: iCoriolis !< Coriolis effect: iCoriolis = 0 (no); iCoriolis = 1 (yes)
         
         Real, Allocatable:: SScalar(:)               ! Salinity Concentration - Current Time Step
+        Real, Allocatable:: SScalarSaturation(:)               ! Salinity Concentration - Current Time Step
         Real, Allocatable:: SScalar2D(:)               ! Salinity Concentration - Current Time Step
         Real, Allocatable:: SVector(:,:)               ! Salinity Concentration - Current Time Step
        

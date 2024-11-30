@@ -1,4 +1,4 @@
-Subroutine VerticalWB(HydroParam,MeshParam,MeteoParam,dt)
+Subroutine VerticalWB(HydroParam,MeshParam,MeteoParam,dt,SimTime)
 
     ! This routine calculates the vertical water balance on the free-surface water by Evaporation and Precipitation
     ! Called in routine 0-MAIN
@@ -14,15 +14,29 @@ Subroutine VerticalWB(HydroParam,MeshParam,MeteoParam,dt)
     Real:: W_evap,Epslon_s,Epslon_c,Epslon,Fir,H_evap, Er, e_sat, B_EVAP
     Integer:: iElem
     Real:: NearZero = 1e-10
-    Real:: dt
+    Real:: dt,SimTime,etaplus0
     type(MeshGridParam) :: MeshParam
     type(HydrodynamicParam) :: HydroParam
     type(MeteorologicalParam) :: MeteoParam
 
+    etaplus0 = 0.d0
+    If(SimTime <= 5400 ) Then !Bench 02 Superficial
+        etaplus0 = 10.8d0/1000/3600*dt
+    EndIf
+    
+    !etaplus0 = 0.d0
+    !If(SimTime <= 3024000 ) Then !Bench 02 Subsurface
+    !    etaplus0 = 10.8d0/1000/3600*dt
+    !EndIf
+    
+    !!
     !!$OMP parallel do default(none) shared(MeshParam,HydroParam,MeteoParam) private(iElem,Er,e_sat,B_Evap,e_evap,Ea,DELTA,NearZero,dt)
     Do iElem=1,MeshParam%nElem
-        HydroParam%etaplus(iElem) = 0.
-    
+        HydroParam%etaplus(iElem) = etaplus0
+        
+        !If(MeshParam%xb(iElem) == 810.0d0) Then  !Bench02
+        !    HydroParam%etaplus(iElem) = etaplus0
+        !EndIf 
       !  If (MeteoParam%iReadEvap==0) Then
       !      HydroParam%etaplus(iElem) = -MeteoParam%Evap(iElem)/86400./1000.
       !  ElseIf (MeteoParam%iReadEvap==1) Then
@@ -48,7 +62,7 @@ Subroutine VerticalWB(HydroParam,MeshParam,MeteoParam,dt)
       !
       !  HydroParam%etaplus(iElem) = HydroParam%etaplus(iElem)*dt
       !  
-      !  If (HydroParam%eta(iElem) - HydroParam%hb(iElem) <= HydroParam%Pcri+NearZero) HydroParam%etaplus(iElem) = 0.
+      !If (HydroParam%eta(iElem) - HydroParam%hb(iElem) <= HydroParam%Pcri+NearZero) HydroParam%etaplus(iElem) = 0.
     
     EndDo
     !!$OMP end parallel do

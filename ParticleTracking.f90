@@ -409,6 +409,7 @@
     upart = 0.
     vpart = 0.
     wpart = 0.
+    
     Do j=1,4
         nd = MeshParam%Edge(j,nnel)
         nn = MeshParam%Quadri(j,nnel)+1
