@@ -6,7 +6,7 @@ Subroutine ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,IniTime,Fina
     Use MeshVars
     
     Implicit none
-    Integer i,j,k,iEdge,iNode1,iNode2,Face,iLayer,iRange
+    Integer i,j,k,iEdge,iNode1,iNode2,Face,iLayer,iRange,nWaterLvl
     Integer:: idate(6)
     character(len=20):: str
     Integer NObjInflow, NObjWaterLevel, NObjRange
@@ -25,7 +25,9 @@ Subroutine ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,IniTime,Fina
     call c_f_pointer(hydroConfiguration%boundaryConditions, boundaryConditions, [hydroConfiguration%numberOfBoundaryConditions])
     
     
-    
+    !Allocate(HydroParam%IndexInflow(HydroParam%NInflow,2))
+    Allocate(HydroParam%IndexInflow(MeshParam%nEdge,2))
+    HydroParam%IndexInflow = 0
     
     
     HydroParam%IndexWaterLevel = 0.d0
@@ -103,7 +105,6 @@ Subroutine ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,IniTime,Fina
     Allocate (HydroParam%InFlowValue(HydroParam%NInflow,NObjInflow))
     Allocate (HydroParam%InFlowTime(HydroParam%NInflow,NObjInflow))
     Allocate (HydroParam%InFlownTime(HydroParam%NInflow))
-    Allocate(HydroParam%IndexInflow(HydroParam%NInflow,2))
     Allocate (HydroParam%InFlowSmallm(HydroParam%NInflow))
     Allocate (HydroParam%InFlowCapitalM(HydroParam%NInflow))
     Allocate (HydroParam%NRange(HydroParam%NInflow)) 
@@ -111,11 +112,11 @@ Subroutine ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,IniTime,Fina
     HydroParam%IndexWaterLevel = 0
     HydroParam%IndexWaterLevelEdge = 0
     
-    HydroParam%IndexInflow = 0
     HydroParam%IndexInflowEdge = 0
     HydroParam%NInflow = 0
     HydroParam%NWaterLevel = 0
     !NObjRange = 0
+    nWaterLvl = 0
     
     Do i = 1,hydroConfiguration%numberOfBoundaryConditions
         call c_f_pointer(boundaryConditions(i)%cells, boundaryConditionCells, [boundaryConditions(i)%cellsLength])
@@ -133,15 +134,15 @@ Subroutine ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,IniTime,Fina
                         If (iNode1==boundaryConditionCells(k)%verticeIds(1).and.iNode2==boundaryConditionCells(k)%verticeIds(2)) Then
                             HydroParam%IndexWaterLevel(HydroParam%NWaterLevel,1) = Face
                             HydroParam%IndexWaterLevel(HydroParam%NWaterLevel,2) = boundaryConditionCells(k)%cellId + 1
-                            HydroParam%IndexWaterLevelEdge(Face) = 1
+                            nWaterLvl = nWaterLvl + 1
+                            HydroParam%IndexWaterLevelEdge(Face) = nWaterLvl
+                            !HydroParam%IndexWaterLevelEdge(Face) = 1
                         EndIf
                     EndDo
                     
                     HydroParam%WaterLevelTime(HydroParam%NWaterLevel,1) = IniTime
                     HydroParam%WaterLevelTime(HydroParam%NWaterLevel,2) = FinalTime
                     HydroParam%WaterLevelValue(HydroParam%NWaterLevel,:) = boundaryConditions(i)%constantValue
-                    
-                    
                     
                 EndDo
             ElseIf (boundaryConditions(i)%conditionFunction == 2) Then !Time-series
@@ -157,7 +158,9 @@ Subroutine ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,IniTime,Fina
                         If (iNode1==boundaryConditionCells(k)%verticeIds(1).and.iNode2==boundaryConditionCells(k)%verticeIds(2)) Then
                             HydroParam%IndexWaterLevel(HydroParam%NWaterLevel,1) = Face
                             HydroParam%IndexWaterLevel(HydroParam%NWaterLevel,2) = boundaryConditionCells(k)%cellId + 1
-                            HydroParam%IndexWaterLevelEdge(Face) = 1
+                            nWaterLvl = nWaterLvl + 1
+                            HydroParam%IndexWaterLevelEdge(Face) = nWaterLvl
+                            !HydroParam%IndexWaterLevelEdge(Face) = 1
                         EndIf
                     EndDo 
                     
@@ -175,7 +178,9 @@ Subroutine ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,IniTime,Fina
                         If (iNode1==boundaryConditionCells(k)%verticeIds(1).and.iNode2==boundaryConditionCells(k)%verticeIds(2)) Then
                             HydroParam%IndexWaterLevel(HydroParam%NWaterLevel,1) = Face
                             HydroParam%IndexWaterLevel(HydroParam%NWaterLevel,2) = boundaryConditionCells(k)%cellId + 1
-                            HydroParam%IndexWaterLevelEdge(Face) = 1
+                            nWaterLvl = nWaterLvl + 1
+                            HydroParam%IndexWaterLevelEdge(Face) = nWaterLvl
+                            !HydroParam%IndexWaterLevelEdge(Face) = 1
                         EndIf
                     EndDo
 
@@ -471,7 +476,13 @@ Subroutine ReadHydroBoundaryCondition(HydroParam,hydroConfiguration,IniTime,Fina
         EndIf
     EndDo    
     
-   
+    
+    
+    !Open(96,FILE=trim(simParam%OutputPath)//'/'//trim(Basename)//trim(FileName)//'.txt',STATUS='OLD',ACTION='READ')
+    !Do i=1,HydroParam%InflownTime(1)
+    !    READ(96,*) HydroParam%irrgMirim(i), HydroParam%irrgMangueira(i)    
+    !EndDo
+        
    
 End Subroutine ReadHydroBoundaryCondition
     

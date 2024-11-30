@@ -42,7 +42,6 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
     HydroParam%psi_cell = 0.d0
     Do iElem = 1, MeshParam%nElem
         
-        
         ! 1. Define Sub-Cycle Time Step    
         Do iLayer = HydroParam%ElSmallm(iElem), HydroParam%ElCapitalM(iElem)
             SumQj = 0.
@@ -185,9 +184,11 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
 
                 !Define Psi Values
                 Do iEdge = 1,4
+                    
                     Face = MeshParam%Edge(iEdge,iElem)
                     l = MeshParam%Left(Face)
                     r = MeshParam%Right(Face)
+                    
                     If (iEdge==1) Then
                         iEdgein = 3
                     ElseIf (iEdge==2) Then
@@ -197,34 +198,37 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
                     ElseIf (iEdge==4) Then
                         iEdgein = 2
                     EndIf
+                    
                     rr = MeshParam%Neighbor(iEdgein,iElem)
                     
                     !set boundary conditions for psi_edge
-                    b= VarEstP(iLayer,iElem)
-                    if (rr==0) then
+                    b = VarEstP(iLayer,iElem)
+                    If (rr==0) then
                         a = b! VarEstP(iLayer,iElem)
-                    else
-                        if (iLayer<HydroParam%ElSmallm(rr)) then ! r==0 to the bottom
+                    Else
+                        If (iLayer < HydroParam%ElSmallm(rr)) then ! r==0 to the bottom
                             a = b !VarEstP(iLayer,iElem)
-                        else
-                            a= VarEstP(iLayer,MeshParam%Neighbor(iEdgein,iElem))
-                        endif
-                    endif
-                    if (MeshParam%Neighbor(iEdge,iElem)==0) then
+                        Else
+                            a = VarEstP(iLayer,MeshParam%Neighbor(iEdgein,iElem))
+                        EndIf
+                    EndIf
+                    
+                    If (MeshParam%Neighbor(iEdge,iElem)==0) then
                         c = b !VarEstP(iLayer,iElem)
                         Neighbor = iElem
-                    else
-                        if (iLayer<HydroParam%ElSmallm(MeshParam%Neighbor(iEdge,iElem))) then ! r==0 to the bottom
+                    Else
+                        If (iLayer < HydroParam%ElSmallm(MeshParam%Neighbor(iEdge,iElem))) Then ! r==0 to the bottom
                             c = b !VarEstP(iLayer,iElem)
                             Neighbor = iElem
-                        else
-                            c= VarEstP(iLayer,MeshParam%Neighbor(iEdge,iElem))
+                        Else
+                            c = VarEstP(iLayer,MeshParam%Neighbor(iEdge,iElem))
                             Neighbor = MeshParam%Neighbor(iEdge,iElem)
-                        endif
-                    endif
+                        EndIf
+                    EndIf
+                    
                     !r_face
                     num = (b-a)
-                    den= (c-b)+NearZero
+                    den = (c-b)+NearZero
                     
                     if (abs(c-b)<=NearZero.or.abs(b-a)<=NearZero) then
                         HydroParam%psi_edge(iLayer,Face) = 0
@@ -241,8 +245,7 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
                         r_face = num/den 
                         Courant = 0.5*(HydroParam%Theta*HydroParam%u(iLayer,Face)*+(1.-HydroParam%Theta)*HydroParam%ut(iLayer,Face))*dt/MeshParam%CirDistance(Face)
                         Call Psi_value(psi_flag,r_face,Courant,fi_small,psi_face)
-                        HydroParam%psi_edge(iLayer,Face) = psi_face
-                        
+                        HydroParam%psi_edge(iLayer,Face) = psi_face  
                     EndIf
                     
                 EndDo
@@ -316,6 +319,7 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
                             HydroParam%psi_cell(iLayer,iElem) = 0
                             cycle
                         endif
+                        
                         if (abs(numdist)<=NearZero.or.abs(dendist)<=NearZero) then
                             HydroParam%psi_cell(iLayer,iElem) = 0
                             cycle
@@ -371,7 +375,7 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
                         Face = MeshParam%Edge(iEdge,iElem)
                         l = MeshParam%Left(Face)
                         r = MeshParam%Right(Face)
-                        If ( MeshParam%Neighbor(iEdge,iElem)==0.or.HydroParam%H(Face) <= HydroParam%PCRI+NearZero ) Then 
+                        If ( MeshParam%Neighbor(iEdge,iElem)==0 .or. HydroParam%H(Face) <= HydroParam%PCRI+NearZero ) Then 
 		                    ConcFace(iEdge) = VarEstP(iLayer,iElem)
                             DDCFace = 0.
 		                    DCDFace = DCDFace 
@@ -497,8 +501,7 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
                             DC2DZ2 = (DCDZU - DCDZD)/MeshParam%Area(iElem) 
                         
                             DC2DZ2_psi = (DCDZU_psi - DCDZD_psi)/MeshParam%Area(iElem)
-        
-        
+
                             ! Transport Equation Solution
                             If (index== 0) Then !No boundary condition
                                 Advection = 0.
@@ -645,7 +648,7 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
                         
                         
                             ! Transport Equation Solution
-                            If (index== 0) Then !No boundary condition
+                            If (index == 0) Then !No boundary condition
                                 Advection = 0.
                                 Do iEdge = 1,4
                                     Face = MeshParam%Edge(iEdge,iElem)
@@ -656,11 +659,12 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
                                     VarEst(iLayer,iElem) = MAX(NearZero,(dt/nSubCycle*(Dispersion-Advection+DC2DZ2)-dt/nSubCycle/2.*Dispersion_psi-dt/nSubCycle/2.*DC2DZ2_psi+dtday/nSubCycle*dVar(iLayer,iElem)*HydroParam%DZitau(iLayer,iElem)+VarEstP(iLayer,iElem)*HydroParam%DZitau(iLayer,iElem) - ((HydroParam%Theta*HydroParam%w(iLayer+1,iElem)+(1.0d0-HydroParam%Theta)*HydroParam%wt(iLayer+1,iElem))*CONCU-(HydroParam%Theta*HydroParam%w(iLayer,iElem)+(1.0d0-HydroParam%Theta)*HydroParam%wt(iLayer,iElem))*CONCD)*dt/nSubCycle)/HydroParam%DZitau(iLayer,iElem))
                             Else
                                 Advection = 0.
-                                num=0
+                                num = 0
                                 Do iEdge = 1,4
                                     Face = MeshParam%Edge(iEdge,iElem)
                                     l = MeshParam%Left(Face)
                                     r = MeshParam%Right(Face)
+                                    
                                     If (HydroParam%IndexInflowEdge(Face) > 0.or.HydroParam%IndexWaterLevelEdge(Face) > 0) Then !Inflow/Outflow boundary condition
                                         If (HydroParam%Theta*HydroParam%u(iLayer,Face)+(1.-HydroParam%Theta)*HydroParam%ut(iLayer,Face)>=0) Then ! Outflow Loading
                                             Advection = Advection + (MeshParam%EdgeLength(Face)*HydroParam%DZjt(iLayer,Face)*Sig(iElem,r,l)*(HydroParam%Theta*HydroParam%u(iLayer,Face)+(1.-HydroParam%Theta)*HydroParam%ut(iLayer,Face)))*ConcFace(iEdge)/MeshParam%Area(iElem)    
@@ -672,6 +676,7 @@ Subroutine UpWindCWC_HR_GATS(index,uLoadVar,dVar,VarEst,VarEstP,dt,dtday,HydroPa
                                         Advection = Advection + (MeshParam%EdgeLength(Face)*HydroParam%DZjt(iLayer,Face)*Sig(iElem,r,l)*(HydroParam%Theta*HydroParam%u(iLayer,Face)+(1.-HydroParam%Theta)*HydroParam%ut(iLayer,Face)))*ConcFace(iEdge)/MeshParam%Area(iElem)
                                     EndIf
                                 EndDo
+                                
                                 if (num==1) then
                                     VarEst(iLayer,iElem) = MAX(NearZero,(dt/nSubCycle*(Dispersion-Advection+DC2DZ2)+dtday/nSubCycle*dVar(iLayer,iElem)*HydroParam%DZitau(iLayer,iElem)+VarEstP(iLayer,iElem)*HydroParam%DZitau(iLayer,iElem) - ((HydroParam%Theta*HydroParam%w(iLayer+1,iElem)+(1.0d0-HydroParam%Theta)*HydroParam%wt(iLayer+1,iElem))*CONCU-(HydroParam%Theta*HydroParam%w(iLayer,iElem)+(1.0d0-HydroParam%Theta)*HydroParam%wt(iLayer,iElem))*CONCD)*dt/nSubCycle)/HydroParam%DZitau(iLayer,iElem))
                                 else

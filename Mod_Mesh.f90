@@ -37,6 +37,7 @@
 Module MeshVars
     
     use domain_types
+    use Sorting
 
     implicit none
     type MeshGridParam
@@ -64,7 +65,7 @@ Module MeshVars
         Integer, Allocatable:: indPoint(:,:),Connect(:),cell_type(:)
         Real, Allocatable:: LIMCAM(:) !< Layer levels (m)
         Real, Allocatable:: LIMCAMAUX(:) 
-        Integer:: NCAMMAX !< Number of Vertical Layers
+        Integer:: NCAMMAX !< Number of Vertical Layers   
         Real:: zL !< y-cell resolution (m)
         Real:: zR !< y-cell resolution (m)
         Integer:: KMax !< Maximum Number of Vertical Layers
@@ -76,7 +77,7 @@ Module MeshVars
         Integer, Allocatable :: LeftAux(:), RightAux(:) 
         Real, Allocatable:: AbsDelta(:),  EdgeBaryAux(:,:) 
         Integer:: nMaxVertexElem,nMaxEgdesatNode
-    
+        
         !2. Grid Data
         Integer:: iWindRed
         Integer:: iWetland
@@ -89,9 +90,16 @@ Module MeshVars
         Real, Allocatable:: d50(:)
         Real, Allocatable:: OMfraction(:)
         Real, Allocatable:: eta0(:)
-        Real, Allocatable:: Ki(:)   !CAYO
+        Real, Allocatable:: Ki(:,:)   !CAYO
         Real, Allocatable:: Kj(:,:) !CAYO
-        Real, Allocatable:: ei(:,:) !CAYO
+        Real, Allocatable:: Ksat(:,:) !CAYO
+        Real, Allocatable:: Si(:,:) !CAYO
+        Real, Allocatable:: alpha(:,:) !CAYO
+        Real, Allocatable:: nSoil(:,:) !CAYO
+        Real, Allocatable:: ei(:,:) !CAYO  
+        Integer:: subfactor
+        Integer:: iSaturation
+    
         
         Integer, Allocatable:: trv(:),NEIBN(:),NEIBL(:),NEIBS(:),NEIBO(:)   
         
@@ -117,50 +125,89 @@ Module MeshVars
         integer(c_long_long), pointer :: verticeIds(:)
         Integer:: i,j,jEdge,jNode1,jNode2
         Integer:: nMaxVertexElem,nMaxEgdesatNode
-        Real:: n3d(3), tempvec(3), Check(2), v(4,3), zn(3), Norm_n3d, CheckMesh, Det
+        Real:: n3d(3), tempvec(3), Check(2), v(4,3), zn(3), Norm_n3d, CheckMesh, Det, layersub(81)!bench 02:
         Integer:: l, r
-    
+        
+        
         call c_f_pointer(StructuredMeshFeatures%xCoordinates, xCoordinates, [StructuredMeshFeatures%numberOfElements])
         call c_f_pointer(StructuredMeshFeatures%yCoordinates, yCoordinates, [StructuredMeshFeatures%numberOfElements])
         call c_f_pointer(StructuredMeshFeatures%verticeIds, verticeIds, [StructuredMeshFeatures%verticeIdsLength])
         call c_f_pointer(sim%label, simulationLabel, [sim%labelLength])
         call c_f_pointer(sim%layers, layers, [sim%layersLength])
 
-        this%nElem = StructuredMeshFeatures%numberOfElements 
+        this%nElem = StructuredMeshFeatures%numberOfElements
+        
         
         this%dx = StructuredMeshFeatures%resolution
-        !Lock horizontal resolution test
-        !this%dx = 0.02d0
-        !!
         this%dy = this%dx
+        !Lock horizontal resolution test
+        !this%dx = 20.0d0 !bench 02 - bacia
+        !this%dy = 6.48d0 !bench 01
+        !this%dx = 0.020d0 !bench 01 - maré 
+        this%dy = this%dx
+        !this%nElem = StructuredMeshFeatures%numberOfElements - 36!bench01 - maré
         
-    
+        this%subfactor = 1
         Allocate(this%xb(this%nElem))
         Allocate(this%yb(this%nElem))
         Allocate(this%Quadri(4,this%nElem))
-        
+        ! 1. Defining Mesh Vertex
+        ! Using NC and NL we can define a Mathematical Equation to save the vertex for each node without repetition
+        ! For nodes numeration, the Standard is this:
+        !     4     3
+        !     .-----.
+        !     |     |
+        !     |     |
+        !     .-----.
+        !     1     2
+        ! For nodes positions in the vector, the Standard is this:
+        !     2     1
+        !     .-----.
+        !     |     |
+        !     |     |
+        !     .-----.
+        !     3     4 
         Do iElem = 1, this%nElem
             this%xb(iElem) = xCoordinates(iElem)
-            this%yb(iElem) = yCoordinates(iElem)
+            this%yb(iElem) = yCoordinates(iElem)            
+            !this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO bench 01- maré
             this%Quadri(3,iElem) = verticeIds(4*(iElem-1)+1)
             this%Quadri(4,iElem) = verticeIds(4*(iElem-1)+2)
-            this%Quadri(1,iElem) = verticeIds(4*(iElem-1)+3)
+            this%Quadri(1,iElem) = verticeIds(4*(iElem-1)+3) ! ser igual a 3 para a cell 1
             this%Quadri(2,iElem) = verticeIds(4*(iElem-1)+4)
         EndDo
-    
-    
-        !transferir para Module Mesh
-        this%NCAMMAX = sim%layersLength  !Cayo.+1 Original: this%NCAMMAX = sim%layersLength                    ! Number of Vertical Layers
-        this%zL = sim%minimumVerticalLimit-0.001  !Cayo. Original: sim%minimumVerticalLimit-0.001 -16.001 
+        
+        !Do iElem = 1, this%nElem
+        !    this%xb(iElem) = xCoordinates(iElem)
+        !    this%yb(iElem) = yCoordinates(iElem)            
+        !    !this%yb(iElem) = this%dy/2 !yCoordinates(iElem) !CAYO bench 01- maré
+        !    this%Quadri(3,iElem) = verticeIds(4*(iElem-1)+1)
+        !    this%Quadri(4,iElem) = verticeIds(4*(iElem-1)+2)
+        !    this%Quadri(1,iElem) = verticeIds(4*(iElem-1)+3) ! ser igual a 3 para a cell 1
+        !    this%Quadri(2,iElem) = verticeIds(4*(iElem-1)+4)
+        !EndDo
+        
+        this%NCAMMAX = sim%layersLength       ! Number of Vertical Layers
+        this%zL = sim%minimumVerticalLimit-0.001
+        this%zL = sim%minimumVerticalLimit
         this%zR = sim%maximumVerticalLimit
-    
+        Call SortDecreasing(layers,sim%layersLength)
+        
+        !this%NCAMMAX = 62 !bench02 1 surface + 11 subsurface
+        !this%zL = 0.000 !bench02
+        !layersub(1) = sim%maximumVerticalLimit-1
+        !Do i = 2,this%NCAMMAX-1
+        !    layersub(i) = sim%maximumVerticalLimit - i !the top ten layers have 1m thickness
+        !EndDo
+        !layersub(this%NCAMMAX) = this%zL         
+        
         If (this%NCAMMAX > 0) Then
             ALLOCATE (this%LIMCAM(this%NCAMMAX))
             ALLOCATE (this%LIMCAMAUX(this%NCAMMAX+1))
-            Do i = 1,this%NCAMMAX !Cayo.-1 Original: sDo i = 1,this%NCAMMAX
+            Do i = 1,this%NCAMMAX
                 this%LIMCAM(i) = layers(i)                   ! Layer levels (m)
+                !this%LIMCAM(i) = layersub(i) !bench02
             EndDo
-            !this%LIMCAM(this%NCAMMAX) = -12 !Cayo (linha adicionada)
         Else
             ALLOCATE (this%LIMCAM(1))
             ALLOCATE (this%LIMCAMAUX(1))
@@ -168,9 +215,8 @@ Module MeshVars
             this%LIMCAMAUX = this%zL
         EndIf            
         
-        
         ! Number of Vertical Layers
-        If (this%NCAMMAX ==0) then !Two-dimensional
+        If (this%NCAMMAX == 0) then !Two-dimensional
             this%KMax = 1
             this%LIMCAMAUX(this%KMax)=this%zL
         ElseIf (this%NCAMMAX >= 1) then !Three-dimensional
@@ -201,6 +247,7 @@ Module MeshVars
         Else
             Stop 'Incorrect number of Layers'
         Endif    
+
         
         this%nNode = MAXVAL(this%Quadri) + 1
         this%nPoint = this%nNode
@@ -340,6 +387,7 @@ Module MeshVars
     
         Allocate(this%Left(this%nEdge))
         Allocate(this%Right(this%nEdge))
+        
         Allocate(this%EdgeLength(this%nEdge))
         Allocate(this%CirDistance(this%nEdge))
         Allocate(this%AbsDelta(this%nEdge))
@@ -402,7 +450,7 @@ Module MeshVars
         
         this%nMaxEgdesatNode = this%nMaxVertexElem + 1
         
-        Allocate(this%EgdesatNode(this%nMaxEgdesatNode,this%nNode)) 
+        Allocate(this%EgdesatNode(this%nMaxEgdesatNode,this%nNode))
         Allocate(this%nEgdesatNode(this%nNode))
         this%nEgdesatNode = 0
         this%EgdesatNode = 0
@@ -446,5 +494,3 @@ Module MeshVars
     end subroutine
 
 End Module MeshVars
-    
-    

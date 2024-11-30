@@ -30,6 +30,7 @@ Subroutine CGOp(a,b,dt,HydroParam,MeshParam)
     N = MeshParam%nElem
     b = a                           ! Initial guess
     Call MatOp(b,Ab,dt,HydroParam,MeshParam)
+    ! b - Ab = %Deta - (P+T).eta(k,0)
     r = b - Ab
     pCG = r                         ! Steepest Descent Direction
     alpha = Dot_Product(r,r)        ! Square of the norm of r
@@ -41,6 +42,7 @@ Subroutine CGOp(a,b,dt,HydroParam,MeshParam)
            !Print*, 'The system has been solved with: ',k, 'CGOp iterations'
            Return
        EndIf
+
        Call MatOp(pCG,v,dt,HydroParam,MeshParam)
        
        lambda = alpha/Dot_Product(pCG,v)
@@ -49,6 +51,7 @@ Subroutine CGOp(a,b,dt,HydroParam,MeshParam)
        alphanew = Dot_Product(r,r)
        pCG = r + alphanew/alpha*pCG
        alpha = alphanew
+       
     EndDo
         
     Return

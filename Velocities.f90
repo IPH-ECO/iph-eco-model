@@ -54,21 +54,13 @@
             Face = MeshParam%Edge(iEdge,iElem)
             l = MeshParam%Left(Face) 
             r = MeshParam%Right(Face)
-            if (Face==877) then
-                continue
-            endif
             
             if (r==0) then
                 small = HydroParam%Smallm(iEdge)
             else
                 small = min(HydroParam%ElSmallm(l),HydroParam%ElSmallm(r))
             endif
-            if (iElem==1160.or.iElem==1163) then
-                continue
-            endif
-            
 
-        
             
             Do iLayer = small, HydroParam%ElCapitalM(iElem) !small
                 med=0.5d0
@@ -390,10 +382,9 @@
         aa(2)=signa(MeshParam%xNode(n2),MeshParam%xNode(n3),MeshParam%xb(iElem),MeshParam%yNode(n2),MeshParam%yNode(n3),MeshParam%yb(iElem))
         aa(3)=signa(MeshParam%xNode(n3),MeshParam%xNode(n4),MeshParam%xb(iElem),MeshParam%yNode(n3),MeshParam%yNode(n4),MeshParam%yb(iElem))
         aa(4)=signa(MeshParam%xNode(n4),MeshParam%xNode(n1),MeshParam%xb(iElem),MeshParam%yNode(n4),MeshParam%yNode(n1),MeshParam%yb(iElem))
+       
         Do iLayer = HydroParam%ElSmallm(iElem), HydroParam%ElCapitalM(iElem) 
-            If (iElem==293.and.iLayer==1) Then
-                Continue
-            EndIf
+
             aa(5)=0.d0
             aaU=0.d0
             aaV=0.d0
@@ -444,7 +435,7 @@
     ! 2. Finding Face-centered Vertical velocity components
     Do iEdge=1,MeshParam%nEdge
         l = MeshParam%Left(iEdge)
-        r = MeshParam%Right(iEdge)
+        r = MeshParam%Right(iEdge)                    
         if (r==0) then
             HydroParam%wfc(:,iEdge)= HydroParam%ub(:,3,l)
         else        
@@ -472,9 +463,7 @@
         HydroParam%uxyL(HydroParam%ElSmallm(iElem),2,iElem) = HydroParam%ub(HydroParam%ElSmallm(iElem),2,iElem)
         !HydroParam%uxyL(HydroParam%ElCapitalM(iElem)+1,1,iElem) = HydroParam%ub(HydroParam%ElCapitalM(iElem),1,iElem)
         !HydroParam%uxyL(HydroParam%ElCapitalM(iElem)+1,2,iElem) = HydroParam%ub(HydroParam%ElCapitalM(iElem),2,iElem)
-        if (iElem==39) then
-            continue
-        endif
+
         Do iLayer = HydroParam%ElSmallm(iElem)+1, HydroParam%ElCapitalM(iElem)           
                 HydroParam%uxyL(iLayer,1,iElem) = HydroParam%ub(iLayer-1,1,iElem)+((HydroParam%Zb(iLayer,iElem)-HydroParam%Ze(iLayer,iElem))*((HydroParam%ub(iLayer,1,iElem)-HydroParam%ub(iLayer-1,1,iElem))/(HydroParam%Zb(iLayer,iElem)-HydroParam%Zb(iLayer-1,iElem))))
                 HydroParam%uxyL(iLayer,2,iElem) = HydroParam%ub(iLayer-1,2,iElem)+((HydroParam%Zb(iLayer,iElem)-HydroParam%Ze(iLayer,iElem))*((HydroParam%ub(iLayer,2,iElem)-HydroParam%ub(iLayer-1,2,iElem))/(HydroParam%Zb(iLayer,iElem)-HydroParam%Zb(iLayer-1,iElem))))
@@ -494,6 +483,16 @@
     Do iEdge=1,MeshParam%nEdge
         l = MeshParam%Left(iEdge)
         r = MeshParam%Right(iEdge)
+        
+        !bench 02:
+        if ( 100-NearZero <= MeshParam%EdgeBary(1,iEdge)<= 100 + NearZero) then
+            if (MeshParam%EdgeBary(2,iEdge) >= 110 - NearZero) then
+                r = 0
+            elseif(MeshParam%EdgeBary(2,iEdge) <= 90 + NearZero) then
+                r = 0
+            endif
+        endif        
+                
         !Bottom and top horizontal velocitys are iqual to cell center velocities - layer "k" is difined in the center of each cell
         !Bottom vertical Velocity is = 0, top layer vertical velocity is = w top layer velocity
         !if (r==0) then
