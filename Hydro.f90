@@ -267,8 +267,8 @@ Subroutine Hydro(HydroParam,MeshParam,MeteoParam,dt,time,Simtime)
 				If ((HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))-HydroParam%hj(Face))<=HydroParam%PCRI/2.d0+NearZero) THEN
                     HydroParam%etaInf(iElem) = HydroParam%hj(Face) + HydroParam%PCRI/2.d0
 				Else
-				    !HydroParam%etaInf(iElem) = HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))
-                    HydroParam%etaInf(iElem) = -1.0+1.5d0*sin(((0.025*(1-1))*(0.67d0/0.4d0))+(2.0d0*HydroParam%pi*(Simtime)/43200.0d0)) !wetanddry-bechmark 
+				    HydroParam%etaInf(iElem) = HydroParam%WaterLevel(HydroParam%IndexWaterLevelEdge(Face))
+                    !HydroParam%etaInf(iElem) = -1.0+1.5d0*sin(((0.025*(1-1))*(0.67d0/0.4d0))+(2.0d0*HydroParam%pi*(Simtime)/43200.0d0)) !wetanddry-bechmark 
                     !HydroParam%etaInf(iElem) = 0.01*sin(((0.025*(1-1))*(0.67d0/0.4d0))+(2.0d0*HydroParam%pi*(Simtime)/2.0d0)) !FlowOverBar-benchmark
                 EndIf
                 SumLHS = SumLHS + ( MeshParam%EdgeLength(Face)/MeshParam%CirDistance(Face) )*( HydroParam%etaInf(iElem) )*(HydroParam%g*HydroParam%Theta*dt*HydroParam%DZiADZ(Face) + HydroParam%DZK(Face))

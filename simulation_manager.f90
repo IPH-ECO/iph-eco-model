@@ -221,7 +221,7 @@
         
         Call WriteOutputs(simParam,HydroParam,MeshParam,LimnoParam,MeteoParam)
 
-        Call SaveRecovery(sim,simParam,MeshParam,HydroParam,LimnoParam)
+        !Call SaveRecovery(sim,simParam,MeshParam,HydroParam,LimnoParam)
         
         simParam%time = simParam%time + simParam%dt 
         !Write(1001,'(i20.10,4F30.20)') time, eta(1), SumVer, SumVerAcum

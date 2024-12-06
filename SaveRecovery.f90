@@ -21,9 +21,9 @@ Subroutine SaveRecovery(sim,simParam,MeshParam,HydroParam,LimnoParam)
             simParam%SaveVariables%edges = MeshParam%nEdge
             simParam%SaveVariables%elements = MeshParam%nElem
             simParam%SaveVariables%simulationTime = simParam%time
-            simParam%SaveVariables%u = c_loc(HydroParam%u)
-            simParam%SaveVariables%w = c_loc(HydroParam%w)
-            simParam%SaveVariables%eta = c_loc(HydroParam%eta)
+            !simParam%SaveVariables%u = c_loc(HydroParam%u)
+            !simParam%SaveVariables%w = c_loc(HydroParam%w)
+            !simParam%SaveVariables%eta = c_loc(HydroParam%eta)
                 
             !simParam%SaveVariables%wqo = c_loc(LimnoParam%sDSalW)
             Do iOutput = 1,sim%wqoOutputParametersLength
@@ -43,9 +43,9 @@ Subroutine SaveRecovery(sim,simParam,MeshParam,HydroParam,LimnoParam)
                 EndIf
             EndDo
                 
-            simParam%SaveVariables%wqo = c_loc(simParam%wqoutput)
+            !simParam%SaveVariables%wqo = c_loc(simParam%wqoutput)
                 
-            sim%recoveryVariables = c_loc(simParam%SaveVariables)
+            !sim%recoveryVariables = c_loc(simParam%SaveVariables)
                 
             simParam%SaveVariables%changed = logical(.true., kind = c_bool)
                 
